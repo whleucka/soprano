@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Welcome;
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
-class WelcomeController extends Controller
+class HomeController extends Controller
 {
-    #[Get("/", "welcome.index")] 
+    #[Get("/", "home.index")] 
     public function index(): string
     {
-        return $this->render("welcome/index.html.twig");
+        return $this->render("home/index.html.twig");
     }
 }

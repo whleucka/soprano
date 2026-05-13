@@ -1,0 +1,84 @@
+html,body {
+  height: 100%;
+}
+
+/** Sections */
+#app {
+  color: #fff;
+  background: #000;
+}
+
+#top-search input, #top-search button {
+  background: #121212;
+  color: #fff;
+}
+#top-search input::placeholder {
+  color: #555;
+}
+
+#menu-button {
+  background: none !important;
+}
+
+#profile-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #999;
+}
+
+#sidebar {
+  width: 200px;
+}
+
+#sidebar .nav-link {
+  color: #bbb;
+}
+
+#sidebar .nav-link:hover {
+  color: #fff;
+}
+
+#sidebar h1 {
+  font-weight: 800;
+  font-size: 1.8rem;
+}
+
+#sidebar h2 {
+  font-weight: 800;
+  color: #999;
+  font-size: 1.2rem;
+}
+
+#view {
+}
+
+#view h1 {
+  font-size: 3rem;
+  font-weight: 800;
+}
+#view h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+#view .hero {
+  min-height: 200px;
+  border-radius: 12px 12px;
+  background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+#player {
+  height: 100px;
+}
+
+#playlist {
+  width: 400px;
+}
+
+#app .content {
+  margin: 4px;
+  background: #121212;
+  border-radius: 12px;
+}
+
