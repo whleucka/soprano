@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Echo\Framework\Console\Kernel as ConsoleKernel;
 use Echo\Framework\Console\Commands;
+use App\Console\Commands as AppCommands;
 
 class Kernel extends ConsoleKernel
 {
@@ -75,5 +76,9 @@ class Kernel extends ConsoleKernel
 
         // Sitemap
         Commands\SitemapGenerateCommand::class,
+
+        // Soprano
+        AppCommands\SyncTracksCommand::class, 
+        AppCommands\SyncMetaCommand::class, 
     ];
 }
