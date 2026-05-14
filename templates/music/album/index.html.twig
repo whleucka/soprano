@@ -30,4 +30,41 @@
     {% endfor %}
   </div>
 </section>
+<script>
+  (function () {
+    const btn = document.getElementById('share');
+    if (!btn) return;
+
+    async function copyToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+      }
+      // Fallback for non-secure contexts (e.g. HTTP on a LAN IP).
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (!ok) throw new Error('execCommand copy failed');
+    }
+
+    btn.addEventListener('click', async () => {
+      const icon = btn.querySelector('i');
+      const original = icon ? icon.className : null;
+      try {
+        await copyToClipboard(window.location.href);
+        if (icon) {
+          icon.className = 'bi bi-check2';
+          setTimeout(() => { icon.className = original; }, 1500);
+        }
+      } catch (err) {
+        console.error('Clipboard copy failed', err);
+      }
+    });
+  })();
+</script>
 {% endblock %}
