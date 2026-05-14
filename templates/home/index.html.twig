@@ -4,18 +4,17 @@
 
 {% block view %}
 <section id="home" class="h-100">
-  <div class="hero d-flex align-items-center p-2">
+  <div class="hero d-flex align-items-center p-3">
     <h1>Home</h1>
   </div>
-  <div class="p-2">
-    <section id="popluar-songs">
-      <h2>Popular Songs</h2>
-    </section>
+  <div class="p-3">
+    <h2>Recently Added Music</h2>
     <section id="recently-added">
-      <h2>Recently Added</h2>
-    </section>
-    <section id="recently-played">
-      <h2>Recently Played</h2>
+      <div class="d-flex justify-content-start placeholder-glow" hx-get="{{ uri("home.recently-added") }}" hx-trigger="load">
+        <div class="placeholder"></div>
+        <div class="placeholder"></div>
+        <div class="placeholder"></div>
+      </div>
     </section>
   </div>
 </section>

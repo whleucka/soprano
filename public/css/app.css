@@ -1,5 +1,16 @@
-html,body {
+html {
+  color-scheme: dark;
+}
+
+html,
+body {
   height: 100%;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /** Sections */
@@ -8,10 +19,16 @@ html,body {
   background: #000;
 }
 
-#top-search input, #top-search button {
+#main {
+  overflow: hidden;
+}
+
+#top-search input,
+#top-search button {
   background: #121212;
   color: #fff;
 }
+
 #top-search input::placeholder {
   color: #555;
 }
@@ -29,6 +46,7 @@ html,body {
 
 #sidebar {
   width: 200px;
+  min-width: 200px;
 }
 
 #sidebar .nav-link {
@@ -41,7 +59,7 @@ html,body {
 
 #sidebar h1 {
   font-weight: 800;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
 }
 
 #sidebar h2 {
@@ -51,12 +69,14 @@ html,body {
 }
 
 #view {
+  overflow: hidden;
 }
 
 #view h1 {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 800;
 }
+
 #view h2 {
   font-size: 1.5rem;
   font-weight: 800;
@@ -64,7 +84,7 @@ html,body {
 
 #view .hero {
   min-height: 200px;
-  border-radius: 12px 12px;
+  border-radius: 12px;
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
@@ -77,8 +97,47 @@ html,body {
 }
 
 #app .content {
-  margin: 4px;
+  margin: 6px;
   background: #121212;
   border-radius: 12px;
 }
 
+.placeholder {
+  opacity: 0.1;
+}
+
+#home {
+}
+
+#home h2 {
+  font-weight: 800;
+  color: #999;
+}
+
+#home .placeholder {
+  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+  margin-right: 10px;
+}
+
+#home .album {
+  margin-right: 10px;
+}
+
+#home .album img {
+  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+}
+
+#home #recently-added {
+  width: 100%;
+  overflow-x: auto;
+  padding: 6px;
+}
+
+#home #recently-added .album {
+  font-size: 0.8rem;
+  width: 85px;
+}
