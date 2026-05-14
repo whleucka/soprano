@@ -80,5 +80,6 @@ class Kernel extends ConsoleKernel
         // Soprano
         AppCommands\SyncTracksCommand::class, 
         AppCommands\SyncMetaCommand::class, 
+        AppCommands\FetchCoversCommand::class, 
     ];
 }

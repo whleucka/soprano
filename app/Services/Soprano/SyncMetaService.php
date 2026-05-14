@@ -128,7 +128,6 @@ class SyncMetaService
         }
 
         return [
-            'cover'           => '',
             'artist'          => $tag('artist'),
             'album'           => $tag('album'),
             'title'           => $tag('title'),

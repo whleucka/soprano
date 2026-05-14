@@ -10,8 +10,9 @@ class MusicService
     {
         $tracks = TrackMeta::where("album", $track->album)
             ->andWhere("artist", $track->artist)
-            ->orderBy("track_number", "DESC")
             ->get();
+        // Sort numerically
+        usort($tracks, fn($a,$b) => (int)$a->track_number <=> (int)$b->track_number);
         return array_map(fn($item) => [
             "hash" => $item->track()->hash,
             "title" => $item->title,

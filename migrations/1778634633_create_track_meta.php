@@ -11,7 +11,7 @@ return new class implements MigrationInterface
         return Schema::create($this->table, function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("track_id");
-            $table->varchar("cover");
+            $table->varchar("cover")->nullable();
             $table->varchar("artist");
             $table->varchar("album");
             $table->varchar("title");

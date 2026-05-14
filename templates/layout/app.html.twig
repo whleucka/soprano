@@ -50,7 +50,7 @@
               {% block view %}{% endblock %}
             </div>
           </section>
-          <section id="playlist" class="d-none d-xl-block">
+          <section id="playlist" class="d-none">
             <div class="content">
               <div class="p-2">
               </div>
@@ -60,13 +60,22 @@
       </div>
     </div>
     <section id="player" class="d-flex">
-      <div id="info">
+      <div id="info" class="d-flex align-items-center">
+        <img src="/images/no-album-art.png" class="cover ms-2 me-4">
+        <div class="d-flex flex-column">
+          <span class="title">N/A</span>
+          <span class="artist">N/A</span>
+        </div>
       </div>
-      <div id="controls">
+      <div id="controls" class="d-flex justify-content-center align-items-center">
+        <button id="prev" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
+        <button id="play" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
+        <button id="next" class="btn border-0 shadow-none"><i class="bi bi-skip-end-circle"></i></button>
       </div>
-      <div id="playback">
-      </div>
-      <div id="volume">
+      <div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-2">
+        <div class="progress w-100">
+          <div class="progress-bar" role="progressbar" style="width: 35%" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
       </div>
     </section>
   </main>
