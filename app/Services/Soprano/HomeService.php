@@ -9,8 +9,8 @@ class HomeService
     public function recentlyAdded(int $album_count = 20): array
     {
         $recently_added = TrackMeta::where("id", ">", 0)
-            ->orderBy("created_at", "DESC")
             ->groupBy("album")
+            ->orderBy("id", "DESC")
             ->get($album_count);
         return array_map(fn($item) => [
             "hash" => $item->track()->hash,

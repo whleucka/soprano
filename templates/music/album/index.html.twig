@@ -1,0 +1,33 @@
+{% extends "layout/app.html.twig" %}
+
+{% block title %}Soprano - {{album}} {% endblock %}
+
+{% block view %}
+<section id="album" class="h-100">
+  <div class="hero d-flex align-items-center p-3">
+    <div class="d-flex align-items-center">
+      <img class="cover me-3" src="{{ cover }}" />
+      <div class="d-flex flex-column">
+        <p>Album</p>
+        <h1 class="album">{{album}}</h1>
+        <h3 class="artist">{{artist}}</h3>
+      </div>
+    </div>
+  </div>
+  <div id="actions" class="d-flex">
+    <button id="play" class="btn"><i class="bi bi-play-circle"></i></button>
+  </div>
+  <div id="album-tracks">
+    {% for track in tracks %}
+    <div class="track d-flex align-items-center">
+      <span class="track-number p-4">{{ track.track_number }}</span>
+      <div class="d-flex flex-column flex-grow-1">
+        <span class="title">{{ track.title}}</span>
+        <span class="artist">{{ track.artist}}</span>
+      </div>
+      <span class="playtime-string p-4">{{ track.playtime_string }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

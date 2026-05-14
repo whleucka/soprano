@@ -6,70 +6,68 @@
 {% endblock %}
 
 {% block content %}
-  <main id="app" class="h-100 p-2" hx-indicator=".hx-indicator">
-    <div class="d-flex flex-column h-100">
-      <div class="d-flex flex-grow-1">
-        <section id="sidebar" class="d-none d-md-block">
-          <div class="content h-100">
-            <div class="p-3">
-              <h1><i class="bi bi-music-note-beamed pe-1"></i> Soprano</h1>
+  <main id="app" class="d-flex flex-column p-2" hx-indicator=".hx-indicator">
+    <div id="app-main" class="d-flex flex-grow-1">
+      <section id="sidebar" class="d-none d-md-block">
+        <div class="content">
+          <div class="p-3">
+            <h1><i class="bi bi-music-note-beamed pe-1"></i> Soprano</h1>
 
-              <nav class="nav flex-column mt-4">
-                <a class="nav-link" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a>
-                <a class="nav-link" href="{{ uri("music.index") }}"><i class="bi bi-music-note pe-1"></i> Music</a>
-                <a class="nav-link" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a>
-                <a class="nav-link" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a>
-                <a class="nav-link" href="{{ uri("tv.index") }}"><i class="bi bi-tv pe-1"></i> TV</a>
-                <a class="nav-link" href="{{ uri("movies.index") }}"><i class="bi bi-film pe-1"></i> Movies</a>
-              </nav>
+            <nav class="nav flex-column mt-4">
+              <a class="nav-link" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a>
+              <a class="nav-link" href="{{ uri("music.index") }}"><i class="bi bi-music-note pe-1"></i> Music</a>
+              <a class="nav-link" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a>
+              <a class="nav-link" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a>
+              <a class="nav-link" href="{{ uri("tv.index") }}"><i class="bi bi-tv pe-1"></i> TV</a>
+              <a class="nav-link" href="{{ uri("movies.index") }}"><i class="bi bi-film pe-1"></i> Movies</a>
+            </nav>
 
-              <h2 class="mt-4">Playlists</h2>
-              <nav class="nav flex-column">
-                <a class="nav-link disabled" href="#">No playlists yet</a>
-              </nav>
-            </div>
+            <h2 class="mt-4">Playlists</h2>
+            <nav class="nav flex-column">
+              <a class="nav-link disabled" href="#">No playlists yet</a>
+            </nav>
           </div>
-        </section> 
-        <div id="main" class="d-flex flex-column flex-grow-1">
-          <div id="top-search" class="d-flex align-items-center content">
-            <div class="input-group">
-              <input type="search" class="form-control border-0 shadow-none p-3" placeholder="What do you want to play?" />
-              <button class="btn border-0"><i class='bi bi-search'></i></button>
-            </div>
-            <div class="dropdown ms-1">
-              <button class="btn dropdown-toggle border-0 shadow-none" type="button" id="menu-button" data-bs-toggle="dropdown" aria-expanded="false">
-                <img id="profile-icon" src="/images/profile.png" />
-              </button>
-              <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-button">
-                <li><a class="dropdown-item" href="#">N/A</a></li>
-              </ul>
-            </div>
+        </div>
+      </section> 
+      <div id="main" class="d-flex flex-column flex-grow-1">
+        <div id="top-search" class="d-flex align-items-center content">
+          <div class="input-group">
+            <input type="search" class="form-control border-0 shadow-none p-3" placeholder="What do you want to play?" />
+            <button class="btn border-0"><i class='bi bi-search'></i></button>
           </div>
-          <div id="main" class="d-flex flex-grow-1">
-            <section id="view" class="flex-grow-1">
-              <div class="content h-100">
-                {% block view %}{% endblock %}
+          <div class="dropdown ms-1">
+            <button class="btn dropdown-toggle border-0 shadow-none" type="button" id="menu-button" data-bs-toggle="dropdown" aria-expanded="false">
+              <img id="profile-icon" src="/images/profile.png" />
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-button">
+              <li><a class="dropdown-item" href="#">N/A</a></li>
+            </ul>
+          </div>
+        </div>
+        <div id="main-view" class="d-flex flex-grow-1">
+          <section id="view" class="flex-grow-1">
+            <div class="content">
+              {% block view %}{% endblock %}
+            </div>
+          </section>
+          <section id="playlist" class="d-none d-xl-block">
+            <div class="content">
+              <div class="p-2">
               </div>
-            </section>
-            <section id="playlist" class="d-none d-xl-block">
-              <div class="content h-100">
-                <div class="p-2">
-                </div>
-              </div>
-            </section>
-          </div>
+            </div>
+          </section>
         </div>
       </div>
-      <section id="player" class="d-flex">
-        <div id="info">
-        </div>
-        <div id="controls">
-        </div>
-        <div id="playback">
-        </div>
-        <div id="volume">
-        </div>
-      </section>
     </div>
+    <section id="player" class="d-flex">
+      <div id="info">
+      </div>
+      <div id="controls">
+      </div>
+      <div id="playback">
+      </div>
+      <div id="volume">
+      </div>
+    </section>
   </main>
 {% endblock %}

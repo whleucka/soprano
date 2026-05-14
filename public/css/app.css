@@ -17,10 +17,25 @@ body {
 #app {
   color: #fff;
   background: #000;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 #main {
   overflow: hidden;
+}
+
+#app-main {
+  overflow: hidden;
+}
+
+#main-view {
+  overflow: hidden;
+}
+
+#top-search {
+  height: 80px !important;
 }
 
 #top-search input,
@@ -88,6 +103,10 @@ body {
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
+#view .content {
+  overflow: auto;
+}
+
 #player {
   height: 100px;
 }
@@ -101,6 +120,7 @@ body {
   margin: 6px;
   background: #121212;
   border-radius: 12px;
+  height: 100%;
 }
 
 .placeholder {
@@ -115,8 +135,15 @@ body {
   color: #999;
 }
 
+#home #recently-added {
+  overflow-x: auto;
+  padding: 6px;
+}
+
 #home #recently-added .recent {
   margin-right: 10px;
+  cursor: pointer;
+  color: #ddd;
 }
 
 #home #recently-added .cover {
@@ -125,12 +152,49 @@ body {
   height: 80px;
 }
 
-#home #recently-added {
-  overflow-x: auto;
-  padding: 6px;
-}
-
-#home #recently-added .album {
+#home #recently-added .info {
   font-size: 0.8rem;
   width: 85px;
+}
+
+#album .cover {
+  border-radius: 12px;
+  width: 170px;
+  height: 170px;
+}
+#album .hero .album {
+  font-size: 2.5rem;
+  font-weight: 900;
+}
+#album .hero .artist {
+  font-size: 1.8rem;
+  color: #999;
+}
+#album #play {
+  font-size: 4rem;
+  color: #999;
+}
+#album #play:hover {
+  color:lightgray;
+}
+#album #album-tracks {
+}
+#album #album-tracks .track {
+  cursor: pointer;
+}
+#album #album-tracks .track:hover {
+  background: #333;
+}
+#album #album-tracks .track-number {
+  font-weight: 800;
+}
+#album #album-tracks .title {
+  font-size: 1.1rem;
+}
+#album #album-tracks .artist {
+  font-size: 0.9rem;
+  color: #999;
+}
+#album #album-tracks .playtime-string {
+  color: #999;
 }
