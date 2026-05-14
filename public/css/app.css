@@ -94,6 +94,7 @@ body {
 
 #playlist {
   width: 400px;
+  min-width: 400px;
 }
 
 #app .content {
@@ -114,25 +115,17 @@ body {
   color: #999;
 }
 
-#home .placeholder {
-  border-radius: 12px;
-  width: 80px;
-  height: 80px;
+#home #recently-added .recent {
   margin-right: 10px;
 }
 
-#home .album {
-  margin-right: 10px;
-}
-
-#home .album img {
+#home #recently-added .cover {
   border-radius: 12px;
   width: 80px;
   height: 80px;
 }
 
 #home #recently-added {
-  width: 100%;
   overflow-x: auto;
   padding: 6px;
 }
