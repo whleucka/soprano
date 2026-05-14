@@ -58,7 +58,7 @@
       try {
         await copyToClipboard(window.location.href);
         if (icon) {
-          icon.className = 'bi bi-check2';
+          icon.className = 'bi bi-check2 active';
           setTimeout(() => { icon.className = original; }, 1500);
         }
       } catch (err) {

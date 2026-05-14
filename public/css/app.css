@@ -177,6 +177,12 @@ body {
   font-size: 4rem;
 }
 
+#album #share .active {
+  font-weight: 800;
+  color: lime;
+  font-size: 1.4rem;
+}
+
 #album .btn {
   color: #999;
 }
@@ -212,11 +218,10 @@ body {
 }
 
 #player #info {
-  width: 250px;
-  height: 100px;
+  width: 225px;
 }
 
-#player #info .cover {
+#player .cover {
   border-radius: 12px;
   width: 80px;
   height: 80px;
