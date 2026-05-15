@@ -40,13 +40,15 @@ class SopranoService
         if (!$playlist || count($playlist["tracks"]) < 2) return false;
 
         $mod_index = $forward 
-            ? $playlist["index"] + 1 
-            : $playlist["index"] - 1;
+            ? intval($playlist["index"]) + 1 
+            : intval($playlist["index"]) - 1;
         $new_index = $mod_index % count($playlist["tracks"]);
 
-        if (!isset($playlist["tracks"][$new_index])) return false;
+        if ($new_index < 0) {
+            $new_index = count($playlist["tracks"]) - 1;
+        }
 
-        $playlist["index"] = $new_index;
+        if (!isset($playlist["tracks"][$new_index])) return false;
 
         $this->setPlaylist($playlist["tracks"], $new_index);
 

@@ -12,6 +12,12 @@ body {
   overflow: hidden;
 }
 
+.scrollable {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
 /** Utils */
 .truncate {
   white-space: nowrap;
@@ -162,8 +168,7 @@ body {
 }
 
 #view .content {
-  overflow: auto;
-  scrollbar-gutter: stable;
+  overflow: hidden;
 }
 
 #player {
@@ -260,6 +265,14 @@ body {
 
 #album .btn:hover {
   color: lightgray;
+}
+
+#album {
+  display: flex;
+  flex-direction: column;
+}
+
+#album #album-tracks {
 }
 
 #album #album-tracks .track {
