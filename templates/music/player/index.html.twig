@@ -1,5 +1,5 @@
 <div id="album-cover" class="d-flex align-items-center justify-content-center d-none d-md-flex">
-  <img src="{{ cover }}" class="cover ms-2 me-4">
+  <img src="{{ cover }}" class="cover ms-2 me-3">
 </div>
 <div id="info" class="d-flex flex-column justify-content-center d-none d-lg-flex">
   <span class="title">{{ title }}</span>
@@ -38,10 +38,12 @@ audio.onloadedmetadata = function() {
 }
 
 audio.onpause = function () {
+  progressBar.classList.add("disabled");
   playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
 }
 
 audio.onplaying = function () {
+  progressBar.classList.remove("disabled");
   playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
 }
 

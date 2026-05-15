@@ -235,7 +235,7 @@ body {
 }
 
 #album .hero .album {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 900;
 }
 
@@ -347,6 +347,10 @@ body {
 #player #playback .progress .progress-bar {
   background: #b30404;
   background: linear-gradient(90deg, rgba(179, 4, 4, 1) 41%, rgba(255, 0, 170, 1) 100%);
+}
+
+#player #playback .progress .progress-bar.disabled {
+  background: linear-gradient(90deg, rgba(50,50,50,0.5) 41%, rgba(125,125,125,0.5) 100%);
 }
 
 #artist .hero .artist {

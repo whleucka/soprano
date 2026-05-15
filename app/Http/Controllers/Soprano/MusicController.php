@@ -75,9 +75,31 @@ class MusicController extends Controller
 
         if ($track) {
             $src = uri("music.stream", $track->hash);
+            error_log(print_r([
+                $track->meta()->title, 
+                $track->meta()->artist, 
+                $track->meta()->cover, 
+                $src
+            ], true));
             $this->soprano->setPlayer($track->meta()->title, $track->meta()->artist, $track->meta()->cover, $src);
             $this->hxTrigger("loadPlayer");
             return;
+        }
+
+        return $this->pageNotFound();
+    }
+
+    #[Get("/music/play-album-track/{hash}/{index}", "music.play-album-track")]
+    public function playAlbumTrack(string $hash, int $index)
+    {
+        $track = $this->music->getTrack($hash);
+
+        if ($track) {
+            $tracks = $this->music->albumTracks($track->meta());
+            if ($tracks) {
+                $this->soprano->setPlaylist($tracks, $index);
+                return $this->play($tracks[$index]['hash']);
+            }
         }
 
         return $this->pageNotFound();
