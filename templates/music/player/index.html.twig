@@ -6,9 +6,9 @@
   <span class="artist">{{ artist }}</span>
 </div>
 <div id="controls" class="d-flex justify-content-center align-items-center">
-  <button id="prev" onclick="next()" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
+  <button id="prev" onclick="prev()" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
   <button id="play" onclick="play()" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
-  <button id="next" onclick="prev()" class="btn border-0 shadow-none"><i class="bi bi-skip-end-circle"></i></button>
+  <button id="next" onclick="next()" class="btn border-0 shadow-none"><i class="bi bi-skip-end-circle"></i></button>
 </div>
 <div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-4">
   <div class="progress w-100" onclick="updateProgress()">
@@ -47,6 +47,7 @@ audio.onplaying = function () {
 
 audio.onended = function () {
   progressBar.style.width = 0; 
+  next();
 }
 
 // Player controls
@@ -61,7 +62,15 @@ function play() {
   }
 }
 
+// These next/prev handlers are for playlists
 function next() {
+  // Try next track
+  htmx.ajax('GET', '{{ uri("music.next-track") }}', {swap: 'none'});
+}
+
+function prev() {
+  // Try prev track
+  htmx.ajax('GET', '{{ uri("music.prev-track") }}', {swap: 'none'});
 }
 
 // Progress bar stuff

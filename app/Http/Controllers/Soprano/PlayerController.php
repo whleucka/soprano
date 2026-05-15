@@ -16,7 +16,7 @@ class PlayerController extends Controller
         $player = $this->soprano->getPlayer();
         return $this->render("music/player/index.html.twig", [
             "title" => $player["title"] ?? 'N/A',
-            "artist" => $player["artist"]->artist ?? 'N/A',
+            "artist" => $player["artist"] ?? 'N/A',
             "cover" => $player["cover"] ?? '/images/no-album-art.png',
             "src" => $player["src"] ?? '',
         ]);

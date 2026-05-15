@@ -71,16 +71,13 @@ class MusicController extends Controller
     #[Get("/music/play/{hash}", "music.play")]
     public function play(string $hash)
     {
-        $player = $this->soprano->getPlayer();
         $track = $this->music->getTrack($hash);
 
         if ($track) {
             $src = uri("music.stream", $track->hash);
-            if ($src !== $player['src']) {
-                $this->soprano->setPlayer($track->meta()->title, $track->meta()->artist, $src);
-                $this->hxTrigger("loadPlayer");
-            }
-            return true;
+            $this->soprano->setPlayer($track->meta()->title, $track->meta()->artist, $track->meta()->cover, $src);
+            $this->hxTrigger("loadPlayer");
+            return;
         }
 
         return $this->pageNotFound();
@@ -93,19 +90,32 @@ class MusicController extends Controller
 
         if ($track) {
             $tracks = $this->music->albumTracks($track->meta());
-            $this->soprano->setPlaylist($tracks);
-            $this->play($tracks[0]['hash']);
-            return true;
+            if ($tracks) {
+                $this->soprano->setPlaylist($tracks);
+                return $this->play($tracks[0]['hash']);
+            }
         }
 
         return $this->pageNotFound();
     }
 
+    #[Get("/music/next-track", "music.next-track")]
     public function nextTrack()
     {
+        $next_track = $this->soprano->changePlaylistTrack();
+
+        if ($next_track) {
+            return $this->play($next_track['hash']); 
+        }
     }
 
+    #[Get("/music/prev-track", "music.prev-track")]
     public function prevTrack()
     {
+        $prev_track = $this->soprano->changePlaylistTrack(false);
+
+        if ($prev_track) {
+            return $this->play($prev_track['hash']); 
+        }
     }
 }

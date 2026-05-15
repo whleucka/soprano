@@ -167,7 +167,9 @@ body {
 }
 
 #player {
-  height: 100px;
+  height: 75px;
+  min-height: 75px;
+  margin-top: 8px;
 }
 
 #playlist {
