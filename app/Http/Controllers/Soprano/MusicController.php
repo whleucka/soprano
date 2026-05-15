@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Welcome;
 
 use App\Http\StreamResponse;
-use App\Models\Track;
+use App\Models\{Track, TrackMeta};
 use App\Services\Soprano\CoverArtService;
 use App\Services\Soprano\MusicService;
 use Echo\Framework\Http\Controller;
@@ -85,5 +85,31 @@ class MusicController extends Controller
         }
 
         return $this->pageNotFound();
+    }
+
+    #[Get("/music/play-album/{hash}", "music.play-album")]
+    public function playAlbum(string $hash)
+    {
+        $track = Track::where("hash", $hash)->first();
+
+        if ($track) {
+            $tracks = $this->music->albumTracks($track->meta());
+            session()->set("playlist", [
+                "index" => 0,
+                "tracks" => $tracks,
+            ]);
+            $this->play($tracks[0]['hash']);
+            return true;
+        }
+
+        return $this->pageNotFound();
+    }
+
+    public function nextTrack()
+    {
+    }
+
+    public function prevTrack()
+    {
     }
 }
