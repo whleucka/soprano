@@ -71,11 +71,15 @@ class MusicController extends Controller
     #[Get("/music/play/{hash}", "music.play")]
     public function play(string $hash)
     {
+        $player = $this->soprano->getPlayer();
         $track = $this->music->getTrack($hash);
 
         if ($track) {
-            $this->soprano->setPlayer($track->meta()->title, $track->meta()->artist, uri("music.stream", $track->hash));
-            $this->hxTrigger("loadPlayer");
+            $src = uri("music.stream", $track->hash);
+            if ($src !== $player['src']) {
+                $this->soprano->setPlayer($track->meta()->title, $track->meta()->artist, $src);
+                $this->hxTrigger("loadPlayer");
+            }
             return true;
         }
 
