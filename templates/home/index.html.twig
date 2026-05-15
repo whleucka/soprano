@@ -5,11 +5,11 @@
 {% block view %}
 <section id="home" class="h-100">
   <div class="hero d-flex align-items-center p-3">
-    <h1>Home</h1>
+    <h1>Welcome back!</h1>
   </div>
   <div class="p-3">
-    <h2>Recently Added Music</h2>
-    <section id="recently-added" class="d-flex justify-content-start placeholder-glow" hx-get="{{ uri("home.recently-added") }}" hx-trigger="load">
+    <h2>Recently Added</h2>
+    <section id="recently-added" class="d-flex justify-content-start placeholder-glow pb-3" hx-get="{{ uri("home.recently-added") }}" hx-trigger="load">
       <div class="d-flex flex-column recent">
         <div class="cover placeholder"></div>
       </div>

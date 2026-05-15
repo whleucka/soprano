@@ -1,0 +1,83 @@
+<div id="album-cover" class="d-flex align-items-center justify-content-center d-none d-md-flex">
+  <img src="{{ cover }}" class="cover ms-2 me-4">
+</div>
+<div id="info" class="d-flex flex-column justify-content-center d-none d-lg-flex">
+  <span class="title">{{ title }}</span>
+  <span class="artist">{{ artist }}</span>
+</div>
+<div id="controls" class="d-flex justify-content-center align-items-center">
+  <button id="prev" onclick="next()" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
+  <button id="play" onclick="play()" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
+  <button id="next" onclick="prev()" class="btn border-0 shadow-none"><i class="bi bi-skip-end-circle"></i></button>
+</div>
+<div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-4">
+  <div class="progress w-100" onclick="updateProgress()">
+    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+  </div>
+</div>
+<div id="actions" class="d-flex justify-content-center align-items-center d-none d-md-flex">
+  <button id="show-playlist" class="btn border-0 shadow-none" onclick="togglePlaylist()"><i class="bi bi-music-note-list"></i></button>
+</div>
+<audio id="audio" src="{{ src }}"></audio>
+<script>
+var progressBar = document.querySelector("#playback .progress .progress-bar");
+var progressContainer = document.querySelector('.progress');
+var audio = document.getElementById("audio");
+var playBtn = document.getElementById("play");
+var playlist = document.getElementById("playlist");
+
+progressContainer.addEventListener('click', (e) => {
+    const rect = progressContainer.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percent = clickX / rect.width;
+    media.currentTime = percent * media.duration;
+    });
+
+audio.onloadedmetadata = function() {
+  play();
+}
+
+audio.onpause = function () {
+  playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
+}
+
+audio.onplaying = function () {
+  playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
+}
+
+audio.onended = function () {
+  progressBar.style.width = 0; 
+}
+
+// Player controls
+function prev() {
+}
+
+function play() {
+  if (audio.paused) {
+    audio.play();
+  } else {
+    audio.pause();
+  }
+}
+
+function next() {
+}
+
+// Progress bar stuff
+function updateProgress() {
+  if (!audio.paused) {
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progressBar.style.width = percent + '%';
+    progressBar.setAttribute('aria-valuenow', percent);
+  }
+  requestAnimationFrame(updateProgress);
+}
+
+// Toggles the rhs playlist view
+function togglePlaylist() {
+  playlist.classList.toggle("d-none");
+}
+
+requestAnimationFrame(updateProgress);
+</script>

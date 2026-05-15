@@ -7,10 +7,65 @@ body {
   height: 100%;
 }
 
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/** Utils */
 .truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/** HTMX */
+.hx-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #b30404,
+    #ff00aa,
+    #aa00ff,
+    #00aaff,
+    #00ffaa,
+    #ffff00,
+    #b30404
+  );
+  background-size: 300% 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: none;
+  will-change: transform, opacity, background-position;
+  transition: opacity 200ms ease-out 80ms;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+}
+
+.hx-indicator.htmx-request {
+  opacity: 1;
+  transition: opacity 80ms ease-in;
+  animation:
+    hx-progress 4s cubic-bezier(0.1, 0.7, 0.1, 1) forwards,
+    hx-rainbow 1.2s linear infinite;
+}
+
+@keyframes hx-progress {
+  0%   { transform: scaleX(0); }
+  5%   { transform: scaleX(0.25); }
+  20%  { transform: scaleX(0.55); }
+  50%  { transform: scaleX(0.8); }
+  100% { transform: scaleX(0.95); }
+}
+
+@keyframes hx-rainbow {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 300% 0%; }
 }
 
 /** Sections */
@@ -36,6 +91,7 @@ body {
 
 #top-search {
   height: 60px !important;
+  min-height: 60px !important;
 }
 
 #top-search input,
@@ -75,7 +131,7 @@ body {
 
 #sidebar h1 {
   font-weight: 800;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
 }
 
 #sidebar h2 {
@@ -102,10 +158,12 @@ body {
   min-height: 200px;
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+  overflow: hidden;
 }
 
 #view .content {
   overflow: auto;
+  scrollbar-gutter: stable;
 }
 
 #player {
@@ -141,10 +199,16 @@ body {
 }
 
 #home #recently-added .recent {
-  margin-right: 10px;
+  margin-right: 15px;
   cursor: pointer;
   color: #bbb;
 }
+
+.recent a:link,
+.recent a:visited {
+  color: #999;
+}
+
 
 #home #recently-added .cover {
   border-radius: 12px;
@@ -157,19 +221,19 @@ body {
   width: 85px;
 }
 
-#album .cover {
+.hero .cover {
   border-radius: 12px;
-  width: 170px;
-  height: 170px;
+  width: 90px;
+  height: 90px;
 }
 
 #album .hero .album {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 900;
 }
 
 #album .hero .artist {
-  font-size: 1.8rem;
+  font-size: 1rem;
   color: #999;
 }
 
@@ -180,11 +244,16 @@ body {
 #album #share .active {
   font-weight: 800;
   color: lime;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
 }
 
 #album .btn {
   color: #999;
+  font-size: 1.5rem;
+}
+
+#album #playAlbum {
+  font-size: 3rem;
 }
 
 #album .btn:hover {
@@ -196,7 +265,7 @@ body {
 }
 
 #album #album-tracks .track:hover {
-  background: #333;
+  background: #222;
 }
 
 #album #album-tracks .track-number {
@@ -205,15 +274,16 @@ body {
 }
 
 #album #album-tracks .title {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 #album #album-tracks .artist {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #999;
 }
 
 #album #album-tracks .playtime-string {
+  font-size: 0.8rem;
   color: #999;
 }
 
@@ -222,24 +292,92 @@ body {
 }
 
 #player .cover {
+  padding: 8px;
   border-radius: 12px;
   width: 80px;
   height: 80px;
 }
 
 #player #info .title {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
 }
 
 #player #info .artist {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   color: #999;
 }
 
-#player #controls .btn {
-  font-size: 2.5rem;
+#player .btn {
+  font-size: 2.1rem;
   color: #999;
 }
-#player #controls .btn:hover {
+
+#player #play {
+  font-size: 3rem;
+}
+
+#player #show-playlist {
+  font-size: 1.5rem;
+}
+
+#player .btn:hover {
   color: #fff;
 }
+
+#player #playback .progress {
+  background: #222;
+  height: 12px;
+}
+
+#player #playback .progress .progress-bar {
+  background: #b30404;
+  background: linear-gradient(90deg, rgba(179, 4, 4, 1) 41%, rgba(255, 0, 170, 1) 100%);
+}
+
+#artist .hero .artist {
+  font-size: 2.5rem;
+  font-weight: 900;
+}
+
+
+/** SM */
+@media (min-width: 576px) {}
+
+/** MD */
+@media (min-width: 768px) {
+  .hero .cover {
+    width: 170px;
+    height: 170px;
+  }
+
+  #view .hero {
+    min-height: 260px;
+  }
+
+  #album .hero .album {
+    font-size: 2.5rem;
+  }
+
+  #album .hero .artist {
+    font-size: 1.8rem;
+  }
+
+  #album #album-tracks .track-number {
+    font-weight: 800;
+  }
+
+  #album #album-tracks .title {
+    font-size: 1.1rem;
+  }
+
+  #album #album-tracks .artist {
+    font-size: 0.9rem;
+  }
+}
+
+/** LG */
+@media (min-width: 992px) {}
+
+@media (min-width: 1200px) {}
+
+@media (min-width: 1400px) {}

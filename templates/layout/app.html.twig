@@ -1,5 +1,9 @@
 {% extends "layout/base.html.twig" %}
 
+{% block head_js %}
+<script src="/js/app.js"></script>
+{% endblock %}
+
 {% block head_css %}
   <link rel="stylesheet" href="/css/app.css">
   <link rel="stylesheet" href="/css/bootstrap-icons/bootstrap-icons.min.css">
@@ -13,13 +17,15 @@
           <div class="p-3">
             <h1><i class="bi bi-music-note-beamed pe-1"></i> Soprano</h1>
 
-            <nav class="nav flex-column mt-4">
+            <nav class="nav flex-column mt-4" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
               <a class="nav-link" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a>
+              <!--
               <a class="nav-link" href="{{ uri("music.index") }}"><i class="bi bi-music-note pe-1"></i> Music</a>
               <a class="nav-link" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a>
               <a class="nav-link" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a>
               <a class="nav-link" href="{{ uri("tv.index") }}"><i class="bi bi-tv pe-1"></i> TV</a>
               <a class="nav-link" href="{{ uri("movies.index") }}"><i class="bi bi-film pe-1"></i> Movies</a>
+              -->
             </nav>
 
             <h2 class="mt-4">Playlists</h2>
@@ -40,7 +46,7 @@
               <img id="profile-icon" src="/images/profile.png" />
             </button>
             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-button">
-              <li><a class="dropdown-item" href="#">N/A</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-in-right me-1"></i> Sign In</a></li>
             </ul>
           </div>
         </div>
@@ -52,31 +58,11 @@
           </section>
           <section id="playlist" class="d-none">
             <div class="content">
-              <div class="p-2">
-              </div>
             </div>
           </section>
         </div>
       </div>
     </div>
-    <section id="player" class="d-flex">
-      <div id="album-cover" class="d-flex align-items-center justify-content-center">
-        <img src="/images/no-album-art.png" class="cover ms-2 me-4">
-      </div>
-      <div id="info" class="d-flex flex-column justify-content-center d-none d-md-flex">
-        <span class="title">N/A</span>
-        <span class="artist">N/A</span>
-      </div>
-      <div id="controls" class="d-flex justify-content-center align-items-center">
-        <button id="prev" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
-        <button id="play" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
-        <button id="next" class="btn border-0 shadow-none"><i class="bi bi-skip-end-circle"></i></button>
-      </div>
-      <div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-4">
-        <div class="progress w-100">
-          <div class="progress-bar" role="progressbar" style="width: 35%" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-      </div>
-    </section>
+    <section id="player" class="d-flex" hx-get="{{ uri("player.load") }}" hx-trigger="load, loadPlayer from:body"></section>
   </main>
 {% endblock %}

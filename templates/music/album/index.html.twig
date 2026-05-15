@@ -1,31 +1,31 @@
 {% extends "layout/app.html.twig" %}
 
-{% block title %}Soprano - {{album}} {% endblock %}
+{% block title %}Soprano - {{ album }} {% endblock %}
 
 {% block view %}
 <section id="album" class="h-100">
   <div class="hero d-flex align-items-center p-3"{% if dominant %} style="background: linear-gradient(180deg, rgba({{ dominant[0] }}, {{ dominant[1] }}, {{ dominant[2] }}, 0.7) 0%, rgba(0, 0, 0, 0) 100%);"{% endif %}>
     <div class="d-flex align-items-center">
-      <img class="cover me-3" src="{{ cover }}" />
+      <img class="cover me-4" src="{{ cover }}" />
       <div class="d-flex flex-column">
-        <h1 class="album">{{album}}</h1>
-        <h3 class="artist">{{artist}}</h3>
+        <h1 class="album">{{ album }}</h1>
+        <a class="text-decoration-none" href="{{ uri("music.artist", [hash]) }}"><h3 class="artist">{{ artist }}</h3></a>
       </div>
     </div>
   </div>
   <div id="actions" class="d-flex">
-    <button id="play" class="btn shadow-none border-0"><i class="bi bi-play-circle-fill"></i></button>
+    <button id="playAlbum" class="btn shadow-none border-0"><i class="bi bi-play-circle-fill"></i></button>
     <button id="share" class="btn shadow-none border-0"><i class="bi bi-share-fill"></i></button>
   </div>
   <div id="album-tracks">
     {% for track in tracks %}
-    <div class="track d-flex align-items-center">
+    <div class="track d-flex align-items-center" hx-get="{{ uri("music.play", [track.hash]) }}" hx-swap="none">
       <span class="track-number p-4">{{ track.track_number }}</span>
       <div class="d-flex flex-column flex-grow-1">
         <span class="title">{{ track.title}}</span>
-        <span class="artist">{{ track.artist}}</span>
+        <div><a class="text-decoration-none" href="{{ uri("music.artist", [hash]) }}"><span class="artist">{{ track.artist}}</span></a></div>
       </div>
-      <span class="playtime-string p-4">{{ track.playtime_string }}</span>
+      <span class="playtime-string pe-2">{{ track.playtime_string }}</span>
     </div>
     {% endfor %}
   </div>
@@ -34,23 +34,6 @@
   (function () {
     const btn = document.getElementById('share');
     if (!btn) return;
-
-    async function copyToClipboard(text) {
-      if (navigator.clipboard && window.isSecureContext) {
-        return navigator.clipboard.writeText(text);
-      }
-      // Fallback for non-secure contexts (e.g. HTTP on a LAN IP).
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.setAttribute('readonly', '');
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand('copy');
-      document.body.removeChild(ta);
-      if (!ok) throw new Error('execCommand copy failed');
-    }
 
     btn.addEventListener('click', async () => {
       const icon = btn.querySelector('i');

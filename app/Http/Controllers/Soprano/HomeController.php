@@ -8,7 +8,7 @@ use Echo\Framework\Routing\Route\Get;
 
 class HomeController extends Controller
 {
-    public function __construct(private HomeService $service) {}
+    public function __construct(private HomeService $home) {}
 
     #[Get("/", "home.root")] 
     public function index(): void
@@ -26,7 +26,7 @@ class HomeController extends Controller
     public function recentlyAdded(): string
     {
         return $this->render("home/recently-added.html.twig", [
-            "items" => $this->service->recentlyAdded(),
+            "items" => $this->home->recentlyAdded(),
         ]);
     }
 }
