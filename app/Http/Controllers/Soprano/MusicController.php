@@ -16,6 +16,12 @@ class MusicController extends Controller
         private CoverArtService $coverArt,
     ) {}
 
+    #[Get("/music", "music.index")]
+    public function index(): string
+    {
+        return $this->render("music/index.html.twig", []);
+    }
+
     #[Get("/music/album/{hash}", "music.album")]
     public function album(string $hash): string
     {
