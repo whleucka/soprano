@@ -14,7 +14,7 @@
     </div>
   </div>
   <div id="actions" class="d-flex">
-    <a id="playAlbum" class="btn shadow-none border-0" hx-boost="true" href="{{ uri("music.play-album", [hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
+    <a id="playAlbum" class="btn shadow-none border-0" hx-boost="true" hx-push-url="false" href="{{ uri("music.play-album", [hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
     <button id="share" class="btn shadow-none border-0"><i class="bi bi-share-fill"></i></button>
   </div>
   <div id="album-tracks">

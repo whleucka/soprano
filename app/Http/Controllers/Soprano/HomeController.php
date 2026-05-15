@@ -10,13 +10,13 @@ class HomeController extends Controller
 {
     public function __construct(private HomeService $home) {}
 
-    #[Get("/", "home.root")] 
+    #[Get("/", "home.root")]
     public function index(): void
     {
         redirect("/home")->send();
     }
 
-    #[Get("/home", "home.index")] 
+    #[Get("/home", "home.index")]
     public function home(): string
     {
         return $this->render("home/index.html.twig");
