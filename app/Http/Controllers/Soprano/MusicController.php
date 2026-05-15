@@ -61,11 +61,11 @@ class MusicController extends Controller
     {
         $track = $this->music->getTrack($hash);
 
-        if (!$track || !is_file($track->pathname) || !is_readable($track->pathname)) {
-            return $this->pageNotFound();
+        if ($track && is_file($track->pathname) && is_readable($track->pathname)) {
+            return new StreamResponse($track->pathname);
         }
 
-        return new StreamResponse($track->pathname);
+        return $this->pageNotFound();
     }
 
     #[Get("/music/play/{hash}", "music.play")]
