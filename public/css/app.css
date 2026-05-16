@@ -87,26 +87,26 @@ body {
   overflow: hidden;
 }
 
-#app-main {
+#primary-container {
   overflow: hidden;
 }
 
-#main-view {
+#main-content {
   overflow: hidden;
 }
 
-#top-search {
+#top .content {
   height: 60px !important;
   min-height: 60px !important;
 }
 
-#top-search input,
-#top-search button {
+#top .content input,
+#top .content button {
   background: #121212;
   color: #fff;
 }
 
-#top-search input::placeholder {
+#top .content input::placeholder {
   color: #555;
 }
 
@@ -182,22 +182,29 @@ body {
   min-width: 400px;
 }
 
-#playlist #now-playing img {
+#playlist #now-playing #cover {
   border-radius: 12px;
-  width: 90%;
+  width: 100%;
 }
 
-#now-playing > div.d-flex.flex-column.p-3 > h1 {
+#playlist #now-playing #title {
   font-weight: bold;
-  font-size: 2.0rem;
+  font-size: 2rem;
 }
 
-#playlist #now-playing h3 {
+#playlist #now-playing #artist a {
+  color: #999;
+  font-size: 0.9rem;
+}
+#playlist #now-playing #album a {
   color: #999;
   font-size: 0.9rem;
 }
 #playlist #tracks .title {
   font-size: 1rem;
+}
+#playlist #tracks .title.active {
+  font-weight: 800;
 }
 
 #playlist #tracks .artist {
@@ -213,8 +220,7 @@ body {
 #playlist #tracks .track.active {
   background: #222;
 }
-
-#album #tracks .playtime-string {
+#playlist #tracks .playtime-string {
   font-size: 0.8rem;
   color: #999;
 }
@@ -417,11 +423,11 @@ body {
   }
 
   #album .hero .album {
-    font-size: 2.5rem;
+    font-size: 3rem;
   }
 
   #album .hero .artist {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
 
   #album #tracks .track-number {
