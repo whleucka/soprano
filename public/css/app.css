@@ -167,6 +167,22 @@ body {
   overflow: hidden;
 }
 
+#home .hero {
+  background: linear-gradient(180deg,rgba(60, 140, 22, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+#music .hero {
+  background: linear-gradient(180deg,rgba(23, 96, 255, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+#radio .hero {
+  background: linear-gradient(180deg,rgba(255, 157, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+#podcasts .hero {
+  background: linear-gradient(180deg,rgba(255, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
 #view .content {
   overflow: hidden;
 }
