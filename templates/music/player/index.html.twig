@@ -26,31 +26,38 @@ var audio = document.getElementById("audio");
 var playBtn = document.getElementById("play");
 var playlist = document.getElementById("playlist");
 
-progressContainer.addEventListener('click', (e) => {
-    const rect = progressContainer.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percent = clickX / rect.width;
-    media.currentTime = percent * media.duration;
-    });
+(function () {
+  // Focus on elements when track changes
+  document.getElementById("album-{{ hash }}")?.focus();
 
-audio.onloadedmetadata = function() {
-  play();
-}
+  progressContainer.addEventListener('click', (e) => {
+      const rect = progressContainer.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const percent = clickX / rect.width;
+      media.currentTime = percent * media.duration;
+      });
 
-audio.onpause = function () {
-  progressBar.classList.add("disabled");
-  playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
-}
+  audio.onloadedmetadata = function() {
+    play();
+  }
 
-audio.onplaying = function () {
-  progressBar.classList.remove("disabled");
-  playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
-}
+  audio.onpause = function () {
+    progressBar.classList.add("disabled");
+    playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
+  }
 
-audio.onended = function () {
-  progressBar.style.width = 0; 
-  next();
-}
+  audio.onplaying = function () {
+    progressBar.classList.remove("disabled");
+    playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
+  }
+
+  audio.onended = function () {
+    progressBar.style.width = 0; 
+    next();
+  }
+
+  requestAnimationFrame(updateProgress);
+})();
 
 // Player controls
 function play() {
@@ -85,7 +92,8 @@ function updateProgress() {
 // Toggles the rhs playlist view
 function togglePlaylist() {
   playlist.classList.toggle("d-none");
+  if (!playlist.classList.contains("d-none")) {
+    window.scrollPlaylistToActive?.();
+  }
 }
-
-requestAnimationFrame(updateProgress);
 </script>

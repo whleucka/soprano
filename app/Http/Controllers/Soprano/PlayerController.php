@@ -13,12 +13,7 @@ class PlayerController extends Controller
     #[Get("/player/load", "player.load")]
     public function load()
     {
-        $player = $this->soprano->getPlayer();
-        return $this->render("music/player/index.html.twig", [
-            "title" => $player["title"] ?? 'N/A',
-            "artist" => $player["artist"] ?? 'N/A',
-            "cover" => $player["cover"] ?? '/images/no-album-art.png',
-            "src" => $player["src"] ?? '',
-        ]);
+        $player = $this->soprano->getPlayer() ?? [];
+        return $this->render("music/player/index.html.twig", $player);
     }
 }

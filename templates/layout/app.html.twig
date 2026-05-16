@@ -52,9 +52,8 @@
               {% block view %}{% endblock %}
             </div>
           </section>
-          <section id="playlist" class="d-none">
-            <div class="content">
-            </div>
+          <section id="playlist" class="d-none h-100">
+            <div class="content d-flex flex-column" hx-get="{{ uri("playlist.index") }}" hx-trigger="load, loadPlaylist from:body"></div>
           </section>
         </div>
       </div>

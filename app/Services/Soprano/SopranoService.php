@@ -6,15 +6,24 @@ class SopranoService
 {
     public function getPlayer()
     {
-        return session()->get("player");
+        return session()->get("player") ?? [
+            "hash" => '#',
+            "title" => 'N/A',
+            "artist" => 'N/A',
+            "album" => 'N/A',
+            "cover" => '/images/no-album-art.png',
+            "src" => '#',
+        ];
     }
 
-    public function setPlayer(string $title, string $artist, string $cover, string $src)
+    public function setPlayer(string $hash, string $title, string $artist, string $album, ?string $cover, string $src)
     {
         session()->set("player", [
+            "hash" => $hash,
             "title" => $title,
             "artist" => $artist,
-            "cover" => $cover,
+            "album" => $album,
+            "cover" => $cover ?? '/images/no-album-art.png',
             "src" => $src,
         ]);
 

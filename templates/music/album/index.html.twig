@@ -17,9 +17,9 @@
     <a id="playAlbum" class="btn shadow-none border-0" hx-boost="true" hx-push-url="false" href="{{ uri("music.play-album", [hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
     <button id="share" class="btn shadow-none border-0"><i class="bi bi-share-fill"></i></button>
   </div>
-  <div id="album-tracks" class="scrollable">
+  <div id="tracks" class="scrollable">
     {% for track in tracks %}
-    <div id="{{ track.hash }}" class="track d-flex align-items-center" hx-get="{{ uri("music.play-album-track", [track.hash, loop.index0]) }}" hx-swap="none">
+    <div id="album-{{ track.hash }}" tabindex="-1" class="track d-flex align-items-center shadow-none border-0" hx-get="{{ uri("music.play-album-track", [track.hash, loop.index0]) }}" hx-swap="none">
       <span class="track-number py-2 px-4">{{ track.track_number }}</span>
       <div class="d-flex flex-column flex-grow-1 truncate">
         <span class="title truncate">{{ track.title}}</span>
@@ -30,23 +30,23 @@
   </div>
 </section>
 <script>
-  (function () {
-    const btn = document.getElementById('share');
-    if (!btn) return;
+(function () {
+  const btn = document.getElementById('share');
+  if (!btn) return;
 
-    btn.addEventListener('click', async () => {
-      const icon = btn.querySelector('i');
-      const original = icon ? icon.className : null;
-      try {
-        await copyToClipboard(window.location.href);
-        if (icon) {
-          icon.className = 'bi bi-check2 active';
-          setTimeout(() => { icon.className = original; }, 1500);
-        }
-      } catch (err) {
-        console.error('Clipboard copy failed', err);
+  btn.addEventListener('click', async () => {
+    const icon = btn.querySelector('i');
+    const original = icon ? icon.className : null;
+    try {
+      await copyToClipboard(window.location.href);
+      if (icon) {
+        icon.className = 'bi bi-check2 active';
+        setTimeout(() => { icon.className = original; }, 1500);
       }
-    });
-  })();
+    } catch (err) {
+      console.error('Clipboard copy failed', err);
+    }
+  });
+})();
 </script>
 {% endblock %}

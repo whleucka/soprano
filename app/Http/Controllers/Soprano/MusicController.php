@@ -76,13 +76,14 @@ class MusicController extends Controller
         if ($track) {
             $src = uri("music.stream", $track->hash);
             error_log(print_r([
+                "Now Playing",
                 $track->meta()->title, 
                 $track->meta()->artist, 
                 $track->meta()->cover, 
                 $src
             ], true));
-            $this->soprano->setPlayer($track->meta()->title, $track->meta()->artist, $track->meta()->cover, $src);
-            $this->hxTrigger("loadPlayer");
+            $this->soprano->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
+            $this->hxTrigger("loadPlayer, loadPlaylist");
             return;
         }
 
@@ -103,6 +104,16 @@ class MusicController extends Controller
         }
 
         return $this->pageNotFound();
+    }
+
+    #[Get("/music/play-playlist-track/{index}", "music.play-playlist-track")]
+    public function playPlaylistTrack(int $index)
+    {
+        $playlist = $this->soprano->getPlaylist();
+        if (!empty($playlist['tracks'])) {
+            $this->soprano->setPlaylist($playlist['tracks'], $index);
+            return $this->play($playlist['tracks'][$index]['hash']);
+        }
     }
 
     #[Get("/music/play-album/{hash}", "music.play-album")]

@@ -182,6 +182,43 @@ body {
   min-width: 400px;
 }
 
+#playlist #now-playing img {
+  border-radius: 12px;
+  width: 90%;
+}
+
+#now-playing > div.d-flex.flex-column.p-3 > h1 {
+  font-weight: bold;
+  font-size: 2.0rem;
+}
+
+#playlist #now-playing h3 {
+  color: #999;
+  font-size: 0.9rem;
+}
+#playlist #tracks .title {
+  font-size: 1rem;
+}
+
+#playlist #tracks .artist {
+  font-size: 0.8rem;
+  color: #999;
+}
+#playlist #tracks .track {
+  cursor: pointer;
+}
+#playlist #tracks .track:hover {
+  background: #222;
+}
+#playlist #tracks .track.active {
+  background: #222;
+}
+
+#album #tracks .playtime-string {
+  font-size: 0.8rem;
+  color: #999;
+}
+
 #app .content {
   margin: 6px;
   background: #121212;
@@ -272,32 +309,38 @@ body {
   flex-direction: column;
 }
 
-#album #album-tracks {
+#album #tracks {
 }
 
-#album #album-tracks .track {
+#album #tracks .track {
   cursor: pointer;
 }
-
-#album #album-tracks .track:hover {
+#album #tracks .track:focus {
+  outline: none;
+}
+#album #tracks .track.active {
   background: #222;
 }
 
-#album #album-tracks .track-number {
+#album #tracks .track:hover {
+  background: #222;
+}
+
+#album #tracks .track-number {
   font-weight: 800;
   color: #999;
 }
 
-#album #album-tracks .title {
+#album #tracks .title {
   font-size: 1rem;
 }
 
-#album #album-tracks .artist {
+#album #tracks .artist {
   font-size: 0.8rem;
   color: #999;
 }
 
-#album #album-tracks .playtime-string {
+#album #tracks .playtime-string {
   font-size: 0.8rem;
   color: #999;
 }
@@ -381,15 +424,15 @@ body {
     font-size: 1.8rem;
   }
 
-  #album #album-tracks .track-number {
+  #album #tracks .track-number {
     font-weight: 800;
   }
 
-  #album #album-tracks .title {
+  #album #tracks .title {
     font-size: 1.1rem;
   }
 
-  #album #album-tracks .artist {
+  #album #tracks .artist {
     font-size: 0.9rem;
   }
 }
