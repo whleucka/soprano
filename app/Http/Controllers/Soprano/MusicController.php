@@ -83,7 +83,7 @@ class MusicController extends Controller
                 $src
             ], true));
             $this->soprano->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
-            $this->hxTrigger("loadPlayer, loadPlaylist");
+            $this->hxTrigger("loadPlayer");
             return;
         }
 
@@ -99,6 +99,7 @@ class MusicController extends Controller
             $tracks = $this->music->albumTracks($track->meta());
             if ($tracks) {
                 $this->soprano->setPlaylist($tracks, $index);
+                $this->hxTrigger("nowPlaying, playlistQueue");
                 return $this->play($tracks[$index]['hash']);
             }
         }
@@ -112,6 +113,7 @@ class MusicController extends Controller
         $playlist = $this->soprano->getPlaylist();
         if (!empty($playlist['tracks'])) {
             $this->soprano->setPlaylist($playlist['tracks'], $index);
+            $this->hxTrigger("nowPlaying");
             return $this->play($playlist['tracks'][$index]['hash']);
         }
     }
@@ -125,6 +127,7 @@ class MusicController extends Controller
             $tracks = $this->music->albumTracks($track->meta());
             if ($tracks) {
                 $this->soprano->setPlaylist($tracks);
+                $this->hxTrigger("loadPlaylist");
                 return $this->play($tracks[0]['hash']);
             }
         }

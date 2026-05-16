@@ -13,10 +13,23 @@ class PlaylistController extends Controller
     #[Get("/playlist", "playlist.index")]
     public function index(): string
     {
-        $playlist = $this->soprano->getPlaylist();
+        return $this->render("music/playlist/index.html.twig");
+    }
+
+    #[Get("/playlist/now-playing", "playlist.now-playing")]
+    public function nowPlaying(): string
+    {
         $player = $this->soprano->getPlayer();
-        return $this->render("music/playlist/index.html.twig", [
+        return $this->render("music/playlist/now-playing.html.twig", [
             "player" => $player,
+        ]);
+    }
+
+    #[Get("/playlist/queue", "playlist.queue")]
+    public function queue(): string
+    {
+        $playlist = $this->soprano->getPlaylist();
+        return $this->render("music/playlist/queue.html.twig", [
             "playlist" => $playlist, 
         ]);
     }

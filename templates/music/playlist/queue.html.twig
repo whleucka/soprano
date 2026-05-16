@@ -1,0 +1,15 @@
+<div id="tracks">
+  {% if playlist.tracks %}
+    {% for track in playlist.tracks %}
+    <div id="playlist-{{ track.hash }}" tabindex="-1" class="track py-2 {% if player.hash == track.hash %}active{% endif %} d-flex align-items-center shadow-none border-0" hx-get="{{ uri("music.play-playlist-track", [loop.index0]) }}" hx-swap="none">
+      <div class="d-flex flex-column flex-grow-1 truncate">
+        <span class="title truncate pe-1 {% if player.hash == track.hash %}active{% endif %}">{{ track.title}}</span>
+        <span class="artist truncate pe-1 {% if player.hash == track.hash %}active{% endif %}">{{ track.artist}}</span>
+      </div>
+      <span class="playtime-string pe-2">{{ track.playtime_string }}</span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="lead">Playlist is empty</p>
+  {% endif %}
+</div>
