@@ -83,7 +83,7 @@ class MusicController extends Controller
                 $src
             ], true));
             $this->soprano->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
-            $this->hxTrigger("loadPlayer");
+            $this->hxTrigger("loadPlayer, nowPlaying");
             return;
         }
 
@@ -99,7 +99,7 @@ class MusicController extends Controller
             $tracks = $this->music->albumTracks($track->meta());
             if ($tracks) {
                 $this->soprano->setPlaylist($tracks, $index);
-                $this->hxTrigger("nowPlaying, playlistQueue");
+                $this->hxTrigger("playlistQueue");
                 return $this->play($tracks[$index]['hash']);
             }
         }
