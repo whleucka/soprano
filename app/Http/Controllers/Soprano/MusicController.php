@@ -25,10 +25,12 @@ class MusicController extends Controller
     public function album(string $hash): string
     {
         $track = $this->music->getTrack($hash);
+        $player = $this->soprano->getPlayer();
 
         if ($track) {
             $cover = $track->meta()->cover;
             return $this->render("music/album/index.html.twig", [
+                "player" => $player,
                 "hash" => $track->hash,
                 "cover" => $cover,
                 "album" => $track->meta()->album,
@@ -113,7 +115,6 @@ class MusicController extends Controller
         $playlist = $this->soprano->getPlaylist();
         if (!empty($playlist['tracks'])) {
             $this->soprano->setPlaylist($playlist['tracks'], $index);
-            $this->hxTrigger("nowPlaying");
             return $this->play($playlist['tracks'][$index]['hash']);
         }
     }
