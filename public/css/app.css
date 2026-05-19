@@ -257,12 +257,12 @@ body {
   color: #999;
 }
 
-#home #recently-added {
+#home #recently-added, #home #recently-played {
   overflow-x: auto;
   padding: 6px;
 }
 
-#home #recently-added .recent {
+#home .recent {
   margin-right: 15px;
   cursor: pointer;
   color: #bbb;
@@ -274,15 +274,15 @@ body {
 }
 
 
-#home #recently-added .cover {
+#home .cover {
   border-radius: 12px;
   width: 80px;
   height: 80px;
 }
 
-#home #recently-added .info {
+#home .info {
   font-size: 0.8rem;
-  width: 85px;
+  width: 80px;
 }
 
 .hero .cover {
@@ -454,6 +454,15 @@ body {
 
   #album #tracks .artist {
     font-size: 0.9rem;
+  }
+  #home .cover {
+    width: 120px;
+    height: 120px;
+  }
+
+  #home .info {
+    font-size: 1.0rem;
+    width: 120px;
   }
 }
 

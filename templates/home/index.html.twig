@@ -8,8 +8,27 @@
     <h1>Home</h1>
   </div>
   <div class="p-3">
-    <h2>Recently Added</h2>
-    <section id="recently-added" class="d-flex justify-content-start placeholder-glow pb-3" hx-get="{{ uri("home.recently-added") }}" hx-trigger="load">
+    <h2>Recently Played</h2>
+    <section id="recently-played" class="d-flex justify-content-start placeholder-glow pb-3" hx-get="{{ uri("home.recently-played") }}" hx-trigger="load, recentlyPlayed from:body">
+      <div class="d-flex flex-column recent">
+        <div class="cover placeholder"></div>
+      </div>
+      <div class="d-flex flex-column recent">
+        <div class="cover placeholder"></div>
+      </div>
+      <div class="d-flex flex-column recent">
+        <div class="cover placeholder"></div>
+      </div>
+      <div class="d-flex flex-column recent">
+        <div class="cover placeholder"></div>
+      </div>
+      <div class="d-flex flex-column recent">
+        <div class="cover placeholder"></div>
+      </div>
+    </section>
+
+    <h2 class="mt-2">Recently Added</h2>
+    <section id="recently-added" class="d-flex justify-content-start placeholder-glow pb-3" hx-get="{{ uri("home.recently-added") }}" hx-trigger="load, recentlyAdded from:body">
       <div class="d-flex flex-column recent">
         <div class="cover placeholder"></div>
       </div>

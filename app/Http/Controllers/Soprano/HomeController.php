@@ -29,4 +29,12 @@ class HomeController extends Controller
             "items" => $this->home->recentlyAdded(),
         ]);
     }
+
+    #[Get("/home/recently-played", "home.recently-played")]
+    public function recentlyplayed(): string
+    {
+        return $this->render("home/recently-played.html.twig", [
+            "items" => $this->home->recentlyPlayed(),
+        ]);
+    }
 }

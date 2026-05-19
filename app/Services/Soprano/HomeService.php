@@ -2,7 +2,7 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\TrackMeta;
+use App\Models\{TrackMeta,TrackPlay};
 
 class HomeService
 {
@@ -20,5 +20,21 @@ class HomeService
             "cover" => $item->cover,
             "year" => $item->year,
         ], $recently_added);
+    }
+
+    public function recentlyPlayed(int $album_count = 20): array
+    {
+        $dt = new \DateTime("- 1 DAY");
+        $recently_played = TrackPlay::where("created_at", ">", $dt->format("Y-m-d H:i:s"))
+            ->orderBy("id", "DESC")
+            ->get($album_count);
+        return array_map(fn($item) => [
+            "hash" => $item->track()->hash,
+            "title" => $item->track()->meta()->title,
+            "artist" => $item->track()->meta()->artist,
+            "album" => $item->track()->meta()->album,
+            "cover" => $item->track()->meta()->cover,
+            "year" => $item->track()->meta()->year,
+        ], $recently_played);
     }
 }

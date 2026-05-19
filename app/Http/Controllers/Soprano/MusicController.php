@@ -92,7 +92,7 @@ class MusicController extends Controller
                 "client_id" => client()?->id,
             ]);
             $this->soprano->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
-            $this->hxTrigger("loadPlayer, nowPlaying");
+            $this->hxTrigger("loadPlayer, nowPlaying, recentlyPlayed");
             return;
         }
 
