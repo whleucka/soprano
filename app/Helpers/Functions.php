@@ -4,6 +4,7 @@ use App\Application;
 use App\Models\User;
 use App\Http\Kernel as HttpKernel;
 use App\Console\Kernel as ConsoleKernel;
+use App\Models\Client;
 use Echo\Framework\Container\Container;
 use Echo\Framework\Database\Connection;
 use Echo\Framework\Database\QueryBuilder;
@@ -51,6 +52,24 @@ function user(): ?User
     if ($cached === null || $cachedUuid !== $uuid) {
         $cachedUuid = $uuid;
         $cached = User::where("uuid", $uuid)->first();
+    }
+
+    return $cached;
+}
+
+function client(): ?Client
+{
+    static $cached = null;
+    static $cachedUuid = null;
+
+    $uuid = session()->get("client_uuid");
+    if (!$uuid) {
+        return null;
+    }
+
+    if ($cached === null || $cachedUuid !== $uuid) {
+        $cachedUuid = $uuid;
+        $cached = Client::where("uuid", $uuid)->first();
     }
 
     return $cached;

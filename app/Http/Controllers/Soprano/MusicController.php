@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Welcome;
 
 use App\Http\StreamResponse;
+use App\Models\TrackPlay;
 use App\Services\Soprano\{CoverArtService,SopranoService,MusicService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
@@ -77,6 +78,7 @@ class MusicController extends Controller
 
         if ($track) {
             $src = uri("music.stream", $track->hash);
+            // Debug
             error_log(print_r([
                 "Now Playing",
                 $track->meta()->title, 
@@ -84,6 +86,11 @@ class MusicController extends Controller
                 $track->meta()->cover, 
                 $src
             ], true));
+            // Record track play
+            TrackPlay::create([
+                "track_id" => $track->id,
+                "client_id" => client()?->id,
+            ]);
             $this->soprano->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
             $this->hxTrigger("loadPlayer, nowPlaying");
             return;
