@@ -1,9 +1,9 @@
 <div id="album-cover" class="d-flex align-items-center justify-content-center d-none d-md-flex">
   <img src="{{ cover }}" class="cover ms-2 me-3">
 </div>
-<div id="info" class="d-flex flex-column justify-content-center d-none d-lg-flex">
+<div id="info" class="d-flex flex-column justify-content-center d-none d-lg-flex" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
   <span class="title">{{ title }}</span>
-  <span class="artist">{{ artist }}</span>
+  <span class="artist"><a class="text-decoration-none" href="{{ uri("music.artist", [hash]) }}">{{ artist }}</a></span>
 </div>
 <div id="controls" class="d-flex justify-content-center align-items-center">
   <button id="prev" onclick="prev()" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
@@ -46,7 +46,6 @@ async function updateActiveTrack() {
   // Focus on elements when track changes
   document.getElementById("album-{{ hash }}")?.focus();
   document.getElementById("playlist-{{ hash }}")?.focus();
-  document.getElementById("search-{{ hash }}")?.focus();
 
   progressContainer.addEventListener('click', (e) => {
       const rect = progressContainer.getBoundingClientRect();

@@ -131,7 +131,7 @@ class MusicController extends Controller
             $tracks = $this->music->albumTracks($track->meta());
             if ($tracks) {
                 $this->playlist->setPlaylist($tracks);
-                $this->hxTrigger("loadPlaylist");
+                $this->hxTrigger("nowPlaying, playlistQueue");
                 return $this->play($tracks[0]['hash']);
             }
         }

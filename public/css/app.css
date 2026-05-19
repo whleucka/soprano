@@ -320,7 +320,7 @@ body {
   font-size: 1.5rem;
 }
 
-#album #playAlbum {
+#album #play-album {
   font-size: 3rem;
 }
 
@@ -362,7 +362,7 @@ body {
 }
 
 #album #tracks .playtime-string {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: #999;
 }
 
@@ -378,11 +378,11 @@ body {
 }
 
 #player #info .title {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
-#player #info .artist {
-  font-size: 0.7rem;
+#player #info .artist a {
+  font-size: 0.8rem;
   color: #999;
 }
 
@@ -448,12 +448,17 @@ body {
 
 #search #tracks .cover {
   border-radius: 4px;
-  width: 40px;
-  height:40px;
+  width: 70px;
+  height: 70px;
 }
 
 #search #tracks .title {
   font-size: 1rem;
+}
+
+#search #tracks .album a {
+  font-size: 0.8rem;
+  color: #999;
 }
 
 #search #tracks .artist a {
@@ -462,7 +467,7 @@ body {
 }
 
 #search #tracks .playtime-string {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: #999;
 }
 
