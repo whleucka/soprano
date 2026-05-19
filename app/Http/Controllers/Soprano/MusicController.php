@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Welcome;
 
 use App\Http\StreamResponse;
 use App\Models\TrackPlay;
-use App\Services\Soprano\{CoverArtService,SopranoService,MusicService};
+use App\Services\Soprano\{CoverArtService,PlayerService,PlaylistService,MusicService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
 class MusicController extends Controller
 {
     public function __construct(
-        private SopranoService $soprano,
+        private PlayerService $player,
+        private PlaylistService $playlist,
         private MusicService $music,
         private CoverArtService $coverArt,
     ) {}
@@ -26,7 +27,7 @@ class MusicController extends Controller
     public function album(string $hash): string
     {
         $track = $this->music->getTrack($hash);
-        $player = $this->soprano->getPlayer();
+        $player = $this->player->getPlayer();
 
         if ($track) {
             $cover = $track->meta()->cover;
@@ -91,12 +92,10 @@ class MusicController extends Controller
                 "track_id" => $track->id,
                 "client_id" => client()?->id,
             ]);
-            $this->soprano->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
-            $this->hxTrigger("loadPlayer, nowPlaying, recentlyPlayed");
+            $this->player->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
+            $this->hxTrigger("loadPlayer, recentlyPlayed");
             return;
         }
-
-        return $this->pageNotFound();
     }
 
     #[Get("/music/play-album-track/{hash}/{index}", "music.play-album-track")]
@@ -107,21 +106,18 @@ class MusicController extends Controller
         if ($track) {
             $tracks = $this->music->albumTracks($track->meta());
             if ($tracks) {
-                $this->soprano->setPlaylist($tracks, $index);
-                $this->hxTrigger("playlistQueue");
                 return $this->play($tracks[$index]['hash']);
             }
         }
-
-        return $this->pageNotFound();
     }
 
     #[Get("/music/play-playlist-track/{index}", "music.play-playlist-track")]
     public function playPlaylistTrack(int $index)
     {
-        $playlist = $this->soprano->getPlaylist();
+        $playlist = $this->playlist->getPlaylist();
         if (!empty($playlist['tracks'])) {
-            $this->soprano->setPlaylist($playlist['tracks'], $index);
+            $this->playlist->setPlaylist($playlist['tracks'], $index);
+            $this->hxTrigger("nowPlaying");
             return $this->play($playlist['tracks'][$index]['hash']);
         }
     }
@@ -134,21 +130,20 @@ class MusicController extends Controller
         if ($track) {
             $tracks = $this->music->albumTracks($track->meta());
             if ($tracks) {
-                $this->soprano->setPlaylist($tracks);
+                $this->playlist->setPlaylist($tracks);
                 $this->hxTrigger("loadPlaylist");
                 return $this->play($tracks[0]['hash']);
             }
         }
-
-        return $this->pageNotFound();
     }
 
     #[Get("/music/next-track", "music.next-track")]
     public function nextTrack()
     {
-        $next_track = $this->soprano->changePlaylistTrack();
+        $next_track = $this->playlist->changePlaylistTrack();
 
         if ($next_track) {
+            $this->hxTrigger("nowPlaying");
             return $this->play($next_track['hash']); 
         }
     }
@@ -156,9 +151,10 @@ class MusicController extends Controller
     #[Get("/music/prev-track", "music.prev-track")]
     public function prevTrack()
     {
-        $prev_track = $this->soprano->changePlaylistTrack(false);
+        $prev_track = $this->playlist->changePlaylistTrack(false);
 
         if ($prev_track) {
+            $this->hxTrigger("nowPlaying");
             return $this->play($prev_track['hash']); 
         }
     }

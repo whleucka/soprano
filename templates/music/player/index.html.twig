@@ -38,6 +38,7 @@ async function updateActiveTrack() {
   await removeActiveTrack();
   document.getElementById("album-{{ hash }}")?.classList.add("active");
   document.getElementById("playlist-{{ hash }}")?.classList.add("active");
+  document.getElementById("search-{{ hash }}")?.classList.add("active");
 }
   
 
@@ -45,8 +46,7 @@ async function updateActiveTrack() {
   // Focus on elements when track changes
   document.getElementById("album-{{ hash }}")?.focus();
   document.getElementById("playlist-{{ hash }}")?.focus();
-
-  setTimeout(() => {updateActiveTrack()}, 100);
+  document.getElementById("search-{{ hash }}")?.focus();
 
   progressContainer.addEventListener('click', (e) => {
       const rect = progressContainer.getBoundingClientRect();
@@ -57,6 +57,10 @@ async function updateActiveTrack() {
 
   audio.onloadedmetadata = function() {
     play();
+  }
+
+  audio.onloadeddata = function () {
+    updateActiveTrack();
   }
 
   audio.onpause = function () {
@@ -111,7 +115,7 @@ function updateProgress() {
 function togglePlaylist() {
   playlist.classList.toggle("d-none");
   if (!playlist.classList.contains("d-none")) {
-    window.scrollPlaylistToActive?.();
+    document.getElementById("playlist-{{ hash }}")?.focus();
   }
 }
 </script>

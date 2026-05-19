@@ -30,6 +30,7 @@ class HomeService
             ->get($album_count);
         return array_map(fn($item) => [
             "hash" => $item->track()->hash,
+            "client" => $item->client()?->username,
             "title" => $item->track()->meta()->title,
             "artist" => $item->track()->meta()->artist,
             "album" => $item->track()->meta()->album,

@@ -171,6 +171,10 @@ body {
   background: linear-gradient(180deg,rgba(60, 140, 22, 1) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
+#search .hero {
+  background: linear-gradient(180deg,rgba(224, 66, 245) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
 #music .hero {
   background: linear-gradient(180deg,rgba(23, 96, 255, 1) 0%, rgba(0, 0, 0, 0) 100%);
 }
@@ -329,9 +333,6 @@ body {
   flex-direction: column;
 }
 
-#album #tracks {
-}
-
 #album #tracks .track {
   cursor: pointer;
 }
@@ -419,6 +420,50 @@ body {
 #artist .hero .artist {
   font-size: 2.5rem;
   font-weight: 900;
+}
+
+#search {
+  display: flex;
+  flex-direction: column;
+}
+
+#search #tracks .track {
+  cursor: pointer;
+}
+#search #tracks .track:focus {
+  outline: none;
+}
+#search #tracks .track.active {
+  background: #222;
+}
+
+#search #tracks .track:hover {
+  background: #222;
+}
+
+#search #tracks .track-number {
+  font-weight: 800;
+  color: #999;
+}
+
+#search #tracks .cover {
+  border-radius: 4px;
+  width: 40px;
+  height:40px;
+}
+
+#search #tracks .title {
+  font-size: 1rem;
+}
+
+#search #tracks .artist a {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+#search #tracks .playtime-string {
+  font-size: 0.8rem;
+  color: #999;
 }
 
 
