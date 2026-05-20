@@ -10,16 +10,17 @@
       <div class="d-flex flex-column">
         <h1 class="album">{{ album }}</h1>
         <a class="text-decoration-none" href="{{ uri("music.artist", [hash]) }}"><h3 class="artist">{{ artist }}</h3></a>
+        <h3 class="artist">{{ year }}</h3>
       </div>
     </div>
   </div>
   <div id="actions" class="d-flex">
-    <a id="play-album" class="btn shadow-none border-0" hx-boost="true" hx-push-url="false" href="{{ uri("music.play-album", [hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
+    <a id="play-album" class="btn shadow-none border-0" hx-boost="true" hx-push-url="false" href="{{ uri("player.play-album", [hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
     <button id="share" class="btn shadow-none border-0"><i class="bi bi-share-fill"></i></button>
   </div>
   <div id="tracks" class="scrollable">
     {% for track in tracks %}
-    <div id="album-{{ track.hash }}" tabindex="-1" class="track d-flex align-items-center shadow-none border-0 {% if track.hash == player.hash %}active{% endif %}" hx-get="{{ uri("music.play-album-track", [track.hash, loop.index0]) }}" hx-swap="none">
+    <div id="album-{{ track.hash }}" tabindex="-1" class="track d-flex align-items-center shadow-none border-0 {% if track.hash == player.hash %}active{% endif %}" hx-get="{{ uri("player.play-album-track", [track.hash, loop.index0]) }}" hx-swap="none">
       <span class="track-number py-2 px-4">{{ track.track_number }}</span>
       <div class="d-flex flex-column flex-grow-1 truncate">
         <span class="title truncate">{{ track.title}}</span>

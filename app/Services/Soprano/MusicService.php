@@ -2,7 +2,7 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\{Track, TrackMeta};
+use App\Models\{Track, TrackMeta, TrackPlay};
 
 class MusicService
 {
@@ -28,5 +28,14 @@ class MusicService
             "track_number" => $item->track_number,
             "playtime_string" => $item->playtime_string,
         ], $tracks);
+    }
+
+    public function trackPlay(int $track_id, ?int $client_id)
+    {
+        // Record track play
+        TrackPlay::create([
+            "track_id" => $track_id,
+            "client_id" => $client_id,
+        ]);
     }
 }

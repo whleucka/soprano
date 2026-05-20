@@ -20,7 +20,7 @@
           <div class="content d-flex align-items-center" hx-get="{{ uri("search.top") }}" hx-trigger="load, loadTop from:body"></div>
         </section>
         <div id="main-content" class="d-flex flex-grow-1">
-          <section id="view" class="flex-grow-1">
+          <section id="view" class="flex-grow-1" hx-history-elt>
             <div class="content">{% block view %}{% endblock %}</div>
           </section>
           <section id="playlist" class="d-none h-100">

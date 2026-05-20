@@ -15,9 +15,6 @@
     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
   </div>
 </div>
-<div id="actions" class="d-flex justify-content-center align-items-center d-none d-md-flex">
-  <button id="show-playlist" class="btn border-0 shadow-none" onclick="togglePlaylist()"><i class="bi bi-music-note-list"></i></button>
-</div>
 <audio id="audio" src="{{ src }}"></audio>
 <script>
 var progressBar = document.querySelector("#playback .progress .progress-bar");
@@ -92,12 +89,12 @@ function play() {
 // These next/prev handlers are for playlists
 function next() {
   // Try next track
-  htmx.ajax('GET', '{{ uri("music.next-track") }}', {swap: 'none'});
+  htmx.ajax('GET', '{{ uri("player.next-track") }}', {swap: 'none'});
 }
 
 function prev() {
   // Try prev track
-  htmx.ajax('GET', '{{ uri("music.prev-track") }}', {swap: 'none'});
+  htmx.ajax('GET', '{{ uri("player.prev-track") }}', {swap: 'none'});
 }
 
 // Progress bar stuff
@@ -108,13 +105,5 @@ function updateProgress() {
     progressBar.setAttribute('aria-valuenow', percent);
   }
   requestAnimationFrame(updateProgress);
-}
-
-// Toggles the rhs playlist view
-function togglePlaylist() {
-  playlist.classList.toggle("d-none");
-  if (!playlist.classList.contains("d-none")) {
-    document.getElementById("playlist-{{ hash }}")?.focus();
-  }
 }
 </script>

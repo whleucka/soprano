@@ -16,7 +16,7 @@
   <div id="tracks" class="scrollable">
     {% if search.tracks %}
       {% for track in search.tracks %}
-      <div id="search-{{ track.hash }}" tabindex="-1" class="track py-2 px-1 {% if player.hash == track.hash %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0" hx-get="{{ uri("music.play", [track.hash]) }}" hx-swap="none">
+      <div id="search-{{ track.hash }}" tabindex="-1" class="track py-2 px-1 {% if player.hash == track.hash %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
         <img title="{{ track.album }}" class="cover me-2" src="{{ track.cover }}" />
         <div class="d-flex flex-column flex-grow-1 truncate" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
           <span title="{{ track.title }}" class="title truncate {% if player.hash == track.hash %}active{% endif %}">{{ track.title}}</span>

@@ -110,6 +110,11 @@ body {
   color: #555;
 }
 
+#top #profile-icon {
+  width: 22px;
+  height: 22px;
+}
+
 #menu-button {
   background: none !important;
 }
@@ -209,7 +214,7 @@ body {
 
 #playlist #now-playing #title {
   font-weight: bold;
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 
 #playlist #now-playing #artist a {
@@ -258,7 +263,7 @@ body {
 
 #home h2 {
   font-weight: 800;
-  color: #999;
+  color: #eee;
 }
 
 #home #recently-added, #home #recently-played {
@@ -429,6 +434,7 @@ body {
 
 #search #tracks .track {
   cursor: pointer;
+  line-height: 18px;
 }
 #search #tracks .track:focus {
   outline: none;
@@ -447,13 +453,13 @@ body {
 }
 
 #search #tracks .cover {
-  border-radius: 4px;
-  width: 70px;
-  height: 70px;
+  border-radius: 12px;
+  width: 60px;
+  height: 60px;
 }
 
 #search #tracks .title {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 #search #tracks .album a {
@@ -473,7 +479,12 @@ body {
 
 
 /** SM */
-@media (min-width: 576px) {}
+@media (min-width: 576px) {
+  #playlist {
+    width: 320px;
+    min-width: 320px;
+  }
+}
 
 /** MD */
 @media (min-width: 768px) {
@@ -517,8 +528,11 @@ body {
 }
 
 /** LG */
-@media (min-width: 992px) {}
+@media (min-width: 992px) {
+}
 
-@media (min-width: 1200px) {}
+@media (min-width: 1200px) {
+}
 
-@media (min-width: 1400px) {}
+@media (min-width: 1400px) {
+}

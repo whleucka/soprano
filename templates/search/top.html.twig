@@ -1,17 +1,23 @@
 <form class="w-100" hx-get="{{ uri("search.index") }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-push-url="true">
   <div class="input-group">
     <input type="text" class="form-control border-0 shadow-none p-3" name="term" value="{{ search.term }}" placeholder="What do you want to play?" />
-    <button type="submit" class="btn border-0"><i class='bi bi-search'></i></button>
     {% if search.term %}
-    <button type="button" class="btn border-0" hx-get="{{ uri('search.clear') }}"><i class='bi bi-trash'></i></button>
+      <button type="button" class="btn border-0" hx-get="{{ uri('search.clear') }}"><i class='bi bi-trash'></i></button>
     {% endif %}
   </div>
 </form>
 <div class="dropdown ms-1">
   <button class="btn dropdown-toggle border-0 shadow-none" type="button" id="menu-button" data-bs-toggle="dropdown" aria-expanded="false">
-    <img id="profile-icon" src="/images/profile.png" />
+    <i class="bi bi-person-circle"></i>
   </button>
-  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-button">
-    <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-in-right me-1"></i> Sign In</a></li>
+  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-button" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+    <li class="d-block"><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-in-right me-1"></i> Sign In</a></li>
+    <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a></li>
+    <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("search.index") }}"><i class="bi bi-search pe-1"></i> Search</a></li>
+    <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a></li>
+    <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a></li>
   </ul>
+</div>
+<div class="d-flex justify-content-center align-items-center">
+  <button id="show-playlist" class="btn border-0 shadow-none" onclick="togglePlaylist()"><i class="bi bi-music-note-list"></i></button>
 </div>

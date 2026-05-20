@@ -9,6 +9,15 @@ document.addEventListener('htmx:afterRequest', () => {
   document.querySelector('.hx-indicator')?.classList.remove('htmx-request');
 });
 
+
+// Toggles the rhs playlist view
+function togglePlaylist() {
+  playlist.classList.toggle("d-none");
+  if (!playlist.classList.contains("d-none")) {
+    document.getElementById("playlist-{{ hash }}")?.focus();
+  }
+}
+
 async function copyToClipboard(text) {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(text);
