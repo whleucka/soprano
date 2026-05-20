@@ -267,7 +267,7 @@ body {
   color: #eee;
 }
 
-#home #recently-added, #home #recently-played, #home #top-played {
+#home #recently-added, #home #recently-played, #home #top-played, #artist #discography {
   overflow-x: auto;
   padding: 6px;
 }
@@ -385,6 +385,7 @@ body {
 }
 
 #album #tracks .track-number {
+  text-align: right;
   font-weight: 800;
   color: #999;
 }
@@ -470,6 +471,8 @@ body {
 }
 
 #artist #top-tracks .rank {
+  text-align: right;
+  width: 20px;
   color: #bbb !important;
 }
 
@@ -581,6 +584,7 @@ body {
   }
 
   #album #tracks .track-number {
+    width: 60px;
     font-weight: 800;
   }
 

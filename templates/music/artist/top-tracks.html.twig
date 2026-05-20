@@ -1,10 +1,10 @@
 {% if items %}
   <ol class="top-tracks list-unstyled m-0">
     {% for item in items %}
-      <li class="top-track d-flex align-items-center py-1">
+      <li class="top-track d-flex align-items-center mb-1">
         <span class="rank text-muted me-3">{{ loop.index }}</span>
         <img class="cover me-3" src="{{ item.cover }}" alt="{{ item.album }}" />
-        <div class="d-flex flex-column flex-grow-1 min-width-0">
+        <div class="d-flex flex-column flex-grow-1 min-width-0 truncate">
           <span title="{{ item.title }}" class="truncate title fw-bold">{{ item.title }}</span>
           <span title="{{ item.album }}" class="truncate album text-muted small"><a hx-boost="true" class="text-decoration-none" href="{{ uri("music.album", [item.hash]) }}">{{ item.album }}</a></span>
         </div>
