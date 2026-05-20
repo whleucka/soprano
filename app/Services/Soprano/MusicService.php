@@ -38,4 +38,59 @@ class MusicService
             "client_id" => $client_id,
         ]);
     }
+
+    public function discography(string $artist, int $limit = 20): array
+    {
+        $rows = TrackMeta::where("artist", $artist)
+            ->select(["album", "MIN(id) as first_id", "MAX(year) as year"])
+            ->groupBy("album")
+            ->orderBy("year", "DESC")
+            ->getRaw($limit);
+
+        return array_map(function ($row) {
+            $meta = TrackMeta::find($row['first_id']);
+            $track = $meta->track();
+            return [
+                "hash" => $track->hash,
+                "title" => $meta->album,
+                "artist" => $meta->artist,
+                "album" => $meta->album,
+                "cover" => $meta->cover,
+                "year" => $row['year'],
+            ];
+        }, $rows);
+    }
+
+    public function topTracksByArtist(string $artist, int $limit = 10): array
+    {
+        $metaRows = TrackMeta::where("artist", $artist)
+            ->select(["track_id"])
+            ->getRaw();
+        $ids = array_column($metaRows, 'track_id');
+        if (empty($ids)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $rows = TrackPlay::where("id", ">", 0)
+            ->whereRaw("track_id IN ($placeholders)", $ids)
+            ->select(["track_id", "COUNT(*) as plays"])
+            ->groupBy("track_id")
+            ->orderBy("plays", "DESC")
+            ->getRaw($limit);
+
+        return array_map(function ($row) {
+            $track = Track::find($row['track_id']);
+            $meta = $track->meta();
+            return [
+                "hash" => $track->hash,
+                "title" => $meta->title,
+                "artist" => $meta->artist,
+                "album" => $meta->album,
+                "cover" => $meta->cover,
+                "year" => $meta->year,
+                "plays" => (int) $row['plays'],
+            ];
+        }, $rows);
+    }
 }

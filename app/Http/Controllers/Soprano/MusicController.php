@@ -25,6 +25,7 @@ class MusicController extends Controller
             return $this->render("music/album/index.html.twig", [
                 "player" => $player,
                 "hash" => $track->hash,
+                "year" => $track->meta()->year,
                 "cover" => $cover,
                 "album" => $track->meta()->album,
                 "artist" => $track->meta()->artist,
@@ -45,6 +46,34 @@ class MusicController extends Controller
             return $this->render("music/artist/index.html.twig", [
                 "hash" => $track->hash,
                 "artist" => $track->meta()->artist,
+            ]);
+        }
+
+        return $this->pageNotFound();
+    }
+
+    #[Get("/music/artist/{hash}/discography", "music.artist.discography")]
+    public function discography(string $hash): string
+    {
+        $track = $this->music->getTrack($hash);
+
+        if ($track) {
+            return $this->render("music/artist/discography.html.twig", [
+                "items" => $this->music->discography($track->meta()->artist),
+            ]);
+        }
+
+        return $this->pageNotFound();
+    }
+
+    #[Get("/music/artist/{hash}/top-tracks", "music.artist.top-tracks")]
+    public function topTracks(string $hash): string
+    {
+        $track = $this->music->getTrack($hash);
+
+        if ($track) {
+            return $this->render("music/artist/top-tracks.html.twig", [
+                "items" => $this->music->topTracksByArtist($track->meta()->artist),
             ]);
         }
 

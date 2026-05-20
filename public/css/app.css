@@ -337,6 +337,11 @@ body {
   color: #999;
 }
 
+#album .hero .year {
+  font-size: 0.9rem;
+  color: #999;
+}
+
 #album #play {
   font-size: 4rem;
 }
@@ -454,6 +459,41 @@ body {
   font-weight: 900;
 }
 
+#artist #top-tracks .cover {
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+}
+
+#artist .album a {
+  color: #999;
+}
+
+#artist #top-tracks .rank {
+  color: #bbb !important;
+}
+
+#artist #top-tracks .plays {
+  color: #bbb !important;
+}
+
+#artist .recent {
+  margin-right: 15px;
+  cursor: pointer;
+  color: #bbb;
+}
+
+#artist #discography .cover {
+  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+}
+
+#artist .info {
+  font-size: 0.8rem;
+  width: 80px;
+}
+
 #search {
   display: flex;
   flex-direction: column;
@@ -562,6 +602,16 @@ body {
   }
 
   #home .info {
+    font-size: 1.0rem;
+    width: 120px;
+  }
+
+  #artist #discography .cover {
+    width: 120px;
+    height: 120px;
+  }
+
+  #artist .info {
     font-size: 1.0rem;
     width: 120px;
   }
