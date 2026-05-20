@@ -127,8 +127,8 @@ body {
 }
 
 #sidebar {
-  width: 225px;
-  min-width: 225px;
+  width: 210px;
+  min-width: 210px;
 }
 
 #sidebar .nav-link {
@@ -156,7 +156,7 @@ body {
 }
 
 #view h1 {
-  font-size: 3.5rem;
+  font-size: 2.5rem;
   font-weight: 800;
 }
 
@@ -209,7 +209,8 @@ body {
 
 #playlist #now-playing #cover {
   border-radius: 12px;
-  width: 100%;
+  width: 90px;
+  height: 90px;
 }
 
 #playlist #now-playing #title {
@@ -495,6 +496,14 @@ body {
 
   #view .hero {
     min-height: 260px;
+  }
+
+  #view h1 {
+    font-size: 3.5rem;
+  }
+
+  #view h2 {
+    font-size: 1.5rem;
   }
 
   #album .hero .album {
