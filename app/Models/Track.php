@@ -12,4 +12,9 @@ class Track extends Model
     {
         return $this->hasOne(TrackMeta::class);
     }
+
+    public function plays()
+    {
+        return $this->hasMany(TrackPlay::class, "track_id", "id");
+    }
 }

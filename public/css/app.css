@@ -267,9 +267,35 @@ body {
   color: #eee;
 }
 
-#home #recently-added, #home #recently-played {
+#home #recently-added, #home #recently-played, #home #top-played {
   overflow-x: auto;
   padding: 6px;
+}
+
+#home .cover-wrap {
+  width: 80px;
+  height: 80px;
+}
+
+#home .play-count-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+#home .play-count-badge .bi {
+  font-size: 0.75rem;
 }
 
 #home .recent {
@@ -526,6 +552,11 @@ body {
     font-size: 0.9rem;
   }
   #home .cover {
+    width: 120px;
+    height: 120px;
+  }
+
+  #home .cover-wrap {
     width: 120px;
     height: 120px;
   }

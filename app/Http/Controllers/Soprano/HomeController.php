@@ -37,4 +37,12 @@ class HomeController extends Controller
             "items" => $this->home->recentlyPlayed(),
         ]);
     }
+
+    #[Get("/home/top-played", "home.top-played")]
+    public function topPlayed(): string
+    {
+        return $this->render("home/top-played.html.twig", [
+            "items" => $this->home->topPlayed(),
+        ]);
+    }
 }

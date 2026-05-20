@@ -2,7 +2,7 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\{TrackMeta,TrackPlay};
+use App\Models\{Track,TrackMeta,TrackPlay};
 
 class HomeService
 {
@@ -22,20 +22,51 @@ class HomeService
         ], $recently_added);
     }
 
-    public function recentlyPlayed(int $album_count = 20): array
+    public function recentlyPlayed(int $track_count = 20): array
     {
         $dt = new \DateTime("- 1 DAY");
-        $recently_played = TrackPlay::where("created_at", ">", $dt->format("Y-m-d H:i:s"))
-            ->orderBy("id", "DESC")
-            ->get($album_count);
-        return array_map(fn($item) => [
-            "hash" => $item->track()->hash,
-            "client" => $item->client()?->username,
-            "title" => $item->track()->meta()->title,
-            "artist" => $item->track()->meta()->artist,
-            "album" => $item->track()->meta()->album,
-            "cover" => $item->track()->meta()->cover,
-            "year" => $item->track()->meta()->year,
-        ], $recently_played);
+        $rows = TrackPlay::where("created_at", ">", $dt->format("Y-m-d H:i:s"))
+            ->select(["track_id", "MAX(id) as last_play_id"])
+            ->groupBy("track_id")
+            ->orderBy("last_play_id", "DESC")
+            ->getRaw($track_count);
+
+        return array_map(function ($row) {
+            $play = TrackPlay::find($row['last_play_id']);
+            $track = $play->track();
+            $meta = $track->meta();
+            return [
+                "hash" => $track->hash,
+                "client" => $play->client()?->username,
+                "title" => $meta->title,
+                "artist" => $meta->artist,
+                "album" => $meta->album,
+                "cover" => $meta->cover,
+                "year" => $meta->year,
+            ];
+        }, $rows);
+    }
+
+    public function topPlayed(int $track_count = 20): array
+    {
+        $rows = TrackPlay::where("id", ">", 0)
+            ->select(["track_id", "COUNT(*) as plays"])
+            ->groupBy("track_id")
+            ->orderBy("plays", "DESC")
+            ->getRaw($track_count);
+
+        return array_map(function ($row) {
+            $track = Track::find($row['track_id']);
+            $meta = $track->meta();
+            return [
+                "hash" => $track->hash,
+                "title" => $meta->title,
+                "artist" => $meta->artist,
+                "album" => $meta->album,
+                "cover" => $meta->cover,
+                "year" => $meta->year,
+                "plays" => (int) $row['plays'],
+            ];
+        }, $rows);
     }
 }
