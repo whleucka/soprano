@@ -100,7 +100,7 @@ class PlayerController extends Controller
             ], true));
             $this->music->trackPlay($track->id, client()?->id);
             $this->player->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
-            $this->hxTrigger("loadPlayer, recentlyPlayed");
+            $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed");
             return;
         }
     }
