@@ -6,7 +6,6 @@
         <span class="play-count-badge" title="{{ item.plays }} plays"><i class="bi bi-play-fill"></i>{{ item.plays }}</span>
       </div>
       <span title="{{ item.title }}" class="info truncate fw-bold mt-1">{{ item.title }}</span>
-      <span title="{{ item.album }}" class="info truncate"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("music.album", [item.hash]) }}">{{ item.album }}</a></span>
       <span title="{{ item.artist }}" class="info truncate"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("music.artist", [item.hash]) }}">{{ item.artist }}</a></span>
     </div>
   {% endfor %}
