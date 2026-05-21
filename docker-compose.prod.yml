@@ -21,6 +21,8 @@ services:
 
   nginx:
     restart: unless-stopped
+    volumes:
+      - $HOME/Music:/music:ro
     deploy:
       resources:
         limits:

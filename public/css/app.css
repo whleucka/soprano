@@ -12,6 +12,24 @@ body {
   overflow: hidden;
 }
 
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444; 
+  border-radius: 10px; /* Makes it look like a pill */
+  border: 2px solid #1e1e1e; /* Creates "padding" around the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
 .scrollable {
   flex: 1 1 auto;
   min-height: 0;

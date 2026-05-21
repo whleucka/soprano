@@ -6,7 +6,7 @@ use App\Models\{Track,TrackMeta,TrackPlay};
 
 class HomeService
 {
-    public function recentlyAdded(int $album_count = 20): array
+    public function recentlyAdded(int $album_count = 50): array
     {
         $recently_added = TrackMeta::where("id", ">", 0)
             ->groupBy("album")

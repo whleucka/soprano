@@ -6,7 +6,7 @@ use Echo\Framework\Http\Response;
 
 class StreamResponse extends Response
 {
-    private const CHUNK_SIZE = 8192;
+    private const INTERNAL_LOCATION = '/_protected/music/';
 
     private const MIME_MAP = [
         'mp3'  => 'audio/mpeg',
@@ -35,82 +35,21 @@ class StreamResponse extends Response
 
     public function send(): void
     {
-        $size  = filesize($this->filePath);
-        $start = 0;
-        $end   = $size - 1;
-        $status = 200;
-
-        $rangeHeader = $_SERVER['HTTP_RANGE'] ?? null;
-        if ($rangeHeader && preg_match('/bytes=(\d*)-(\d*)/', $rangeHeader, $m)) {
-            $reqStart = $m[1] !== '' ? (int)$m[1] : null;
-            $reqEnd   = $m[2] !== '' ? (int)$m[2] : null;
-
-            if ($reqStart === null && $reqEnd !== null) {
-                // Suffix range: last N bytes
-                $start = max(0, $size - $reqEnd);
-            } else {
-                $start = $reqStart ?? 0;
-                if ($reqEnd !== null) {
-                    $end = min($reqEnd, $size - 1);
-                }
-            }
-
-            if ($start > $end || $start >= $size) {
-                while (ob_get_level()) {
-                    ob_end_clean();
-                }
-                http_response_code(416);
-                header("Content-Range: bytes */$size");
-                return;
-            }
-            $status = 206;
-        }
-
-        $length = $end - $start + 1;
-
         while (ob_get_level()) {
             ob_end_clean();
         }
 
-        if (function_exists('session_write_close')) {
-            @session_write_close();
-        }
-
-        http_response_code($status);
-        header("Content-Type: {$this->contentType}");
-        header("Accept-Ranges: bytes");
-        header("Content-Length: {$length}");
-        header("Cache-Control: public, max-age=31536000");
-        header("X-Content-Type-Options: nosniff");
-        if ($status === 206) {
-            header("Content-Range: bytes {$start}-{$end}/{$size}");
-        }
-
-        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD') {
+        $musicRoot = rtrim((string)config('soprano.music_path'), '/');
+        if ($musicRoot === '' || !str_starts_with($this->filePath, $musicRoot . '/')) {
+            http_response_code(404);
             return;
         }
 
-        $handle = fopen($this->filePath, 'rb');
-        if ($handle === false) {
-            return;
-        }
+        $relative = substr($this->filePath, strlen($musicRoot) + 1);
+        $encoded  = implode('/', array_map('rawurlencode', explode('/', $relative)));
 
-        fseek($handle, $start);
-        $remaining = $length;
-
-        while ($remaining > 0 && !feof($handle)) {
-            if (connection_aborted()) {
-                break;
-            }
-            $chunk = fread($handle, (int)min(self::CHUNK_SIZE, $remaining));
-            if ($chunk === false) {
-                break;
-            }
-            echo $chunk;
-            flush();
-            $remaining -= strlen($chunk);
-        }
-
-        fclose($handle);
+        header('Content-Type: ' . $this->contentType);
+        header('Cache-Control: public, max-age=31536000');
+        header('X-Accel-Redirect: ' . self::INTERNAL_LOCATION . $encoded);
     }
 }

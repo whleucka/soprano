@@ -90,14 +90,6 @@ class PlayerController extends Controller
 
         if ($track) {
             $src = uri("player.stream", $track->hash);
-            // Debug
-            error_log(print_r([
-                "Now Playing",
-                $track->meta()->title, 
-                $track->meta()->artist, 
-                $track->meta()->cover, 
-                $src
-            ], true));
             $this->music->trackPlay($track->id, client()?->id);
             $this->player->setPlayer($track->hash, $track->meta()->title, $track->meta()->artist, $track->meta()->album, $track->meta()->cover, $src);
             $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topTracks");
