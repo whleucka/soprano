@@ -409,7 +409,8 @@ body {
 }
 
 #player #info {
-  width: 225px;
+  width: 300px;
+  min-width: 300px;
 }
 
 #player .cover {

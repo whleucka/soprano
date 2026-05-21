@@ -5,12 +5,12 @@
   <span class="title">{{ title }}</span>
   <span class="artist"><a class="text-reset text-decoration-none" href="{{ uri("music.artist", [hash]) }}">{{ artist }}</a></span>
 </div>
-<div id="controls" class="d-flex justify-content-center align-items-center">
+<div id="controls" class="d-flex justify-content-center align-items-center px-2">
   <button id="prev" onclick="prev()" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
   <button id="play" onclick="play()" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
   <button id="next" onclick="next()" class="btn border-0 shadow-none"><i class="bi bi-skip-end-circle"></i></button>
 </div>
-<div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-4">
+<div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-5">
   <div class="progress w-100" onclick="updateProgress()">
     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
   </div>
