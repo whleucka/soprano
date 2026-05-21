@@ -6,7 +6,7 @@ use Echo\Framework\Database\Model;
 
 class TrackPlay extends Model
 {
-    protected string $tableName = 'track_play';
+    protected string $tableName = 'track_plays';
 
     public function track(): ?Track
     {

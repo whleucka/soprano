@@ -4,7 +4,7 @@ use Echo\Framework\Database\{Schema, Blueprint, MigrationInterface};
 
 return new class implements MigrationInterface
 {
-    private string $table = "track_play";
+    private string $table = "track_plays";
 
     public function up(): string
     {
