@@ -19,6 +19,10 @@ body {
 }
 
 /** Utils */
+.lead {
+  color: #999;
+  text-decoration: italic;
+}
 .truncate {
   white-space: nowrap;
   overflow: hidden;
@@ -218,11 +222,11 @@ body {
   font-size: 1.5rem;
 }
 
-#playlist #now-playing #artist a {
+#playlist #now-playing #artist {
   color: #999;
   font-size: 0.9rem;
 }
-#playlist #now-playing #album a {
+#playlist #now-playing #album {
   color: #999;
   font-size: 0.9rem;
 }
@@ -327,17 +331,17 @@ body {
   height: 90px;
 }
 
-#album .hero .album {
+#album .hero #album {
   font-size: 1.8rem;
   font-weight: 900;
 }
 
-#album .hero .artist {
+#album .hero #artist {
   font-size: 1rem;
   color: #999;
 }
 
-#album .hero .year {
+#album .hero #year {
   font-size: 0.9rem;
   color: #999;
 }
@@ -354,7 +358,7 @@ body {
 
 #album .btn {
   color: #999;
-  font-size: 1.5rem;
+  font-size: 1.0rem;
 }
 
 #album #play-album {
@@ -419,7 +423,7 @@ body {
   font-size: 1rem;
 }
 
-#player #info .artist a {
+#player #info .artist {
   font-size: 0.8rem;
   color: #999;
 }
@@ -455,9 +459,13 @@ body {
   background: linear-gradient(90deg, rgba(50,50,50,0.5) 41%, rgba(125,125,125,0.5) 100%);
 }
 
-#artist .hero .artist {
+#artist .hero #artist {
   font-size: 2.5rem;
   font-weight: 900;
+}
+
+#artist #top-tracks .track {
+  cursor: pointer;
 }
 
 #artist #top-tracks .cover {
@@ -466,17 +474,23 @@ body {
   height: 40px;
 }
 
-#artist .album a {
+#artist .album {
   color: #999;
 }
 
-#artist #top-tracks .rank {
+#artist .top-tracks .rank {
   text-align: right;
   width: 20px;
   color: #bbb !important;
 }
 
-#artist #top-tracks .plays {
+#artist .top-tracks .album {
+  color: #bbb !important;
+}
+
+
+#artist .top-tracks .plays {
+  font-size: 0.9rem;
   color: #bbb !important;
 }
 
@@ -486,15 +500,22 @@ body {
   color: #bbb;
 }
 
+#artist .info {
+  width: 80px;
+}
+
 #artist #discography .cover {
   border-radius: 12px;
   width: 80px;
   height: 80px;
 }
-
-#artist .info {
+#artist #discography .album {
+  color: #bbb;
+  font-size: 1rem;
+}
+#artist #discography .year {
+  color: #bbb;
   font-size: 0.8rem;
-  width: 80px;
 }
 
 #search {
@@ -523,21 +544,21 @@ body {
 }
 
 #search #tracks .cover {
-  border-radius: 12px;
-  width: 60px;
-  height: 60px;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
 }
 
 #search #tracks .title {
   font-size: 0.9rem;
 }
 
-#search #tracks .album a {
+#search #tracks .album {
   font-size: 0.8rem;
   color: #999;
 }
 
-#search #tracks .artist a {
+#search #tracks .artist {
   font-size: 0.8rem;
   color: #999;
 }
@@ -575,12 +596,20 @@ body {
     font-size: 1.5rem;
   }
 
-  #album .hero .album {
+  #artist .hero #artist {
     font-size: 3rem;
   }
 
-  #album .hero .artist {
+  #album .hero #album {
+    font-size: 3rem;
+  }
+
+  #album .hero #artist {
     font-size: 1.5rem;
+  }
+
+  #album .hero #year {
+    font-size: 1rem;
   }
 
   #album #tracks .track-number {

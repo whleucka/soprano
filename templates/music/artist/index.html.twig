@@ -8,7 +8,7 @@
     <div class="d-flex align-items-center">
       <img class="cover me-3" src="/images/no-album-art.png" />
       <div class="d-flex flex-column">
-        <h1 class="artist">{{ artist }}</h1>
+        <h1 id="artist">{{ artist }}</h1>
       </div>
     </div>
   </div>
@@ -16,7 +16,7 @@
   </div>
   <div class="p-3 scrollable">
     <h2>Top Tracks</h2>
-    <section id="top-tracks" class="placeholder-glow pb-3" hx-get="{{ uri("music.artist.top-tracks", [hash]) }}" hx-trigger="load">
+    <section id="top-tracks" class="placeholder-glow pb-3" hx-get="{{ uri("music.artist.top-tracks", [hash]) }}" hx-trigger="load, topTracks">
       <ol class="top-tracks list-unstyled m-0">
         <li class="top-track d-flex align-items-center py-2">
           <span class="rank text-muted me-3">1</span>

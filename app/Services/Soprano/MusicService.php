@@ -56,7 +56,7 @@ class MusicService
                 "artist" => $meta->artist,
                 "album" => $meta->album,
                 "cover" => $meta->cover,
-                "year" => $row['year'],
+                "year" => $meta->year,
             ];
         }, $rows);
     }
