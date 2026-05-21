@@ -45,6 +45,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 /** HTMX */
@@ -349,17 +350,17 @@ body {
   height: 90px;
 }
 
-#album .hero #album {
+#album .hero .album {
   font-size: 1.8rem;
   font-weight: 900;
 }
 
-#album .hero #artist {
+#album .hero .artist {
   font-size: 1rem;
   color: #999;
 }
 
-#album .hero #year {
+#album .hero .year {
   font-size: 0.9rem;
   color: #999;
 }
@@ -478,7 +479,7 @@ body {
   background: linear-gradient(90deg, rgba(50,50,50,0.5) 41%, rgba(125,125,125,0.5) 100%);
 }
 
-#artist .hero #artist {
+#artist .hero .artist {
   font-size: 2.5rem;
   font-weight: 900;
 }
@@ -615,19 +616,19 @@ body {
     font-size: 1.5rem;
   }
 
-  #artist .hero #artist {
+  #artist .hero .artist {
     font-size: 3rem;
   }
 
-  #album .hero #album {
+  #album .hero .album {
     font-size: 3rem;
   }
 
-  #album .hero #artist {
+  #album .hero .artist {
     font-size: 1.5rem;
   }
 
-  #album .hero #year {
+  #album .hero .year {
     font-size: 1rem;
   }
 

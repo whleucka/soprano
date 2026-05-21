@@ -24,7 +24,7 @@ class SearchService
     public function search(string $term): array
     {
         $meta = new TrackMeta();
-        $tracks = $meta->whereRaw("artist LIKE ? OR album LIKE ? OR artist LIKE ?", [
+        $tracks = $meta->whereRaw("artist LIKE ? OR album LIKE ? OR title LIKE ?", [
             "%$term%",
             "%$term%",
             "%$term%",

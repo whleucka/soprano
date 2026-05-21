@@ -1,21 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Welcome;
+namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{PlayerService,PlaylistService};
+use App\Services\Soprano\{PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
 class PlaylistController extends Controller
 {
-    private array $player;
-    private array $playlist;
-
     public function __construct(
-        private PlaylistService $playlistService, 
-    ) {
-        $this->playlist = $this->playlistService->getPlaylist();
-    }
+        private PlaylistService $playlist,
+    ) {}
 
     #[Get("/playlist", "playlist.index")]
     public function index(): string
@@ -26,16 +21,17 @@ class PlaylistController extends Controller
     #[Get("/playlist/now-playing", "playlist.now-playing")]
     public function nowPlaying(): string
     {
-        $index = $this->playlist["index"];
+        $playlist = $this->playlist->getPlaylist();
+        $index = $playlist["index"];
         return $this->render("playlist/now-playing.html.twig", [
-            "current" => $this->playlist["tracks"][$index] ?? [
+            "current" => $playlist["tracks"][$index] ?? [
                 "hash" => "#",
                 "artist" => "N/A",
                 "cover" => "/images/no-album-art.png",
                 "album" => "N/A",
                 "title" => "N/A",
             ],
-            "playlist" => $this->playlist
+            "playlist" => $playlist
         ]);
     }
 
@@ -43,15 +39,14 @@ class PlaylistController extends Controller
     public function queue(): string
     {
         return $this->render("playlist/queue.html.twig", [
-            "playlist" => $this->playlist, 
+            "playlist" => $this->playlist->getPlaylist(),
         ]);
     }
 
     #[Get("/playlist/queue/clear", "playlist.queue-clear")]
     public function queue_clear(): void
     {
-        $this->playlistService->setPlaylist([], 0);
+        $this->playlist->setPlaylist([], 0);
         $this->hxTrigger("nowPlaying, playlistQueue");
     }
 }
-

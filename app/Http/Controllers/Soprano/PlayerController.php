@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Welcome;
+namespace App\Http\Controllers\Soprano;
 
 use App\Services\Soprano\{MusicService, PlaylistService,PlayerService};
 use Echo\Framework\Http\Controller;

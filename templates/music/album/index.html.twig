@@ -5,12 +5,12 @@
 {% block view %}
 <section id="album" class="h-100">
   <div class="hero d-flex align-items-center p-3"{% if dominant %} style="background: linear-gradient(180deg, rgba({{ dominant[0] }}, {{ dominant[1] }}, {{ dominant[2] }}, 0.7) 0%, rgba(0, 0, 0, 0) 100%);"{% endif %}>
-    <div class="d-flex align-items-center" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+    <div class="d-flex align-items-center truncate" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
       <img class="cover me-4" src="{{ cover }}" />
-      <div class="d-flex flex-column">
-        <h1 id="album">{{ album }}</h1>
-        <h3 id="artist"><a class="text-reset text-decoration-none" href="{{ uri("music.artist", [hash]) }}">{{ artist }}</a></h3>
-        <h3 id="year">{{ year }}</h3>
+      <div class="d-flex flex-column truncate">
+        <h1 title="{{ album }}" class="album truncate">{{ album }}</h1>
+        <h3 class="artist"><a class="text-reset text-decoration-none" href="{{ uri("music.artist", [hash]) }}">{{ artist }}</a></h3>
+        <h3 class="year">{{ year }}</h3>
       </div>
     </div>
   </div>
