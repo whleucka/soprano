@@ -1,9 +1,14 @@
 <div class="d-flex align-items-center p-2">
-  <img id="cover" src="{{ player.cover }}" />
+  <img id="cover" src="{{ current.cover }}" />
   <div class="d-flex flex-column truncate p-2 mt-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-    <h1 id="title" class="m-0 truncate">{{ player.title }}</h1>
-    <h3 id="artist" class="truncate"><a class="text-decoration-none" href="{{ uri("music.artist", [player.hash]) }}" hx-on::after-request="togglePlaylist()"><i class="bi bi-person pe-1"></i> {{ player.artist }}</a></h3>
-    <h3 id="album" class="truncate"><a class="text-decoration-none" href="{{ uri("music.album", [player.hash]) }}" hx-on::after-request="togglePlaylist()"><i class="bi bi-disc pe-1"></i> {{ player.album }}</a></h3>
+    <h1 id="title" class="m-0 truncate">{{ current.title }}</h1>
+    <h3 id="artist" class="truncate"><a class="text-decoration-none" href="{{ uri("music.artist", [current.hash]) }}" hx-on::after-request="togglePlaylist()"><i class="bi bi-person pe-1"></i> {{ current.artist }}</a></h3>
+    <h3 id="album" class="truncate"><a class="text-decoration-none" href="{{ uri("music.album", [current.hash]) }}" hx-on::after-request="togglePlaylist()"><i class="bi bi-disc pe-1"></i> {{ current.album }}</a></h3>
   </div>
+</div>
+<div class="d-flex px-2">
+  {% if playlist.tracks %}
+    <button class="btn btn-sm btn-danger" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash"></i></button>
+  {% endif %}
 </div>
 <hr>

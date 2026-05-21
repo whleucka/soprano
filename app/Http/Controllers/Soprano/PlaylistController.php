@@ -8,10 +8,14 @@ use Echo\Framework\Routing\Route\Get;
 
 class PlaylistController extends Controller
 {
+    private array $player;
+    private array $playlist;
+
     public function __construct(
-        private PlaylistService $playlist, 
-        private PlayerService $player
-    ) {}
+        private PlaylistService $playlistService, 
+    ) {
+        $this->playlist = $this->playlistService->getPlaylist();
+    }
 
     #[Get("/playlist", "playlist.index")]
     public function index(): string
@@ -22,19 +26,32 @@ class PlaylistController extends Controller
     #[Get("/playlist/now-playing", "playlist.now-playing")]
     public function nowPlaying(): string
     {
-        $player = $this->player->getPlayer();
+        $index = $this->playlist["index"];
         return $this->render("playlist/now-playing.html.twig", [
-            "player" => $player,
+            "current" => $this->playlist["tracks"][$index] ?? [
+                "hash" => "#",
+                "artist" => "N/A",
+                "cover" => "/images/no-album-art.png",
+                "album" => "N/A",
+                "title" => "N/A",
+            ],
+            "playlist" => $this->playlist
         ]);
     }
 
     #[Get("/playlist/queue", "playlist.queue")]
     public function queue(): string
     {
-        $playlist = $this->playlist->getPlaylist();
         return $this->render("playlist/queue.html.twig", [
-            "playlist" => $playlist, 
+            "playlist" => $this->playlist, 
         ]);
+    }
+
+    #[Get("/playlist/queue/clear", "playlist.queue-clear")]
+    public function queue_clear(): void
+    {
+        $this->playlistService->setPlaylist([], 0);
+        $this->hxTrigger("nowPlaying, playlistQueue");
     }
 }
 
