@@ -39,7 +39,7 @@
         "symfony/string": "^7.0",
         "phpmailer/phpmailer": "dev-master",
         "geoip2/geoip2": "dev-main",
-        "james-heinrich/getid3": "2.0.x-dev"
+        "james-heinrich/getid3": "2.0.x-dev",
         "twig/string-extra": "4.x-dev"
     },
     "require-dev": {
