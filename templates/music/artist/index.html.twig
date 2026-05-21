@@ -16,7 +16,7 @@
   </div>
   <div class="p-3 scrollable">
     <h2>Top Tracks</h2>
-    <section id="top-tracks" class="placeholder-glow pb-3" hx-get="{{ uri("music.artist.top-tracks", [hash]) }}" hx-trigger="load, topTracks">
+    <section id="top-tracks" class="placeholder-glow pb-3" hx-get="{{ uri("music.artist.top-tracks", [hash]) }}" hx-trigger="load, topTracks from:body">
       <ol class="top-tracks list-unstyled m-0">
         <li class="top-track d-flex align-items-center py-2">
           <span class="rank text-muted me-3">1</span>

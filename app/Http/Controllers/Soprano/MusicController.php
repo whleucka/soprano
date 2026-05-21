@@ -59,7 +59,7 @@ class MusicController extends Controller
 
         if ($track) {
             return $this->render("music/artist/discography.html.twig", [
-                "items" => $this->music->discography($track->meta()->artist),
+                "tracks" => $this->music->discography($track->meta()->artist),
             ]);
         }
 
@@ -73,7 +73,7 @@ class MusicController extends Controller
 
         if ($track) {
             return $this->render("music/artist/top-tracks.html.twig", [
-                "items" => $this->music->topTracksByArtist($track->meta()->artist),
+                "tracks" => $this->music->topTracksByArtist($track->meta()->artist),
             ]);
         }
 

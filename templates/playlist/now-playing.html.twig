@@ -6,9 +6,10 @@
     <h3 id="album" class="truncate"><a class="text-reset text-decoration-none" href="{{ uri("music.album", [current.hash]) }}" hx-on::after-request="togglePlaylist()"><i class="bi bi-disc pe-1"></i> {{ current.album }}</a></h3>
   </div>
 </div>
-<div class="d-flex px-2">
+<div class="d-flex px-2 scrollable">
   {% if playlist.tracks %}
-    <button class="btn btn-sm btn-danger" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash"></i></button>
+    <button class="btn btn-sm btn-dark me-1" hx-get="{{ uri("player.play-playlist-track", [0]) }}" hx-swap="none"><i class="bi bi-play-fill text-success"></i></button>
+    <button class="btn btn-sm btn-dark" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash text-danger"></i></button>
   {% endif %}
 </div>
 <hr>

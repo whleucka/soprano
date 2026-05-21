@@ -1,9 +1,9 @@
-{% if items %}
-  {% for item in items %}
+{% if tracks %}
+  {% for track in tracks %}
     <div class="d-flex flex-column recent" hx-push-url="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-      <img title="{{ item.album }}" hx-get="{{ uri("music.album", [item.hash]) }}" class="cover" src="{{ item.cover }}" />
-      <span title="{{ item.album }}" class="info album truncate fw-bold mt-1"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("music.album", [item.hash]) }}">{{ item.album }}</a></span>
-      <span title="{{ item.year }}" class="info year truncate">{{ item.year }}</span>
+      <img title="{{ track.album }}" hx-get="{{ uri("music.album", [track.hash]) }}" class="cover" src="{{ track.cover }}" />
+      <span title="{{ track.album }}" class="info album truncate fw-bold mt-1"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("music.album", [track.hash]) }}">{{ track.album }}</a></span>
+      <span title="{{ track.year }}" class="info year truncate">{{ track.year }}</span>
     </div>
   {% endfor %}
 {% else %}

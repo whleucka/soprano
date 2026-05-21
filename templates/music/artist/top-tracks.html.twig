@@ -1,15 +1,15 @@
-{% if items %}
-  <ol class="top-tracks list-unstyled m-0">
-    {% for item in items %}
-      <li class="track d-flex align-items-center mb-2" hx-get="{{ uri("player.play", [item.hash]) }}" hx-swap="none">
+{% if tracks %}
+  <ol id="top-tracks-{{ track.hash }}" tabindex="-1" class="top-tracks list-unstyled m-0">
+    {% for track in tracks %}
+      <li class="track d-flex align-items-center mb-2" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
         <span class="rank text-muted me-3">{{ loop.index }}</span>
-        <img class="cover me-3" src="{{ item.cover }}" alt="{{ item.album }}" />
+        <img class="cover me-3" src="{{ track.cover }}" alt="{{ track.album }}" />
         <div class="d-flex flex-column flex-grow-1 min-width-0 truncate" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-          <span title="{{ item.title }}" class="truncate title fw-bold">{{ item.title }}</span>
-          <span title="{{ item.album }}" class="truncate album text-muted small"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("music.album", [item.hash]) }}">{{ item.album }}</a></span>
+          <span title="{{ track.title }}" class="truncate title fw-bold">{{ track.title }}</span>
+          <span title="{{ track.album }}" class="truncate album text-muted small"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("music.album", [track.hash]) }}">{{ track.album }}</a></span>
         </div>
         <bi class="bi bi-play-fill"></i>
-        <span class="plays text-muted badge badge-dark text-end" title="{{ item.plays }} plays">{{ item.plays }}</span>
+        <span class="plays text-muted badge badge-dark text-end" title="{{ track.plays }} plays">{{ track.plays }}</span>
       </li>
     {% endfor %}
   </ol>
