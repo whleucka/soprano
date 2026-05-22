@@ -85,7 +85,7 @@ class PlayerController extends Controller
     }
 
     #[Get("/player/play/{hash}", "player.play")]
-    public function play(string $hash)
+    public function play(string $hash): void
     {
         $track = $this->music->getTrack($hash);
         if (!$track) {
