@@ -27,6 +27,9 @@ class SearchService
         $tracks = TrackMeta::query()
             ->with('track')
             ->whereRaw("artist LIKE ? OR album LIKE ? OR title LIKE ?", [$like, $like, $like])
+            ->orderBy('artist')
+            ->orderBy('album')
+            ->orderBy('track_number')
             ->get();
         return array_map(fn($item) => [
             "hash" => $item->track()->hash,

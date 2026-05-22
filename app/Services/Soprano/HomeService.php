@@ -2,7 +2,7 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\{Track,TrackMeta,TrackPlay};
+use App\Models\{Track, TrackMeta, TrackPlay};
 
 class HomeService
 {
