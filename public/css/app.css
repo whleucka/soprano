@@ -155,7 +155,7 @@ body {
 }
 
 #sidebar .nav-link {
-  color: #bbb;
+  color: #999;
   font-size: 1.2rem;
 }
 
@@ -324,7 +324,7 @@ body {
 #home .recent {
   margin-right: 15px;
   cursor: pointer;
-  color: #bbb;
+  color: #999;
 }
 
 .recent a:link,
@@ -339,10 +339,16 @@ body {
   height: 80px;
 }
 
-#home .info {
-  font-size: 0.8rem;
-  width: 80px;
+#home .info.title {
+  color: #fff;
+  font-size: 1rem;
 }
+
+#home .info.artist {
+  font-size: 0.8rem;
+  color: #999;
+}
+
 
 .hero .cover {
   border-radius: 12px;
@@ -488,6 +494,15 @@ body {
   cursor: pointer;
 }
 
+#artist #top-tracks .title {
+  cursor: pointer;
+  font-size: 1rem;
+}
+#artist #top-tracks .artist {
+  font-size: 0.8rem;
+  color: #999;
+}
+
 #artist #top-tracks .cover {
   border-radius: 6px;
   width: 40px;
@@ -501,23 +516,23 @@ body {
 #artist .top-tracks .rank {
   text-align: right;
   width: 20px;
-  color: #bbb !important;
+  color: #999 !important;
 }
 
 #artist .top-tracks .album {
-  color: #bbb !important;
+  color: #999 !important;
 }
 
 
 #artist .top-tracks .plays {
   font-size: 0.9rem;
-  color: #bbb !important;
+  color: #999 !important;
 }
 
 #artist .recent {
   margin-right: 15px;
   cursor: pointer;
-  color: #bbb;
+  color: #999;
 }
 
 #artist .info {
@@ -530,11 +545,11 @@ body {
   height: 80px;
 }
 #artist #discography .album {
-  color: #bbb;
+  color: #999;
   font-size: 1rem;
 }
 #artist #discography .year {
-  color: #bbb;
+  color: #999;
   font-size: 0.8rem;
 }
 
@@ -545,7 +560,6 @@ body {
 
 #search #tracks .track {
   cursor: pointer;
-  line-height: 18px;
 }
 #search #tracks .track:focus {
   outline: none;
@@ -559,18 +573,19 @@ body {
 }
 
 #search #tracks .track-number {
+  text-align: right;
   font-weight: 800;
   color: #999;
 }
 
 #search #tracks .cover {
   border-radius: 4px;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
 }
 
 #search #tracks .title {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 #search #tracks .album {
@@ -632,17 +647,12 @@ body {
     font-size: 1rem;
   }
 
-  #album #tracks .track-number {
-    width: 60px;
-    font-weight: 800;
-  }
-
   #album #tracks .title {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   #album #tracks .artist {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
   #home .cover {
     width: 120px;

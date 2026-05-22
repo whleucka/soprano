@@ -5,8 +5,8 @@
         <span class="rank text-muted me-3">{{ loop.index }}</span>
         <img class="cover me-3" src="{{ track.cover }}" alt="{{ track.album }}" />
         <div class="d-flex flex-column flex-grow-1 min-width-0 truncate" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-          <span title="{{ track.title }}" class="truncate title fw-bold">{{ track.title }}</span>
-          <span title="{{ track.album }}" class="truncate album text-muted small"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("album.index", [track.album_hash]) }}" onclick="event.stopPropagation()">{{ track.album }}</a></span>
+          <span title="{{ track.title }}" class="truncate title">{{ track.title }}</span>
+          <span title="{{ track.album }}" class="truncate album small"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("album.index", [track.album_hash]) }}" onclick="event.stopPropagation()">{{ track.album }}</a></span>
         </div>
         <i class="bi bi-play-fill"></i>
         <span class="plays text-muted badge badge-dark text-end" title="{{ track.plays }} plays">{{ track.plays }}</span>
