@@ -13,6 +13,16 @@ class Track extends Model
         return $this->hasOne(TrackMeta::class);
     }
 
+    public function artist(): ?Artist
+    {
+        return $this->belongsTo(Artist::class);
+    }
+
+    public function album(): ?Album
+    {
+        return $this->belongsTo(Album::class);
+    }
+
     public function plays()
     {
         return $this->hasMany(TrackPlay::class, "track_id", "id");

@@ -16,6 +16,7 @@ return new class implements MigrationInterface
             $table->varchar("genre");
             $table->varchar("year");
             $table->timestamps();
+            $table->unique("hash");
             $table->primaryKey("id");
         });
     }

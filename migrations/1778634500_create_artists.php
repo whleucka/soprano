@@ -13,6 +13,7 @@ return new class implements MigrationInterface
             $table->char("hash", 32);
             $table->varchar("name");
             $table->timestamps();
+            $table->unique("hash");
             $table->primaryKey("id");
         });
     }

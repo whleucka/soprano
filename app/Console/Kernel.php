@@ -78,8 +78,6 @@ class Kernel extends ConsoleKernel
         Commands\SitemapGenerateCommand::class,
 
         // Soprano
-        AppCommands\SyncTracksCommand::class, 
-        AppCommands\SyncMetaCommand::class, 
-        AppCommands\FetchCoversCommand::class, 
+        AppCommands\SyncCommand::class,
     ];
 }
