@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4de3a94af439fab1812818cd41138039",
+    "content-hash": "b909506af2958beae25cc1b117427949",
     "packages": [
         {
             "name": "chillerlan/php-qrcode",
@@ -1955,24 +1955,28 @@
         },
         {
             "name": "twig/string-extra",
-            "version": "4.x-dev",
+            "version": "3.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/string-extra.git",
-                "reference": "f9cdd5f466842ab60fa376eeae8b03231ca2fecc"
+                "reference": "6ec8f2e8ca9b2193221a02cb599dc92c36384368"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/string-extra/zipball/f9cdd5f466842ab60fa376eeae8b03231ca2fecc",
-                "reference": "f9cdd5f466842ab60fa376eeae8b03231ca2fecc",
+                "url": "https://api.github.com/repos/twigphp/string-extra/zipball/6ec8f2e8ca9b2193221a02cb599dc92c36384368",
+                "reference": "6ec8f2e8ca9b2193221a02cb599dc92c36384368",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2",
+                "php": ">=8.1.0",
                 "symfony/string": "^5.4|^6.4|^7.0|^8.0",
                 "symfony/translation-contracts": "^1.1|^2|^3",
                 "twig/twig": "^3.13|^4.0"
             },
+            "require-dev": {
+                "symfony/phpunit-bridge": "^6.4|^7.0"
+            },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2003,7 +2007,7 @@
                 "unicode"
             ],
             "support": {
-                "source": "https://github.com/twigphp/string-extra/tree/4.x"
+                "source": "https://github.com/twigphp/string-extra/tree/3.x"
             },
             "funding": [
                 {
@@ -2015,7 +2019,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-07T15:24:12+00:00"
+            "time": "2025-12-02T14:45:16+00:00"
         },
         {
             "name": "twig/twig",
@@ -2970,12 +2974,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "7c65c1e79836812819705b473a90c12399542485"
+                "reference": "4bea5ade8daddb87ad99db08a8aa8663e6499217"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/7c65c1e79836812819705b473a90c12399542485",
-                "reference": "7c65c1e79836812819705b473a90c12399542485",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/4bea5ade8daddb87ad99db08a8aa8663e6499217",
+                "reference": "4bea5ade8daddb87ad99db08a8aa8663e6499217",
                 "shasum": ""
             },
             "require": {
@@ -2986,7 +2990,7 @@
                 "sebastian/exporter": "^7.0.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.5.25"
+                "phpunit/phpunit": "^12.5.26"
             },
             "suggest": {
                 "ext-bcmath": "For comparing BcMath\\Number objects"
@@ -3034,7 +3038,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/comparator/issues",
                 "security": "https://github.com/sebastianbergmann/comparator/security/policy",
-                "source": "https://github.com/sebastianbergmann/comparator/tree/7.1.8"
+                "source": "https://github.com/sebastianbergmann/comparator/tree/7.1"
             },
             "funding": [
                 {
@@ -3054,7 +3058,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-21T04:45:25+00:00"
+            "time": "2026-05-21T21:04:40+00:00"
         },
         {
             "name": "sebastian/complexity",
@@ -3377,12 +3381,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/global-state.git",
-                "reference": "51ed0f1d39ea9df986fd0a013e5d34a9f6499f98"
+                "reference": "4ffa364eaf6ad03f10bb15bd51618eadc2325113"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/51ed0f1d39ea9df986fd0a013e5d34a9f6499f98",
-                "reference": "51ed0f1d39ea9df986fd0a013e5d34a9f6499f98",
+                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/4ffa364eaf6ad03f10bb15bd51618eadc2325113",
+                "reference": "4ffa364eaf6ad03f10bb15bd51618eadc2325113",
                 "shasum": ""
             },
             "require": {
@@ -3392,7 +3396,7 @@
             },
             "require-dev": {
                 "ext-dom": "*",
-                "phpunit/phpunit": "^12.5.25"
+                "phpunit/phpunit": "^12.5.26"
             },
             "type": "library",
             "extra": {
@@ -3443,7 +3447,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-20T04:54:53+00:00"
+            "time": "2026-05-21T21:54:56+00:00"
         },
         {
             "name": "sebastian/lines-of-code",
@@ -3451,12 +3455,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/lines-of-code.git",
-                "reference": "684493a61fa7bb6e97c4e513eec84405ff4a40a2"
+                "reference": "aafc47c57556c1f1b33105f8afb69b34680c81b3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/lines-of-code/zipball/684493a61fa7bb6e97c4e513eec84405ff4a40a2",
-                "reference": "684493a61fa7bb6e97c4e513eec84405ff4a40a2",
+                "url": "https://api.github.com/repos/sebastianbergmann/lines-of-code/zipball/aafc47c57556c1f1b33105f8afb69b34680c81b3",
+                "reference": "aafc47c57556c1f1b33105f8afb69b34680c81b3",
                 "shasum": ""
             },
             "require": {
@@ -3464,7 +3468,7 @@
                 "php": ">=8.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.5.25"
+                "phpunit/phpunit": "^12.5.26"
             },
             "type": "library",
             "extra": {
@@ -3513,7 +3517,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-20T04:55:38+00:00"
+            "time": "2026-05-21T21:30:44+00:00"
         },
         {
             "name": "sebastian/object-enumerator",
@@ -3521,12 +3525,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/object-enumerator.git",
-                "reference": "3620f636e7569457d6f6b77f1059cb32be7a0191"
+                "reference": "89dec699690c829bc7b6865342b41c609948d109"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/object-enumerator/zipball/3620f636e7569457d6f6b77f1059cb32be7a0191",
-                "reference": "3620f636e7569457d6f6b77f1059cb32be7a0191",
+                "url": "https://api.github.com/repos/sebastianbergmann/object-enumerator/zipball/89dec699690c829bc7b6865342b41c609948d109",
+                "reference": "89dec699690c829bc7b6865342b41c609948d109",
                 "shasum": ""
             },
             "require": {
@@ -3535,7 +3539,7 @@
                 "sebastian/recursion-context": "^7.0.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.5.25"
+                "phpunit/phpunit": "^12.5.26"
             },
             "type": "library",
             "extra": {
@@ -3583,7 +3587,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-20T04:56:33+00:00"
+            "time": "2026-05-21T20:46:59+00:00"
         },
         {
             "name": "sebastian/object-reflector",
@@ -3977,7 +3981,6 @@
         "php-di/php-di": 20,
         "phpmailer/phpmailer": 20,
         "phpunit/phpunit": 20,
-        "twig/string-extra": 20,
         "vlucas/phpdotenv": 20
     },
     "prefer-stable": false,
