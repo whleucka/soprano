@@ -4,9 +4,9 @@ namespace App\Services\Soprano;
 
 class PlaylistService
 {
-    public function getPlaylist()
+    public function getPlaylist(): array
     {
-        return session()->get("playlist");
+        return session()->get("playlist") ?? ["tracks" => [], "index" => 0];
     }
 
     public function setPlaylist(array $tracks, int $index = 0)
