@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{CoverArtService,PlayerService,MusicService};
+use App\Services\Soprano\{CoverArtService, PlayerService, MusicService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
@@ -17,66 +17,64 @@ class MusicController extends Controller
     #[Get("/music/album/{hash}", "music.album")]
     public function album(string $hash): string
     {
-        $track = $this->music->getTrack($hash);
-        $player = $this->player->getPlayer();
-
-        if ($track) {
-            $cover = $track->meta()->cover;
-            return $this->render("music/album/index.html.twig", [
-                "player" => $player,
-                "hash" => $track->hash,
-                "year" => $track->meta()->year,
-                "cover" => $cover,
-                "album" => $track->meta()->album,
-                "artist" => $track->meta()->artist,
-                "dominant" => $this->coverArt->dominantColor($cover),
-                "tracks" => $this->music->albumTracks($track->meta()),
-            ]);
+        $album = $this->music->getAlbumByHash($hash);
+        if (!$album) {
+            return $this->pageNotFound();
         }
 
-        return $this->pageNotFound();
+        $artist = $album->artist();
+
+        return $this->render("music/album/index.html.twig", [
+            "player"      => $this->player->getPlayer(),
+            "album_hash"  => $album->hash,
+            "artist_hash" => $artist?->hash,
+            "year"        => $album->year,
+            "cover"       => $album->cover,
+            "album"       => $album->title,
+            "artist"      => $artist?->name,
+            "dominant"    => $this->coverArt->dominantColor($album->cover),
+            "tracks"      => $this->music->albumTracks((int) $album->id),
+        ]);
     }
 
     #[Get("/music/artist/{hash}", "music.artist")]
     public function artist(string $hash): string
     {
-        $track = $this->music->getTrack($hash);
-
-        if ($track) {
-            return $this->render("music/artist/index.html.twig", [
-                "hash" => $track->hash,
-                "artist" => $track->meta()->artist,
-            ]);
+        $artist = $this->music->getArtistByHash($hash);
+        if (!$artist) {
+            return $this->pageNotFound();
         }
 
-        return $this->pageNotFound();
+        return $this->render("music/artist/index.html.twig", [
+            "artist_hash" => $artist->hash,
+            "artist"      => $artist->name,
+        ]);
     }
 
     #[Get("/music/artist/{hash}/discography", "music.artist.discography")]
     public function discography(string $hash): string
     {
-        $track = $this->music->getTrack($hash);
-
-        if ($track) {
-            return $this->render("music/artist/discography.html.twig", [
-                "tracks" => $this->music->discography($track->meta()->artist),
-            ]);
+        $artist = $this->music->getArtistByHash($hash);
+        if (!$artist) {
+            return $this->pageNotFound();
         }
 
-        return $this->pageNotFound();
+        return $this->render("music/artist/discography.html.twig", [
+            "tracks" => $this->music->discography((int) $artist->id),
+        ]);
     }
 
     #[Get("/music/artist/{hash}/top-tracks", "music.artist.top-tracks")]
     public function topTracks(string $hash): string
     {
-        $track = $this->music->getTrack($hash);
-
-        if ($track) {
-            return $this->render("music/artist/top-tracks.html.twig", [
-                "tracks" => $this->music->topTracksByArtist($track->meta()->artist),
-            ]);
+        $artist = $this->music->getArtistByHash($hash);
+        if (!$artist) {
+            return $this->pageNotFound();
         }
 
-        return $this->pageNotFound();
+        return $this->render("music/artist/top-tracks.html.twig", [
+            "player" => $this->player->getPlayer(),
+            "tracks" => $this->music->topTracksByArtist((int) $artist->id),
+        ]);
     }
 }

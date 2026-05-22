@@ -2,82 +2,110 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\{Track, TrackMeta, TrackPlay};
-
 class HomeService
 {
-    public function recentlyAdded(int $album_count = 50): array
+    public function recentlyAdded(int $albumCount = 50): array
     {
-        $recently_added = TrackMeta::query()
-            ->with('track')
-            ->groupBy("album")
-            ->orderBy("id", "DESC")
-            ->get($album_count);
-        return array_map(fn($item) => [
-            "hash" => $item->track()->hash,
-            "title" => $item->title,
-            "artist" => $item->artist,
-            "album" => $item->album,
-            "cover" => $item->cover,
-            "year" => $item->year,
-        ], $recently_added);
+        $albumCount = (int) $albumCount;
+        $rows = db()->fetchAll(
+            "SELECT al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist
+             FROM albums al
+             JOIN artists ar ON ar.id = al.artist_id
+             ORDER BY al.id DESC
+             LIMIT $albumCount",
+        );
+
+        return array_map(fn($row) => [
+            'album_hash'  => $row['album_hash'],
+            'artist_hash' => $row['artist_hash'],
+            'album'       => $row['album'],
+            'artist'      => $row['artist'],
+            'cover'       => $row['cover'],
+            'year'        => $row['year'],
+        ], $rows);
     }
 
-    public function recentlyPlayed(int $track_count = 20): array
+    public function recentlyPlayed(int $trackCount = 20): array
     {
-        $dt = new \DateTime("- 1 WEEK");
-        $rows = TrackPlay::where("created_at", ">", $dt->format("Y-m-d H:i:s"))
-            ->select(["track_id", "MAX(id) as last_play_id"])
-            ->groupBy("track_id")
-            ->orderBy("last_play_id", "DESC")
-            ->getRaw($track_count);
+        $trackCount = (int) $trackCount;
+        $since = (new \DateTime('- 1 WEEK'))->format('Y-m-d H:i:s');
 
-        $playIds = array_column($rows, 'last_play_id');
-        $playsById = TrackPlay::whereIn('id', $playIds)
-            ->with('track.meta', 'client')
-            ->keyBy('id');
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    c.username AS client,
+                    MAX(tp.id) AS last_play_id
+             FROM track_plays tp
+             JOIN tracks t ON t.id = tp.track_id
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             LEFT JOIN clients c ON c.id = tp.client_id
+             WHERE tp.created_at > ?
+             GROUP BY t.id
+             ORDER BY last_play_id DESC
+             LIMIT $trackCount",
+            [$since],
+        );
 
-        return array_map(function ($row) use ($playsById) {
-            $play = $playsById[$row['last_play_id']];
-            $track = $play->track();
-            $meta = $track->meta();
-            return [
-                "hash" => $track->hash,
-                "client" => $play->client()?->username,
-                "title" => $meta?->title,
-                "artist" => $meta?->artist,
-                "album" => $meta?->album,
-                "cover" => $meta?->cover,
-                "year" => $meta?->year,
-            ];
-        }, $rows);
+        return array_map(fn($row) => [
+            'hash'        => $row['track_hash'],
+            'album_hash'  => $row['album_hash'],
+            'artist_hash' => $row['artist_hash'],
+            'client'      => $row['client'],
+            'title'       => $row['title'] ?? '',
+            'artist'      => $row['artist'],
+            'album'       => $row['album'],
+            'cover'       => $row['cover'],
+            'year'        => $row['year'],
+        ], $rows);
     }
 
-    public function topPlayed(int $track_count = 20): array
+    public function topPlayed(int $trackCount = 20): array
     {
-        $rows = TrackPlay::query()
-            ->select(["track_id", "COUNT(*) as plays"])
-            ->groupBy("track_id")
-            ->orderBy("plays", "DESC")
-            ->getRaw($track_count);
+        $trackCount = (int) $trackCount;
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    COUNT(tp.id) AS plays,
+                    MAX(tp.id) AS last_play_id
+             FROM track_plays tp
+             JOIN tracks t ON t.id = tp.track_id
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             GROUP BY t.id
+             ORDER BY plays DESC, last_play_id DESC
+             LIMIT $trackCount",
+        );
 
-        $trackIds = array_column($rows, 'track_id');
-        $tracksById = Track::whereIn('id', $trackIds)
-            ->with('meta')
-            ->keyBy('id');
-
-        return array_map(function ($row) use ($tracksById) {
-            $track = $tracksById[$row['track_id']];
-            $meta = $track->meta();
-            return [
-                "hash" => $track->hash,
-                "title" => $meta->title,
-                "artist" => $meta->artist,
-                "album" => $meta->album,
-                "cover" => $meta->cover,
-                "year" => $meta->year,
-                "plays" => (int) $row['plays'],
-            ];
-        }, $rows);
+        return array_map(fn($row) => [
+            'hash'        => $row['track_hash'],
+            'album_hash'  => $row['album_hash'],
+            'artist_hash' => $row['artist_hash'],
+            'title'       => $row['title'] ?? '',
+            'artist'      => $row['artist'],
+            'album'       => $row['album'],
+            'cover'       => $row['cover'],
+            'year'        => $row['year'],
+            'plays'       => (int) $row['plays'],
+        ], $rows);
     }
 }

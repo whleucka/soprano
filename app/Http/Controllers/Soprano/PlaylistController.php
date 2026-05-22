@@ -25,11 +25,13 @@ class PlaylistController extends Controller
         $index = $playlist["index"];
         return $this->render("playlist/now-playing.html.twig", [
             "current" => $playlist["tracks"][$index] ?? [
-                "hash" => "#",
-                "artist" => "N/A",
-                "cover" => "/images/no-album-art.png",
-                "album" => "N/A",
-                "title" => "N/A",
+                "hash"        => "#",
+                "album_hash"  => "#",
+                "artist_hash" => "#",
+                "artist"      => "N/A",
+                "cover"       => "/images/no-album-art.png",
+                "album"       => "N/A",
+                "title"       => "N/A",
             ],
             "playlist" => $playlist
         ]);

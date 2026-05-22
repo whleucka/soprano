@@ -12,4 +12,9 @@ class Artist extends Model
     {
         return $this->hasMany(Track::class);
     }
+
+    public function albums(): array
+    {
+        return $this->hasMany(Album::class);
+    }
 }

@@ -2,101 +2,136 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\{Track, TrackMeta, TrackPlay};
+use App\Models\{Album, Artist, Track, TrackPlay};
 
 class MusicService
 {
-    public function getTrack(string $hash)
+    public function getTrack(string $hash): ?Track
     {
-        return Track::where("hash", $hash)->first();
+        return Track::where('hash', $hash)->first();
     }
 
-    public function albumTracks(TrackMeta $track)
+    public function getAlbumByHash(string $hash): ?Album
     {
-        $tracks = TrackMeta::where("album", $track->album)
-            ->andWhere("artist", $track->artist)
-            ->load('track')
-            ->get();
-        // Sort numerically
-        usort($tracks, fn($a, $b) => (int)$a->track_number <=> (int)$b->track_number);
-        return array_map(fn($item) => [
-            "hash" => $item->track()->hash,
-            "title" => $item->title,
-            "artist" => $item->artist,
-            "album" => $item->album,
-            "cover" => $item->cover,
-            "year" => $item->year,
-            "track_number" => $item->track_number,
-            "playtime_string" => $item->playtime_string,
-        ], $tracks);
+        return Album::where('hash', $hash)->first();
     }
 
-    public function trackPlay(int $track_id, ?int $client_id)
+    public function getArtistByHash(string $hash): ?Artist
     {
-        // Record track play
+        return Artist::where('hash', $hash)->first();
+    }
+
+    public function trackPlay(int $trackId, ?int $clientId): void
+    {
         TrackPlay::create([
-            "track_id" => $track_id,
-            "client_id" => $client_id,
+            'track_id'  => $trackId,
+            'client_id' => $clientId,
         ]);
     }
 
-    public function discography(string $artist, int $limit = 20): array
+    public function albumTracks(int $albumId): array
     {
-        $rows = TrackMeta::where("artist", $artist)
-            ->select(["album", "MIN(id) as first_id", "MAX(year) as year"])
-            ->groupBy("album")
-            ->orderBy("year", "DESC")
-            ->getRaw($limit);
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    tm.track_number AS track_number,
+                    tm.playtime_string AS playtime_string
+             FROM tracks t
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE t.album_id = ?
+             ORDER BY CAST(tm.track_number AS UNSIGNED), tm.track_number",
+            [$albumId],
+        );
 
-        $firstIds = array_column($rows, 'first_id');
-        $metasById = TrackMeta::whereIn('id', $firstIds)
-            ->with('track')
-            ->keyBy('id');
+        return array_map([$this, 'mapTrackRow'], $rows);
+    }
 
-        return array_map(function ($row) use ($metasById) {
-            $meta = $metasById[$row['first_id']];
-            $track = $meta->track();
-            return [
-                "hash" => $track->hash,
-                "title" => $meta->album,
-                "artist" => $meta->artist,
-                "album" => $meta->album,
-                "cover" => $meta->cover,
-                "year" => $meta->year,
-            ];
+    public function discography(int $artistId, int $limit = 20): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist
+             FROM albums al
+             JOIN artists ar ON ar.id = al.artist_id
+             WHERE al.artist_id = ?
+             ORDER BY al.year DESC, al.title ASC
+             LIMIT $limit",
+            [$artistId],
+        );
+
+        return array_map([$this, 'mapAlbumRow'], $rows);
+    }
+
+    public function topTracksByArtist(int $artistId, int $limit = 10): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    tm.track_number AS track_number,
+                    tm.playtime_string AS playtime_string,
+                    COUNT(tp.id) AS plays
+             FROM tracks t
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             JOIN track_plays tp ON tp.track_id = t.id
+             WHERE t.artist_id = ?
+             GROUP BY t.id
+             ORDER BY plays DESC, tm.title ASC
+             LIMIT $limit",
+            [$artistId],
+        );
+
+        return array_map(function (array $row) {
+            $entry = $this->mapTrackRow($row);
+            $entry['plays'] = (int) $row['plays'];
+            return $entry;
         }, $rows);
     }
 
-    public function topTracksByArtist(string $artist, int $limit = 10): array
+    private function mapTrackRow(array $row): array
     {
-        $ids = TrackMeta::where("artist", $artist)->pluck("track_id");
-        if (empty($ids)) {
-            return [];
-        }
+        return [
+            'hash'            => $row['track_hash'],
+            'album_hash'      => $row['album_hash'],
+            'artist_hash'     => $row['artist_hash'],
+            'title'           => $row['title'] ?? '',
+            'artist'          => $row['artist'] ?? '',
+            'album'           => $row['album'] ?? '',
+            'cover'           => $row['cover'],
+            'year'            => $row['year'] ?? '',
+            'track_number'    => $row['track_number'] ?? '',
+            'playtime_string' => $row['playtime_string'] ?? '',
+        ];
+    }
 
-        $rows = TrackPlay::whereIn("track_id", $ids)
-            ->select(["track_id", "COUNT(*) as plays"])
-            ->groupBy("track_id")
-            ->orderBy("plays", "DESC")
-            ->getRaw($limit);
-
-        $trackIds = array_column($rows, 'track_id');
-        $tracksById = Track::whereIn('id', $trackIds)
-            ->with('meta')
-            ->keyBy('id');
-
-        return array_map(function ($row) use ($tracksById) {
-            $track = $tracksById[$row['track_id']];
-            $meta = $track->meta();
-            return [
-                "hash" => $track->hash,
-                "title" => $meta->title,
-                "artist" => $meta->artist,
-                "album" => $meta->album,
-                "cover" => $meta->cover,
-                "year" => $meta->year,
-                "plays" => (int) $row['plays'],
-            ];
-        }, $rows);
+    private function mapAlbumRow(array $row): array
+    {
+        return [
+            'album_hash'  => $row['album_hash'],
+            'artist_hash' => $row['artist_hash'],
+            'album'       => $row['album'],
+            'artist'      => $row['artist'],
+            'cover'       => $row['cover'],
+            'year'        => $row['year'],
+        ];
     }
 }

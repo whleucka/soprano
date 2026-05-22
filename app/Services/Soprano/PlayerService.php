@@ -4,28 +4,33 @@ namespace App\Services\Soprano;
 
 class PlayerService
 {
-    public function getPlayer()
+    private const DEFAULT_STATE = [
+        'hash'        => '#',
+        'album_hash'  => '#',
+        'artist_hash' => '#',
+        'title'       => 'N/A',
+        'artist'      => 'N/A',
+        'album'       => 'N/A',
+        'cover'       => '/images/no-album-art.png',
+        'src'         => '#',
+    ];
+
+    public function getPlayer(): array
     {
-        return session()->get("player") ?? [
-            "hash" => '#',
-            "title" => 'N/A',
-            "artist" => 'N/A',
-            "album" => 'N/A',
-            "cover" => '/images/no-album-art.png',
-            "src" => '#',
-        ];
+        return session()->get('player') ?? self::DEFAULT_STATE;
     }
 
-    public function setPlayer(string $hash, string $title, string $artist, string $album, ?string $cover, string $src)
+    public function setPlayer(array $state): void
     {
-        session()->set("player", [
-            "hash" => $hash,
-            "title" => $title,
-            "artist" => $artist,
-            "album" => $album,
-            "cover" => $cover ?? '/images/no-album-art.png',
-            "src" => $src,
+        session()->set('player', [
+            'hash'        => $state['hash']        ?? '#',
+            'album_hash'  => $state['album_hash']  ?? '#',
+            'artist_hash' => $state['artist_hash'] ?? '#',
+            'title'       => $state['title']       ?? 'N/A',
+            'artist'      => $state['artist']      ?? 'N/A',
+            'album'       => $state['album']       ?? 'N/A',
+            'cover'       => $state['cover']       ?? '/images/no-album-art.png',
+            'src'         => $state['src']         ?? '#',
         ]);
-
     }
 }

@@ -101,6 +101,7 @@ class SyncService
 
         $artistId = $this->resolveArtist($tags['album_artist']);
         $albumId  = $this->resolveAlbum(
+            $artistId,
             $tags['album_artist'],
             $tags['album'],
             $tags['genre'],
@@ -152,6 +153,7 @@ class SyncService
     }
 
     private function resolveAlbum(
+        int $artistId,
         string $albumArtist,
         string $album,
         string $genre,
@@ -173,11 +175,12 @@ class SyncService
         $coverUrl = $this->extractAndStoreCover($info);
 
         $created = Album::create([
-            'hash'  => $hash,
-            'title' => $album,
-            'cover' => $coverUrl,
-            'genre' => $genre,
-            'year'  => $year,
+            'hash'      => $hash,
+            'artist_id' => $artistId,
+            'title'     => $album,
+            'cover'     => $coverUrl,
+            'genre'     => $genre,
+            'year'      => $year,
         ]);
 
         if (!$created instanceof Album) {
