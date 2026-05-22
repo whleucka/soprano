@@ -8,7 +8,8 @@ class HomeService
 {
     public function recentlyAdded(int $album_count = 50): array
     {
-        $recently_added = TrackMeta::where("id", ">", 0)
+        $recently_added = TrackMeta::query()
+            ->with('track')
             ->groupBy("album")
             ->orderBy("id", "DESC")
             ->get($album_count);
@@ -24,39 +25,59 @@ class HomeService
 
     public function recentlyPlayed(int $track_count = 20): array
     {
-        $dt = new \DateTime("- 1 DAY");
+        $dt = new \DateTime("- 1 WEEK");
         $rows = TrackPlay::where("created_at", ">", $dt->format("Y-m-d H:i:s"))
             ->select(["track_id", "MAX(id) as last_play_id"])
             ->groupBy("track_id")
             ->orderBy("last_play_id", "DESC")
             ->getRaw($track_count);
 
-        return array_map(function ($row) {
-            $play = TrackPlay::find($row['last_play_id']);
+        $playIds = array_column($rows, 'last_play_id');
+        $plays = TrackPlay::whereIn('id', $playIds)
+            ->with('track.meta', 'client')
+            ->get();
+
+        $playsById = [];
+        foreach ($plays as $play) {
+            $playsById[$play->id] = $play;
+        }
+
+        return array_map(function ($row) use ($playsById) {
+            $play = $playsById[$row['last_play_id']];
             $track = $play->track();
             $meta = $track->meta();
             return [
                 "hash" => $track->hash,
                 "client" => $play->client()?->username,
-                "title" => $meta->title,
-                "artist" => $meta->artist,
-                "album" => $meta->album,
-                "cover" => $meta->cover,
-                "year" => $meta->year,
+                "title" => $meta?->title,
+                "artist" => $meta?->artist,
+                "album" => $meta?->album,
+                "cover" => $meta?->cover,
+                "year" => $meta?->year,
             ];
         }, $rows);
     }
 
     public function topPlayed(int $track_count = 20): array
     {
-        $rows = TrackPlay::where("id", ">", 0)
+        $rows = TrackPlay::query()
             ->select(["track_id", "COUNT(*) as plays"])
             ->groupBy("track_id")
             ->orderBy("plays", "DESC")
             ->getRaw($track_count);
 
-        return array_map(function ($row) {
-            $track = Track::find($row['track_id']);
+        $trackIds = array_column($rows, 'track_id');
+        $tracks = Track::whereIn('id', $trackIds)
+            ->load('meta')
+            ->get();
+
+        $tracksById = [];
+        foreach ($tracks as $track) {
+            $tracksById[$track->id] = $track;
+        }
+
+        return array_map(function ($row) use ($tracksById) {
+            $track = $tracksById[$row['track_id']];
             $meta = $track->meta();
             return [
                 "hash" => $track->hash,

@@ -15,6 +15,7 @@ class MusicService
     {
         $tracks = TrackMeta::where("album", $track->album)
             ->andWhere("artist", $track->artist)
+            ->load('track')
             ->get();
         // Sort numerically
         usort($tracks, fn($a, $b) => (int)$a->track_number <=> (int)$b->track_number);
@@ -47,8 +48,18 @@ class MusicService
             ->orderBy("year", "DESC")
             ->getRaw($limit);
 
-        return array_map(function ($row) {
-            $meta = TrackMeta::find($row['first_id']);
+        $firstIds = array_column($rows, 'first_id');
+        $metas = TrackMeta::whereIn('id', $firstIds)
+            ->load('track')
+            ->get();
+
+        $metasById = [];
+        foreach ($metas as $meta) {
+            $metasById[$meta->id] = $meta;
+        }
+
+        return array_map(function ($row) use ($metasById) {
+            $meta = $metasById[$row['first_id']];
             $track = $meta->track();
             return [
                 "hash" => $track->hash,
@@ -71,16 +82,24 @@ class MusicService
             return [];
         }
 
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $rows = TrackPlay::where("id", ">", 0)
-            ->whereRaw("track_id IN ($placeholders)", $ids)
+        $rows = TrackPlay::whereIn("track_id", $ids)
             ->select(["track_id", "COUNT(*) as plays"])
             ->groupBy("track_id")
             ->orderBy("plays", "DESC")
             ->getRaw($limit);
 
-        return array_map(function ($row) {
-            $track = Track::find($row['track_id']);
+        $trackIds = array_column($rows, 'track_id');
+        $tracks = Track::whereIn('id', $trackIds)
+            ->load('meta')
+            ->get();
+
+        $tracksById = [];
+        foreach ($tracks as $track) {
+            $tracksById[$track->id] = $track;
+        }
+
+        return array_map(function ($row) use ($tracksById) {
+            $track = $tracksById[$row['track_id']];
             $meta = $track->meta();
             return [
                 "hash" => $track->hash,

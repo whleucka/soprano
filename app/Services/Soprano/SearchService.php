@@ -23,12 +23,11 @@ class SearchService
 
     public function search(string $term): array
     {
-        $meta = new TrackMeta();
-        $tracks = $meta->whereRaw("artist LIKE ? OR album LIKE ? OR title LIKE ?", [
-            "%$term%",
-            "%$term%",
-            "%$term%",
-        ])->get();
+        $like = "%$term%";
+        $tracks = TrackMeta::query()
+            ->with('track')
+            ->whereRaw("artist LIKE ? OR album LIKE ? OR title LIKE ?", [$like, $like, $like])
+            ->get();
         return array_map(fn($item) => [
             "hash" => $item->track()->hash,
             "title" => $item->title,

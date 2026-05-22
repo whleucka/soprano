@@ -13,7 +13,7 @@ class TrackPlay extends Model
         return $this->belongsTo(Track::class);
     }
 
-    public function client(): ?Track
+    public function client(): ?Client
     {
         return $this->belongsTo(Client::class);
     }
