@@ -9,7 +9,7 @@
       <img class="cover me-4" src="{{ cover }}" />
       <div class="d-flex flex-column truncate">
         <h1 title="{{ album }}" class="album truncate">{{ album }}</h1>
-        <h3 class="artist"><a class="text-reset text-decoration-none" href="{{ uri("music.artist", [artist_hash]) }}">{{ artist }}</a></h3>
+        <h3 class="artist"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [artist_hash]) }}">{{ artist }}</a></h3>
         <h3 class="year">{{ year }}</h3>
       </div>
     </div>
