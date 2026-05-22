@@ -4,19 +4,14 @@ use Echo\Framework\Database\{Schema, Blueprint, MigrationInterface};
 
 return new class implements MigrationInterface
 {
-    private string $table = "radio_stations";
+    private string $table = "artists";
 
     public function up(): string
     {
          return Schema::create($this->table, function (Blueprint $table) {
             $table->id();
             $table->char("hash", 32);
-            $table->varchar("cover")->nullable();
             $table->varchar("name");
-            $table->varchar("country")->nullable();
-            $table->varchar("province")->nullable();
-            $table->varchar("city")->nullable();
-            $table->varchar("src");
             $table->timestamps();
             $table->primaryKey("id");
         });

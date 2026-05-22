@@ -105,11 +105,6 @@ class SyncTracksService
 
     private function loadExistingHashes(): array
     {
-        $rows = (new Track())->select(['hash'])->getRaw();
-        $map = [];
-        foreach ($rows as $row) {
-            $map[$row['hash']] = true;
-        }
-        return $map;
+        return array_fill_keys(Track::query()->pluck('hash'), true);
     }
 }

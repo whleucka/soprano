@@ -33,14 +33,9 @@ class HomeService
             ->getRaw($track_count);
 
         $playIds = array_column($rows, 'last_play_id');
-        $plays = TrackPlay::whereIn('id', $playIds)
+        $playsById = TrackPlay::whereIn('id', $playIds)
             ->with('track.meta', 'client')
-            ->get();
-
-        $playsById = [];
-        foreach ($plays as $play) {
-            $playsById[$play->id] = $play;
-        }
+            ->keyBy('id');
 
         return array_map(function ($row) use ($playsById) {
             $play = $playsById[$row['last_play_id']];
@@ -67,14 +62,9 @@ class HomeService
             ->getRaw($track_count);
 
         $trackIds = array_column($rows, 'track_id');
-        $tracks = Track::whereIn('id', $trackIds)
-            ->load('meta')
-            ->get();
-
-        $tracksById = [];
-        foreach ($tracks as $track) {
-            $tracksById[$track->id] = $track;
-        }
+        $tracksById = Track::whereIn('id', $trackIds)
+            ->with('meta')
+            ->keyBy('id');
 
         return array_map(function ($row) use ($tracksById) {
             $track = $tracksById[$row['track_id']];

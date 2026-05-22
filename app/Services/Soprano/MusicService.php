@@ -49,14 +49,9 @@ class MusicService
             ->getRaw($limit);
 
         $firstIds = array_column($rows, 'first_id');
-        $metas = TrackMeta::whereIn('id', $firstIds)
-            ->load('track')
-            ->get();
-
-        $metasById = [];
-        foreach ($metas as $meta) {
-            $metasById[$meta->id] = $meta;
-        }
+        $metasById = TrackMeta::whereIn('id', $firstIds)
+            ->with('track')
+            ->keyBy('id');
 
         return array_map(function ($row) use ($metasById) {
             $meta = $metasById[$row['first_id']];
@@ -74,10 +69,7 @@ class MusicService
 
     public function topTracksByArtist(string $artist, int $limit = 10): array
     {
-        $metaRows = TrackMeta::where("artist", $artist)
-            ->select(["track_id"])
-            ->getRaw();
-        $ids = array_column($metaRows, 'track_id');
+        $ids = TrackMeta::where("artist", $artist)->pluck("track_id");
         if (empty($ids)) {
             return [];
         }
@@ -89,14 +81,9 @@ class MusicService
             ->getRaw($limit);
 
         $trackIds = array_column($rows, 'track_id');
-        $tracks = Track::whereIn('id', $trackIds)
-            ->load('meta')
-            ->get();
-
-        $tracksById = [];
-        foreach ($tracks as $track) {
-            $tracksById[$track->id] = $track;
-        }
+        $tracksById = Track::whereIn('id', $trackIds)
+            ->with('meta')
+            ->keyBy('id');
 
         return array_map(function ($row) use ($tracksById) {
             $track = $tracksById[$row['track_id']];
