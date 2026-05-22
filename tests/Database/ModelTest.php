@@ -3,7 +3,9 @@
 namespace Tests\Database;
 
 use App\Models\User;
+use Echo\Framework\Database\ModelNotFoundException;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 
 class ModelTest extends TestCase
@@ -624,5 +626,397 @@ class ModelTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         User::where("123col", "test");
+    }
+
+    // ─── latest() / oldest() ────────────────────────────────────
+
+    public function testLatestDefaultsToCreatedAtDesc()
+    {
+        $sql = User::query()->latest()->sql();
+        $this->assertSame("SELECT * FROM users ORDER BY created_at DESC", $sql["query"]);
+    }
+
+    public function testLatestAcceptsColumn()
+    {
+        $sql = User::query()->latest("updated_at")->sql();
+        $this->assertSame("SELECT * FROM users ORDER BY updated_at DESC", $sql["query"]);
+    }
+
+    public function testOldestDefaultsToCreatedAtAsc()
+    {
+        $sql = User::query()->oldest()->sql();
+        $this->assertSame("SELECT * FROM users ORDER BY created_at ASC", $sql["query"]);
+    }
+
+    public function testOldestAcceptsColumn()
+    {
+        $sql = User::where("role", "admin")->oldest("registered_at")->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (role = ?) ORDER BY registered_at ASC",
+            $sql["query"]
+        );
+    }
+
+    public function testLatestRejectsInvalidColumn()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->latest("col; DROP TABLE users");
+    }
+
+    public function testOldestRejectsInvalidColumn()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->oldest("col)--");
+    }
+
+    // ─── pluck / keyBy / value identifier validation ────────────
+
+    public function testPluckRejectsInvalidColumn()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->pluck("col; DROP TABLE users");
+    }
+
+    public function testKeyByRejectsInvalidColumn()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->keyBy("col)--");
+    }
+
+    public function testValueRejectsInvalidColumn()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->value("1=1; --");
+    }
+
+    // ─── findOrFail / firstOrFail ───────────────────────────────
+
+    /**
+     * Integration test: requires a working MySQL connection (id 99999999 must
+     * not exist). Skipped on hosts without the pdo_mysql driver — host PHP
+     * during local-only test runs without docker, for example.
+     */
+    #[RequiresPhpExtension('pdo_mysql')]
+    public function testFindOrFailThrowsWhenNotFound()
+    {
+        try {
+            User::findOrFail("99999999");
+            $this->fail("Expected ModelNotFoundException");
+        } catch (ModelNotFoundException $e) {
+            $this->assertSame(User::class, $e->modelClass);
+            $this->assertSame("99999999", $e->id);
+            $this->assertStringContainsString("with id [99999999]", $e->getMessage());
+        }
+    }
+
+    public function testModelNotFoundExceptionMessageFormat()
+    {
+        $withId = new ModelNotFoundException(User::class, "42");
+        $this->assertSame(
+            "No query results for model [App\\Models\\User] with id [42]",
+            $withId->getMessage()
+        );
+
+        $withoutId = new ModelNotFoundException(User::class);
+        $this->assertSame(
+            "No query results for model [App\\Models\\User]",
+            $withoutId->getMessage()
+        );
+        $this->assertNull($withoutId->id);
+    }
+
+    // ─── Date helpers ───────────────────────────────────────────
+
+    public function testWhereDate()
+    {
+        $sql = User::where("status", "active")
+            ->whereDate("created_at", "2026-05-22")
+            ->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (status = ?) AND (DATE(created_at) = ?)",
+            $sql["query"]
+        );
+        $this->assertSame(["active", "2026-05-22"], $sql["params"]);
+    }
+
+    public function testWhereDateWithOperator()
+    {
+        $sql = User::query()
+            ->whereDate("created_at", ">=", "2026-01-01")
+            ->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (DATE(created_at) >= ?)",
+            $sql["query"]
+        );
+        $this->assertSame(["2026-01-01"], $sql["params"]);
+    }
+
+    public function testWhereYear()
+    {
+        $sql = User::query()->whereYear("created_at", 2026)->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (YEAR(created_at) = ?)",
+            $sql["query"]
+        );
+        $this->assertSame([2026], $sql["params"]);
+    }
+
+    public function testWhereMonth()
+    {
+        $sql = User::query()->whereMonth("created_at", 5)->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (MONTH(created_at) = ?)",
+            $sql["query"]
+        );
+        $this->assertSame([5], $sql["params"]);
+    }
+
+    public function testWhereDay()
+    {
+        $sql = User::query()->whereDay("created_at", 22)->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (DAY(created_at) = ?)",
+            $sql["query"]
+        );
+    }
+
+    public function testWhereTime()
+    {
+        $sql = User::query()->whereTime("created_at", ">", "12:00:00")->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (TIME(created_at) > ?)",
+            $sql["query"]
+        );
+        $this->assertSame(["12:00:00"], $sql["params"]);
+    }
+
+    public function testWhereNotBetween()
+    {
+        $sql = User::where("active", "1")
+            ->whereNotBetween("created_at", "2026-01-01", "2026-12-31")
+            ->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (active = ?) AND (created_at NOT BETWEEN ? AND ?)",
+            $sql["query"]
+        );
+        $this->assertSame(["1", "2026-01-01", "2026-12-31"], $sql["params"]);
+    }
+
+    public function testWhereDateRejectsInvalidColumn()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->whereDate("col; DROP TABLE users", "2026-01-01");
+    }
+
+    public function testWhereYearRejectsInvalidColumn()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->whereYear("1=1; --", 2026);
+    }
+
+    public function testWhereNotBetweenRejectsInvalidField()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->whereNotBetween("col)--", "a", "b");
+    }
+
+    // ─── when / unless ──────────────────────────────────────────
+
+    public function testWhenAppliesCallbackWhenTruthy()
+    {
+        $sql = User::query()
+            ->when("admin", fn($q, $v) => $q->andWhere("role", $v))
+            ->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (role = ?)",
+            $sql["query"]
+        );
+        $this->assertSame(["admin"], $sql["params"]);
+    }
+
+    public function testWhenSkipsCallbackWhenFalsy()
+    {
+        $sql = User::query()
+            ->when(null, fn($q, $v) => $q->andWhere("role", $v))
+            ->sql();
+        $this->assertSame("SELECT * FROM users", $sql["query"]);
+        $this->assertSame([], $sql["params"]);
+    }
+
+    public function testWhenAppliesDefaultWhenFalsy()
+    {
+        $sql = User::query()
+            ->when(false,
+                fn($q, $v) => $q->andWhere("role", "admin"),
+                fn($q, $v) => $q->andWhere("role", "guest"),
+            )
+            ->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (role = ?)",
+            $sql["query"]
+        );
+        $this->assertSame(["guest"], $sql["params"]);
+    }
+
+    public function testWhenCallbackReturningNullStillChains()
+    {
+        // Callback mutates $this in-place and returns nothing — must still chain.
+        $sql = User::query()
+            ->when(true, function ($q, $v) { $q->andWhere("role", "admin"); })
+            ->andWhere("status", "active")
+            ->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (role = ?) AND (status = ?)",
+            $sql["query"]
+        );
+    }
+
+    public function testUnlessIsInverseOfWhen()
+    {
+        $sql = User::query()
+            ->unless(false, fn($q, $v) => $q->andWhere("role", "admin"))
+            ->sql();
+        $this->assertSame(
+            "SELECT * FROM users WHERE (role = ?)",
+            $sql["query"]
+        );
+    }
+
+    // ─── firstOrCreate / updateOrCreate validation ──────────────
+
+    public function testFirstOrCreateRejectsEmptyFind()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("firstOrCreate(): \$find must contain at least one column => value pair");
+        User::firstOrCreate([]);
+    }
+
+    public function testUpdateOrCreateRejectsEmptyFind()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("updateOrCreate(): \$find must contain at least one column => value pair");
+        User::updateOrCreate([]);
+    }
+
+    // ─── chunk validation ───────────────────────────────────────
+
+    public function testChunkRejectsZeroSize()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        User::query()->orderBy("id")->chunk(0, fn() => true);
+    }
+
+    public function testChunkRequiresOrderBy()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("chunk() requires an ORDER BY clause");
+        User::query()->chunk(10, fn() => true);
+    }
+
+    public function testChunkRejectsGroupBy()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("chunk() does not support groupBy()");
+        User::query()->orderBy("id")->groupBy("role")->chunk(10, fn() => true);
+    }
+
+    // ─── increment / decrement / touch identifier validation ───
+
+    public function testIncrementRejectsInvalidColumn()
+    {
+        $user = User::where("id", "1");
+        $this->expectException(InvalidArgumentException::class);
+        $user->increment("col; DROP TABLE users");
+    }
+
+    public function testDecrementRejectsInvalidColumn()
+    {
+        $user = User::where("id", "1");
+        $this->expectException(InvalidArgumentException::class);
+        $user->decrement("col)--");
+    }
+
+    public function testIncrementReturnsFalseForUnpersistedModel()
+    {
+        // Model with no id (not persisted) can't safely UPDATE — must no-op.
+        $user = User::query();
+        $this->assertNull($user->getId());
+        $this->assertFalse($user->increment("view_count"));
+    }
+
+    public function testTouchReturnsFalseForUnpersistedModel()
+    {
+        $user = User::query();
+        $this->assertFalse($user->touch());
+    }
+
+    // ─── Change tracking ────────────────────────────────────────
+
+    public function testNewlySetAttributesAreDirty()
+    {
+        $user = User::query();
+        $this->assertFalse($user->isDirty());
+        $user->email = "x@y.com";
+        $this->assertTrue($user->isDirty());
+        $this->assertTrue($user->isDirty("email"));
+        $this->assertFalse($user->isClean());
+        $this->assertFalse($user->isDirty("name"));
+    }
+
+    public function testGetDirtyReturnsOnlyChangedAttributes()
+    {
+        $user = User::query();
+        $user->email = "a@b.com";
+        $user->role = "admin";
+        $dirty = $user->getDirty();
+        $this->assertSame(["email" => "a@b.com", "role" => "admin"], $dirty);
+    }
+
+    public function testGetOriginalOnUnloadedModelReturnsNull()
+    {
+        $user = User::query();
+        $user->email = "set@after.com";
+        $this->assertNull($user->getOriginal("email"));
+        $this->assertSame([], $user->getOriginal());
+    }
+
+    // ─── Serialization ──────────────────────────────────────────
+
+    public function testToArrayReturnsAttributes()
+    {
+        $user = User::query();
+        $user->email = "a@b.com";
+        $user->role = "admin";
+        $this->assertSame(
+            ["email" => "a@b.com", "role" => "admin"],
+            $user->toArray()
+        );
+    }
+
+    public function testToJsonRoundTripsViaToArray()
+    {
+        $user = User::query();
+        $user->email = "a@b.com";
+        $json = $user->toJson();
+        $this->assertSame('{"email":"a@b.com"}', $json);
+    }
+
+    public function testJsonEncodeUsesJsonSerialize()
+    {
+        $user = User::query();
+        $user->role = "admin";
+        // PHP's json_encode invokes jsonSerialize() automatically.
+        $this->assertSame('{"role":"admin"}', json_encode($user));
+    }
+
+    public function testModelImplementsJsonSerializable()
+    {
+        $this->assertInstanceOf(\JsonSerializable::class, User::query());
+    }
+
+    public function testFreshReturnsNullForUnpersistedModel()
+    {
+        $user = User::query();
+        $this->assertNull($user->fresh());
     }
 }

@@ -37,7 +37,21 @@ User::createBulk([
     ['email' => 'a@example.com', 'first_name' => 'Alice'],
     ['email' => 'b@example.com', 'first_name' => 'Bob'],
 ]);
+
+// Upsert at row level — find by $find columns or create with $find + $attributes
+$tag = BlogTag::firstOrCreate(
+    ['slug' => 'echo'],
+    ['name' => 'Echo Framework'],
+);
+
+// Find and apply $attributes, or create. Returns the live model either way.
+$counter = HitCounter::updateOrCreate(
+    ['path' => '/posts/42'],
+    ['hits' => 1, 'last_seen' => date('Y-m-d H:i:s')],
+);
 ```
+
+Both `firstOrCreate()` and `updateOrCreate()` require a non-empty `$find` (otherwise they would always create). All `$find` columns are validated as identifiers, then ANDed together to locate the row.
 
 ### Read
 
@@ -57,6 +71,42 @@ $stats = User::query()->select(['role', 'COUNT(*) as count'])->groupBy('role')->
 
 Static factories that start a chain: `query()`, `where()`, `whereIn()`, `find()`. Everything else (`andWhere`, `whereRaw`, `orderBy`, `orderByRaw`, `groupBy`, `groupByRaw`, `having`, `havingRaw`, `paginate`, `with`, ...) is instance-only and mutates the builder.
 
+#### Or-Fail variants
+
+`findOrFail()` and `firstOrFail()` throw `Echo\Framework\Database\ModelNotFoundException` when no row matches — use these in controller paths where a missing row is a 404, not a recoverable nil. The exception carries the model class and (for `findOrFail`) the lookup id so the handler can render a meaningful response without re-running the query.
+
+```php
+$user = User::findOrFail($id);                                  // throws on miss
+$user = User::where('email', $email)->firstOrFail();            // throws on miss
+
+try {
+    $user = User::findOrFail($id);
+} catch (ModelNotFoundException $e) {
+    // $e->modelClass, $e->id
+}
+```
+
+#### Existence checks
+
+`exists()` short-circuits via `LIMIT 1` and is cheaper than `count() > 0` for "is there at least one?" questions. `doesntExist()` is the inverse.
+
+```php
+if (User::where('email', $email)->exists()) { /* ... */ }
+if (BlogPost::where('slug', $slug)->doesntExist()) { /* 404 */ }
+```
+
+#### Scalar reads
+
+`value(string $column)` returns a single column from the first matching row without hydrating the full model. `pluck(string $column)` returns a flat positionally-indexed array of one column's values across all matching rows. `keyBy(string $column)` returns hydrated models indexed by a column.
+
+```php
+$email = User::find($id)->value('email');               // null if no row
+$ids   = User::where('active', 1)->pluck('id');         // [1, 4, 7, ...]
+$byId  = User::whereIn('id', $ids)->keyBy('id');        // ['1' => User, '4' => User, ...]
+```
+
+`keyBy()` skips rows whose key column is null and lets later rows overwrite duplicates.
+
 ### Update
 
 ```php
@@ -66,6 +116,51 @@ $user->update(['first_name' => 'Alice', 'last_name' => 'Smith']);
 // Property assignment
 $user->first_name = 'Alice';
 $user->save();
+```
+
+#### Atomic increment / decrement / touch
+
+`increment()`, `decrement()`, and `touch()` issue a single `UPDATE` keyed by the row's primary key, avoiding the read-modify-write race that a plain `save()` would have. They **do not fire** `ModelUpdating`/`ModelUpdated` events — capturing old/new state would defeat the atomicity. Call `update()` or `save()` if you need events.
+
+```php
+$post->increment('view_count');             // SET view_count = view_count + 1
+$post->decrement('credits', 5);             // SET credits = credits - 5
+$user->touch();                              // SET updated_at = NOW()
+```
+
+All three return `false` when called on an unpersisted model (no id).
+
+#### Change tracking
+
+The model captures attribute state on load and exposes the diff. Useful in observers / event handlers / audit code that needs to react only to actual changes.
+
+```php
+$user = User::find(1);
+$user->email = 'new@x.com';
+$user->isDirty();              // true (any change)
+$user->isDirty('email');       // true (specific column)
+$user->isDirty('name');        // false
+$user->getDirty();             // ['email' => 'new@x.com']
+$user->getOriginal('email');   // 'old@x.com'
+$user->isClean();              // false
+```
+
+`fresh()` returns a *new* instance with re-loaded data, leaving the current instance untouched. Use `refresh()` instead when you want to mutate the current instance in place.
+
+```php
+$reloaded = $user->fresh();    // new instance, same row
+$user->refresh();              // mutate $user with reloaded data
+```
+
+#### Serialization
+
+`toArray()` returns the model's attributes with any **already-loaded** relations folded in (it never triggers lazy loading). `toJson()` wraps `json_encode` over `toArray()`. The model also implements `JsonSerializable`, so `json_encode($model)` works directly.
+
+```php
+$post = Post::find(1)->load('author', 'tags');
+$post->toArray();              // ['id' => 1, ..., 'author' => [...], 'tags' => [...]]
+$post->toJson();
+json_encode($post);            // uses jsonSerialize() under the hood
 ```
 
 ### Delete
@@ -91,8 +186,17 @@ $users = User::where('role', 'admin')
 $users = User::where('active', 1)->whereNull('deleted_at')->get();
 $users = User::where('active', 1)->whereNotNull('verified_at')->get();
 
-// Between
+// Between (inclusive) and its inverse
 $users = User::where('active', 1)->whereBetween('created_at', '2025-01-01', '2025-12-31')->get();
+$users = User::where('active', 1)->whereNotBetween('score', 0, 50)->get();
+
+// Date / time function helpers (MySQL DATE/YEAR/MONTH/DAY/TIME)
+$today = User::query()->whereDate('created_at', '2026-05-22')->get();
+$ytd   = User::query()->whereDate('created_at', '>=', '2026-01-01')->get();
+$thisMonth = User::query()->whereYear('created_at', 2026)
+                          ->whereMonth('created_at', 5)
+                          ->get();
+$morning = User::query()->whereTime('created_at', '<', '12:00:00')->get();
 
 // Raw WHERE
 $users = User::where('active', 1)->whereRaw('YEAR(created_at) = ?', [2025])->get();
@@ -117,6 +221,10 @@ $users = User::where('active', 1)
 
 $first = User::orderBy('id', 'ASC')->first();
 $last = User::orderBy('id', 'ASC')->last();     // reverses to get last
+
+// latest() / oldest() — sugar for the common timestamp-ordering pattern
+$recent = User::query()->latest()->get(10);                  // ORDER BY created_at DESC
+$first  = BlogPost::where('status', 'published')->oldest('published_at')->first();
 
 // Group by with custom select
 $stats = User::where('active', 1)
@@ -187,9 +295,21 @@ User::where('active', 1)
 ```php
 $count = User::where('active', 1)->count();
 $total = User::countAll();                      // all rows
+
 $maxId = User::where('role', 'admin')->max('id');
 $maxId = User::maxAll('id');                    // across all rows
+
+$minId = User::where('active', 1)->min('id');
+$minId = User::minAll('id');
+
+$totalScore = Track::where('artist', $name)->sum('play_count');
+$totalScore = Track::sumAll('play_count');
+
+$avgDuration = Track::where('genre', 'jazz')->avg('duration_ms');
+$avgDuration = Track::avgAll('duration_ms');
 ```
+
+`min/max/sum/avg/count` honor the current `where` chain; their `*All` static counterparts run against the unfiltered table. `sum` and `avg` return numeric strings from MySQL — cast at the call site if you need `int`/`float`.
 
 ## Pagination
 
@@ -221,6 +341,47 @@ $result = BlogPost::where('status', 'published')
   subquery to count grouped rows correctly. For grouped pagination, compute
   the count manually and use `getRaw()` with `limit()`/`offset()` (exposed on
   QueryBuilder).
+
+### Chunking
+
+`chunk(int $size, callable $callback)` processes the query result in batches without loading the full set into memory. Each batch is passed as an array of hydrated models, plus the 1-based page number. Return `false` from the callback to stop iteration early.
+
+Requires an explicit `orderBy()` — without one, the database is free to return rows in any order, making `LIMIT/OFFSET` unsafe across pages. Like `paginate()`, does not support `groupBy()`/`having()`.
+
+```php
+Track::query()
+    ->orderBy('id')
+    ->chunk(500, function (array $tracks, int $page) {
+        foreach ($tracks as $track) {
+            // ... process row
+        }
+        // return false; // would stop after this batch
+    });
+
+// Eager loading carries over to each batch
+Post::query()
+    ->orderBy('id')
+    ->with('author')
+    ->chunk(100, fn($posts) => syncBatch($posts));
+```
+
+Returns `true` if all batches were processed, `false` if the callback aborted.
+
+## Conditional Query Building
+
+`when($value, $callback, $default = null)` applies `$callback($this, $value)` only when `$value` is truthy — useful when controllers build queries from optional request filters. `unless()` is the inverse.
+
+```php
+$query = User::query()
+    ->when($search, fn($q, $v) => $q->where('name', 'like', "%$v%"))
+    ->when($role,   fn($q, $v) => $q->where('role', $v))
+    ->when($status, fn($q, $v) => $q->where('status', $v),
+                    fn($q)     => $q->where('status', 'active'));   // default branch
+
+return $query->paginate(20, $page);
+```
+
+The callback can either return the chain (matches Laravel-style) or mutate `$this` in place and return nothing — both work.
 
 ## Relationships
 
