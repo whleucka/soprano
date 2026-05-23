@@ -18,11 +18,25 @@ function togglePlaylist() {
   }
 }
 
-async function copyToClipboard(text) {
+async function copyClipboard(e) {
+    const icon = e.currentTarget.querySelector('i');
+    const original = icon ? icon.className : null;
+    try {
+      await _copyClipboard(window.location.href);
+      if (icon) {
+        icon.className = 'bi bi-check2 active';
+        setTimeout(() => { icon.className = original; }, 1500);
+      }
+    } catch (err) {
+      console.error('Clipboard copy failed', err);
+    }
+}
+
+// Fallback for non-secure contexts (e.g. HTTP on a LAN IP).
+async function _copyClipboard(text) {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(text);
   }
-  // Fallback for non-secure contexts (e.g. HTTP on a LAN IP).
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.setAttribute('readonly', '');

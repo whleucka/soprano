@@ -14,40 +14,10 @@
       </div>
     </div>
   </div>
-  <div id="actions" class="d-flex">
+  <div class="actions" class="d-flex">
     <a id="play-album" class="btn shadow-none border-0" hx-boost="true" hx-push-url="false" href="{{ uri("player.play-album", [album_hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
-    <button id="share" class="btn shadow-none border-0"><i class="bi bi-share-fill"></i></button>
+    <button onclick="copyClipboard(event)" class="share btn shadow-none border-0"><i class="bi bi-share-fill"></i></button>
   </div>
-  <div id="tracks" class="scrollable">
-    {% for track in tracks %}
-    <div id="{{ track.hash }}" tabindex="-1" class="track d-flex align-items-center shadow-none border-0 {% if track.hash == player.hash %}active{% endif %}" hx-get="{{ uri("player.play-album-track", [album_hash, loop.index0]) }}" hx-swap="none">
-      <span class="track-number py-2 px-4">{% if track.track_number %}{{ track.track_number }}{% else %}#{% endif %}</span>
-      <div class="d-flex flex-column flex-grow-1 truncate">
-        <span class="title truncate">{{ track.title}}</span>
-      </div>
-      <span class="playtime-string pe-3">{{ track.playtime_string }}</span>
-    </div>
-    {% endfor %}
-  </div>
+  <div class="tracks" class="scrollable" hx-get="{{ uri('album.tracks', [album_hash]) }}" hx-trigger="load, albumTracks from:body"></div>
 </section>
-<script>
-(function () {
-  const btn = document.getElementById('share');
-  if (!btn) return;
-
-  btn.addEventListener('click', async () => {
-    const icon = btn.querySelector('i');
-    const original = icon ? icon.className : null;
-    try {
-      await copyToClipboard(window.location.href);
-      if (icon) {
-        icon.className = 'bi bi-check2 active';
-        setTimeout(() => { icon.className = original; }, 1500);
-      }
-    } catch (err) {
-      console.error('Clipboard copy failed', err);
-    }
-  });
-})();
-</script>
 {% endblock %}

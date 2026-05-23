@@ -33,7 +33,21 @@ class AlbumController extends Controller
             "album"       => $album->title,
             "artist"      => $artist?->name,
             "dominant"    => $this->coverArt->dominantColor($album->cover),
-            "tracks"      => $this->music->albumTracks((int) $album->id),
+        ]);
+    }
+
+    #[Get("/album/{hash}/tracks", "album.tracks")]
+    public function tracks(string $hash): string
+    {
+        $album = $this->music->getAlbumByHash($hash);
+        if (!$album) {
+            return $this->pageNotFound();
+        }
+
+        return $this->render("album/tracks.html.twig", [
+            "album_hash"  => $album->hash,
+            "player"      => $this->player->getPlayer(),
+            "tracks" => $this->music->albumTracks((int) $album->id),
         ]);
     }
 }

@@ -249,21 +249,21 @@ body {
   color: #999;
   font-size: 0.9rem;
 }
-#playlist #tracks .title {
+#playlist .tracks .title {
   font-size: 1rem;
 }
 
-#playlist #tracks .artist {
+#playlist .tracks .artist {
   font-size: 0.8rem;
   color: #999;
 }
-#playlist #tracks .track {
+#playlist .tracks .track {
   cursor: pointer;
 }
-#playlist #tracks .track:hover {
+#playlist .tracks .track:hover {
   background: #222;
 }
-#playlist #tracks .playtime-string {
+#playlist .tracks .playtime-string {
   font-size: 0.8rem;
   color: #999;
 }
@@ -349,6 +349,17 @@ body {
   height: 90px;
 }
 
+.actions .share .active {
+  font-weight: 800;
+  color: lime;
+  font-size: 1.3rem;
+}
+
+.actions .btn {
+  color: #999;
+  font-size: 1.0rem;
+}
+
 #album .hero .album {
   font-size: 1.8rem;
   font-weight: 900;
@@ -368,17 +379,6 @@ body {
   font-size: 4rem;
 }
 
-#album #share .active {
-  font-weight: 800;
-  color: lime;
-  font-size: 1.3rem;
-}
-
-#album .btn {
-  color: #999;
-  font-size: 1.0rem;
-}
-
 #album #play-album {
   font-size: 3rem;
 }
@@ -396,33 +396,33 @@ body {
   background: #222;
 }
 
-#album #tracks .track {
+#album .tracks .track {
   cursor: pointer;
 }
-#album #tracks .track:focus {
+#album .tracks .track:focus {
   outline: none;
 }
 
-#album #tracks .track:hover {
+#album .tracks .track:hover {
   background: #222;
 }
 
-#album #tracks .track-number {
+#album .tracks .track-number {
   text-align: right;
   font-weight: 800;
   color: #999;
 }
 
-#album #tracks .title {
+#album .tracks .title {
   font-size: 1rem;
 }
 
-#album #tracks .artist {
+#album .tracks .artist {
   font-size: 0.8rem;
   color: #999;
 }
 
-#album #tracks .playtime-string {
+#album .tracks .playtime-string {
   font-size: 0.9rem;
   color: #999;
 }
@@ -487,7 +487,9 @@ body {
 #artist #top-tracks .track {
   cursor: pointer;
 }
-
+#artist .track:hover {
+  background: #222;
+}
 #artist #top-tracks .title {
   cursor: pointer;
   font-size: 1rem;
@@ -528,43 +530,43 @@ body {
   flex-direction: column;
 }
 
-#search #tracks .track {
+#search .tracks .track {
   cursor: pointer;
 }
-#search #tracks .track:focus {
+#search .tracks .track:focus {
   outline: none;
 }
-#search #tracks .track:hover {
+#search .tracks .track:hover {
   background: #222;
 }
 
-#search #tracks .track-number {
+#search .tracks .track-number {
   text-align: right;
   font-weight: 800;
   color: #999;
 }
 
-#search #tracks .cover {
+#search .tracks .cover {
   border-radius: 4px;
   width: 40px;
   height: 40px;
 }
 
-#search #tracks .title {
+#search .tracks .title {
   font-size: 1rem;
 }
 
-#search #tracks .album {
+#search .tracks .album {
   font-size: 0.8rem;
   color: #999;
 }
 
-#search #tracks .artist {
+#search .tracks .artist {
   font-size: 0.8rem;
   color: #999;
 }
 
-#search #tracks .playtime-string {
+#search .tracks .playtime-string {
   font-size: 0.9rem;
   color: #999;
 }
@@ -613,11 +615,11 @@ body {
     font-size: 1rem;
   }
 
-  #album #tracks .title {
+  #album .tracks .title {
     font-size: 1rem;
   }
 
-  #album #tracks .artist {
+  #album .tracks .artist {
     font-size: 0.8rem;
   }
   #home .cover {

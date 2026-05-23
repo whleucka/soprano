@@ -1,4 +1,4 @@
 <div class="d-flex flex-column h-100" style="min-height: 0;">
   <section id="now-playing" class="d-flex flex-column p-2" hx-get="{{ uri('playlist.now-playing') }}" hx-trigger="load, nowPlaying from:body"></section>
-  <section id="tracks" class="scrollable mt-2" hx-get="{{ uri('playlist.queue') }}" hx-trigger="load, playlistQueue from:body"></section>
+  <section class="tracks" class="scrollable mt-2" hx-get="{{ uri('playlist.queue') }}" hx-trigger="load, playlistQueue from:body"></section>
 </div>
