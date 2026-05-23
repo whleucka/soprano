@@ -1,7 +1,7 @@
 {% if tracks %}
   <ol class="top-tracks list-unstyled m-0">
     {% for track in tracks %}
-      <li id="top-tracks-{{ track.hash }}" class="track d-flex align-items-center mb-2 {% if player.hash == track.hash %}active{% endif %}" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
+      <li id="{{ track.hash }}" class="track d-flex align-items-center mb-2 {% if player.hash == track.hash %}active{% endif %}" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
         <span class="rank text-muted me-3">{{ loop.index }}</span>
         <img class="cover me-3" src="{{ track.cover }}" alt="{{ track.album }}" />
         <div class="d-flex flex-column flex-grow-1 min-width-0 truncate" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">

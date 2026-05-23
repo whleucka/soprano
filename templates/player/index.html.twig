@@ -1,21 +1,21 @@
 <div id="album-cover" class="d-flex align-items-center justify-content-center d-none d-md-flex" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-  <a class="text-decoration-none" href="{{ uri("album.index", [album_hash]) }}"><img src="{{ cover }}" class="cover ms-2 me-3"></a>
+  <a class="text-decoration-none" href="{{ uri("album.index", [player.album_hash]) }}"><img src="{{ player.cover }}" class="cover ms-2 me-3"></a>
 </div>
 <div id="info" class="d-flex flex-column justify-content-center d-none d-lg-flex" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-  <span class="title">{{ title }}</span>
-  <span class="artist"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [artist_hash]) }}">{{ artist }}</a></span>
+  <span class="title">{{ player.title }}</span>
+  <span class="artist"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [player.artist_hash]) }}">{{ player.artist }}</a></span>
 </div>
 <div id="controls" class="d-flex justify-content-center align-items-center px-2">
-  <button id="prev" onclick="prev()" class="btn border-0 shadow-none"><i class="bi bi-skip-start-circle"></i></button>
+  <button id="prev" onclick="prev()" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-start-circle"></i></button>
   <button id="play" onclick="play()" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
-  <button id="next" onclick="next()" class="btn border-0 shadow-none"><i class="bi bi-skip-end-circle"></i></button>
+  <button id="next" onclick="next()" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-end-circle"></i></button>
 </div>
 <div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-5">
   <div class="progress w-100" onclick="updateProgress()">
     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
   </div>
 </div>
-<audio id="audio" src="{{ src }}"></audio>
+<audio id="audio" src="{{ player.src }}"></audio>
 <script>
 var progressBar = document.querySelector("#playback .progress .progress-bar");
 var progressContainer = document.querySelector('.progress');
@@ -27,18 +27,14 @@ async function removeActiveTrack() {
   var tracks = document.querySelectorAll(".track");
   // remove the active class from the current rows
   tracks.forEach((track) => {
-    track.classList.remove("active");
+    if (track.id == '{{ player.hash }}') track.classList.add("active");
+    else track.classList.remove("active");
   })
 }
 
 async function updateActiveTrack() {
   await removeActiveTrack();
-  document.getElementById("album-{{ hash }}")?.classList.add("active");
-  document.getElementById("playlist-{{ hash }}")?.classList.add("active");
-  document.getElementById("search-{{ hash }}")?.classList.add("active");
-  document.getElementById("top-tracks-{{ hash }}")?.classList.add("active");
 }
-  
 
 (function() {
   // Focus on elements when track changes

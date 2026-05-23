@@ -252,9 +252,6 @@ body {
 #playlist #tracks .title {
   font-size: 1rem;
 }
-#playlist #tracks .title.active {
-  font-weight: 800;
-}
 
 #playlist #tracks .artist {
   font-size: 0.8rem;
@@ -264,9 +261,6 @@ body {
   cursor: pointer;
 }
 #playlist #tracks .track:hover {
-  background: #222;
-}
-#playlist #tracks .track.active {
   background: #222;
 }
 #playlist #tracks .playtime-string {
@@ -287,12 +281,7 @@ body {
 
 #home h2 {
   font-weight: 800;
-  color: #eee;
-}
-
-#home #recently-added, #home #recently-played, #home #top-played, #artist #discography {
-  overflow-x: auto;
-  padding: 6px;
+  color: #ddd;
 }
 
 #home .cover-wrap {
@@ -306,7 +295,7 @@ body {
   right: 4px;
   background: rgba(0, 0, 0, 0.75);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
@@ -321,34 +310,38 @@ body {
   font-size: 0.75rem;
 }
 
-#home .recent {
+.album-cont {
+  width: 120px;
   margin-right: 15px;
   cursor: pointer;
   color: #999;
 }
 
-.recent a:link,
-.recent a:visited {
+.album-cont a:link,
+.album-cont a:visited {
   color: #999;
 }
 
+.album-cont .title {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.album-cont .artist {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.album-cont .year {
+  font-size: 0.8rem;
+  color: #999;
+}
 
 #home .cover {
   border-radius: 12px;
   width: 80px;
   height: 80px;
 }
-
-#home .info.title {
-  color: #fff;
-  font-size: 1rem;
-}
-
-#home .info.artist {
-  font-size: 0.8rem;
-  color: #999;
-}
-
 
 .hero .cover {
   border-radius: 12px;
@@ -399,14 +392,15 @@ body {
   flex-direction: column;
 }
 
+.track.active {
+  background: #222;
+}
+
 #album #tracks .track {
   cursor: pointer;
 }
 #album #tracks .track:focus {
   outline: none;
-}
-#album #tracks .track.active {
-  background: #222;
 }
 
 #album #tracks .track:hover {
@@ -529,30 +523,6 @@ body {
   color: #999 !important;
 }
 
-#artist .recent {
-  margin-right: 15px;
-  cursor: pointer;
-  color: #999;
-}
-
-#artist .info {
-  width: 80px;
-}
-
-#artist #discography .cover {
-  border-radius: 12px;
-  width: 80px;
-  height: 80px;
-}
-#artist #discography .album {
-  color: #999;
-  font-size: 1rem;
-}
-#artist #discography .year {
-  color: #999;
-  font-size: 0.8rem;
-}
-
 #search {
   display: flex;
   flex-direction: column;
@@ -564,10 +534,6 @@ body {
 #search #tracks .track:focus {
   outline: none;
 }
-#search #tracks .track.active {
-  background: #222;
-}
-
 #search #tracks .track:hover {
   background: #222;
 }

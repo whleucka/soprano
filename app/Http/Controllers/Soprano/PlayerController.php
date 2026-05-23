@@ -15,10 +15,13 @@ class PlayerController extends Controller
         private MusicService $music,
     ) {}
 
-    #[Get("/player/load", "player.load")]
+    #[Get("/player", "player.index")]
     public function load(): string
     {
-        return $this->render("player/index.html.twig", $this->player->getPlayer());
+        return $this->render("player/index.html.twig", [
+            "player" => $this->player->getPlayer(),
+            "playlist" => $this->playlist->getPlaylist()
+        ]);
     }
 
     #[Get("/player/next-track", "player.next-track")]
