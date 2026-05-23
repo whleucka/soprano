@@ -189,7 +189,7 @@ body {
 }
 
 #view .hero {
-  min-height: 200px;
+  min-height: 120px;
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
   overflow: hidden;
@@ -226,8 +226,8 @@ body {
 }
 
 #playlist {
-  width: 400px;
-  min-width: 400px;
+  width: 352px;
+  min-width: 352px;
 }
 
 #playlist #now-playing #cover {
@@ -311,7 +311,7 @@ body {
 }
 
 .album-cont {
-  width: 120px;
+  width: 80px;
   margin-right: 15px;
   cursor: pointer;
   color: #999;

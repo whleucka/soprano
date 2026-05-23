@@ -27,8 +27,12 @@ async function removeActiveTrack() {
   var tracks = document.querySelectorAll(".track");
   // remove the active class from the current rows
   tracks.forEach((track) => {
-    if (track.id == '{{ player.hash }}') track.classList.add("active");
-    else track.classList.remove("active");
+    if (track.id == '{{ player.hash }}') {
+      track.focus();
+      track.classList.add("active");
+    } else {
+      track.classList.remove("active");
+    }
   })
 }
 
@@ -37,10 +41,6 @@ async function updateActiveTrack() {
 }
 
 (function() {
-  // Focus on elements when track changes
-  document.getElementById("album-{{ hash }}")?.focus();
-  document.getElementById("playlist-{{ hash }}")?.focus();
-
   progressContainer.addEventListener('click', (e) => {
       const rect = progressContainer.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
