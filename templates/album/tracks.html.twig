@@ -1,0 +1,9 @@
+{% for track in tracks %}
+  <div id="{{ track.hash }}" tabindex="-1" class="track d-flex align-items-center shadow-none border-0 {% if track.hash == player.hash %}active{% endif %}" hx-get="{{ uri("player.play-album-track", [album_hash, loop.index0]) }}" hx-swap="none">
+    <span class="track-number py-2 px-4">{% if track.track_number %}{{ track.track_number }}{% else %}#{% endif %}</span>
+    <div class="d-flex flex-column flex-grow-1 truncate">
+      <span class="title truncate">{{ track.title}}</span>
+    </div>
+    <span class="playtime-string pe-3">{{ track.playtime_string }}</span>
+  </div>
+{% endfor %}
