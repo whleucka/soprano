@@ -11,16 +11,12 @@ document.addEventListener('htmx:afterRequest', () => {
 
 
 // Toggles the rhs playlist view
-function togglePlaylist(hash) {
+function togglePlaylist() {
   var playlist = document.getElementById("playlist");
-  var hashes = document.querySelectorAll("."+hash);
   var view = document.getElementById("view");
   playlist.classList.toggle("d-none");
   view.classList.toggle("d-none");
   view.classList.toggle("d-lg-block");
-  if (!playlist.classList.contains("d-none")) {
-    hashes.forEach((target) => target.focus());
-  }
 }
 
 async function copyClipboard(e) {
