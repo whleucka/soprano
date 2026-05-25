@@ -27,6 +27,13 @@ class ArtistController extends Controller
         ]);
     }
 
+    #[Get("/artist/{hash}/actions", "artist.actions")]
+    public function actions(string $hash): string
+    {
+        return $this->render("artist/actions.html.twig", [
+        ]);
+    }
+
     #[Get("/artist/{hash}/discography", "artist.discography")]
     public function discography(string $hash): string
     {

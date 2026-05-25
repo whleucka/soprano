@@ -36,6 +36,19 @@ class AlbumController extends Controller
         ]);
     }
 
+    #[Get("/album/{hash}/actions", "album.actions")]
+    public function actions(string $hash): string
+    {
+        $album = $this->music->getAlbumByHash($hash);
+        if (!$album) {
+            return $this->pageNotFound();
+        }
+
+        return $this->render("album/actions.html.twig", [
+            "album_hash"  => $album->hash,
+        ]);
+    }
+
     #[Get("/album/{hash}/tracks", "album.tracks")]
     public function tracks(string $hash): string
     {

@@ -36,6 +36,13 @@ class SearchController extends Controller
         ]);
     }
 
+    #[Get("/search/actions", "search.actions")]
+    public function actions(): string
+    {
+        return $this->render("search/actions.html.twig", [
+        ]);
+    }
+
     #[Get("/search/top", "search.top")]
     public function top(): string
     {
