@@ -1,0 +1,13 @@
+# Project-specific service overrides for soprano.
+# Loaded automatically by ./bin/dev when present.
+# Kept separate from docker-compose.yml so the base file stays byte-identical
+# to upstream Echo, avoiding merge conflicts on `git fetch upstream`.
+
+services:
+  php:
+    volumes:
+      - $HOME/Music:/music
+
+  nginx:
+    volumes:
+      - $HOME/Music:/music:ro
