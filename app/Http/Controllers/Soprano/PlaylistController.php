@@ -32,8 +32,16 @@ class PlaylistController extends Controller
                 "cover"       => "/images/no-album-art.png",
                 "album"       => "N/A",
                 "title"       => "N/A",
-            ],
-            "playlist" => $playlist
+            ]
+        ]);
+    }
+
+    #[Get("/playlist/actions", "playlist.actions")]
+    public function actions(): string
+    {
+        $playlist = $this->playlist->getPlaylist();
+        return $this->render("playlist/actions.html.twig", [
+            "playlist" => $this->playlist->getPlaylist(),
         ]);
     }
 
@@ -46,9 +54,17 @@ class PlaylistController extends Controller
     }
 
     #[Get("/playlist/queue/clear", "playlist.queue-clear")]
-    public function queue_clear(): void
+    public function queueClear(): void
     {
         $this->playlist->setPlaylist([], 0);
-        $this->hxTrigger("nowPlaying, playlistQueue");
+        $this->hxTrigger("loadPlaylist");
+    }
+
+    #[Get("/playlist/shuffle", "playlist.shuffle")]
+    public function shuffle()
+    {
+        $playlist = $this->playlist->getPlaylist();
+        $this->playlist->setPlaylist($playlist["tracks"], $playlist["index"], !$playlist["shuffle"]);
+        $this->hxTrigger("playlistActions");
     }
 }

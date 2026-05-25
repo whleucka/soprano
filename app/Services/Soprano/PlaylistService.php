@@ -6,35 +6,44 @@ class PlaylistService
 {
     public function getPlaylist(): array
     {
-        return session()->get("playlist") ?? ["tracks" => [], "index" => 0];
+        return session()->get("playlist") ?? [
+            "tracks" => [],
+            "index" => 0,
+            "shuffle" => false
+        ];
     }
 
-    public function setPlaylist(array $tracks, int $index = 0)
+    public function setPlaylist(array $tracks, int $index = 0, bool $shuffle = false)
     {
         session()->set("playlist", [
             "tracks" => $tracks,
             "index" => $index,
+            "shuffle" => $shuffle,
         ]);
     }
 
-    public function changePlaylistTrack($forward = true): array|false
+    public function changePlaylistTrack(array $playlist, $forward = true): array|false
     {
-        $playlist = $this->getPlaylist();
+        $playlist_count = count($playlist["tracks"]);
 
-        if (!$playlist || count($playlist["tracks"]) < 2) return false;
+        if (!$playlist || $playlist_count < 2) return false;
 
-        $mod_index = $forward 
-            ? intval($playlist["index"]) + 1 
-            : intval($playlist["index"]) - 1;
-        $new_index = $mod_index % count($playlist["tracks"]);
+        if ($playlist["shuffle"]) {
+            $new_index = rand(0, $playlist_count - 1);
+        } else {
+            $mod_index = $forward
+                ? intval($playlist["index"]) + 1
+                : intval($playlist["index"]) - 1;
+            $new_index = $mod_index % $playlist_count;
+        }
 
         if ($new_index < 0) {
-            $new_index = count($playlist["tracks"]) - 1;
+            $new_index = $playlist_count - 1;
         }
 
         if (!isset($playlist["tracks"][$new_index])) return false;
 
-        $this->setPlaylist($playlist["tracks"], $new_index);
+        $this->setPlaylist($playlist["tracks"], $new_index, $playlist["shuffle"]);
 
         $next_track = $playlist["tracks"][$new_index];
 

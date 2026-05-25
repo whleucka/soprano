@@ -27,7 +27,8 @@ class PlayerController extends Controller
     #[Get("/player/next-track", "player.next-track")]
     public function nextTrack()
     {
-        $next = $this->playlist->changePlaylistTrack();
+        $playlist = $this->playlist->getPlaylist();
+        $next = $this->playlist->changePlaylistTrack($playlist, true);
         if ($next) {
             $this->hxTrigger("nowPlaying");
             return $this->play($next['hash']);
@@ -37,7 +38,8 @@ class PlayerController extends Controller
     #[Get("/player/prev-track", "player.prev-track")]
     public function prevTrack()
     {
-        $prev = $this->playlist->changePlaylistTrack(false);
+        $playlist = $this->playlist->getPlaylist();
+        $prev = $this->playlist->changePlaylistTrack($playlist, false);
         if ($prev) {
             $this->hxTrigger("nowPlaying");
             return $this->play($prev['hash']);
@@ -55,7 +57,8 @@ class PlayerController extends Controller
         if (empty($tracks[$index])) {
             return;
         }
-        $this->playlist->setPlaylist($tracks, $index);
+        $playlist = $this->playlist->getPlaylist();
+        $this->playlist->setPlaylist($tracks, $index, $playlist["shuffle"]);
         $this->hxTrigger("nowPlaying, playlistQueue");
         return $this->play($tracks[$index]['hash']);
     }
@@ -65,7 +68,7 @@ class PlayerController extends Controller
     {
         $playlist = $this->playlist->getPlaylist();
         if (!empty($playlist['tracks'][$index])) {
-            $this->playlist->setPlaylist($playlist['tracks'], $index);
+            $this->playlist->setPlaylist($playlist['tracks'], $index, $playlist["shuffle"]);
             $this->hxTrigger("nowPlaying");
             return $this->play($playlist['tracks'][$index]['hash']);
         }
@@ -83,7 +86,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks);
-        $this->hxTrigger("nowPlaying, playlistQueue");
+        $this->hxTrigger("nowPlaying, playlistActions, playlistQueue");
         return $this->play($tracks[0]['hash']);
     }
 
