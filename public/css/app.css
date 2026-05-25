@@ -98,6 +98,13 @@ body {
 }
 
 /** Sections */
+.track:focus {
+  border-color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  outline: none;
+} 
+
 #app {
   color: #fff;
   background: #000;
@@ -224,20 +231,9 @@ body {
   overflow: hidden;
 }
 
-#player {
-  height: 75px;
-  min-height: 75px;
-  margin-top: 8px;
-}
-
 #playlist {
   width: 100%;
   min-width: 100%;
-}
-
-#playlist .actions {
-  height: 34px;
-  max-height: 34px;
 }
 
 #playlist #now-playing #cover {
@@ -357,6 +353,16 @@ body {
   height: 90px;
 }
 
+.actions {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.actions > * {
+  flex-shrink: 0;
+}
+
 .actions .share .active {
   font-weight: 800;
   color: lime;
@@ -433,6 +439,12 @@ body {
 #album .tracks .playtime-string {
   font-size: 0.9rem;
   color: #999;
+}
+
+#player {
+  height: 75px;
+  min-height: 75px;
+  margin-top: 8px;
 }
 
 #player #info {

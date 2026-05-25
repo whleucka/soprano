@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MusicService, PlaylistService, PlayerService};
+use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, SearchService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 use App\Http\StreamResponse;
@@ -11,6 +11,7 @@ class PlayerController extends Controller
 {
     public function __construct(
         private PlayerService $player,
+        private SearchService $search,
         private PlaylistService $playlist,
         private MusicService $music,
     ) {}
@@ -59,7 +60,7 @@ class PlayerController extends Controller
         }
         $playlist = $this->playlist->getPlaylist();
         $this->playlist->setPlaylist($tracks, $index, $playlist["shuffle"]);
-        $this->hxTrigger("nowPlaying, playlistQueue");
+        $this->hxTrigger("loadPlaylist");
         return $this->play($tracks[$index]['hash']);
     }
 
@@ -74,6 +75,19 @@ class PlayerController extends Controller
         }
     }
 
+    #[Get("/player/play/search", "player.play-search")]
+    public function playSearch()
+    {
+        $playlist = $this->playlist->getPlaylist();
+        $search = $this->search->getSearch();
+        if (!empty($search['tracks'])) {
+            $this->playlist->setPlaylist($search['tracks'], 0, $playlist["shuffle"]);
+            $this->hxTrigger("loadPlaylist");
+            return $this->play($search['tracks'][0]['hash']);
+        }
+    }
+
+
     #[Get("/player/play/album/{hash}", "player.play-album")]
     public function playAlbum(string $hash)
     {
@@ -86,7 +100,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks);
-        $this->hxTrigger("nowPlaying, playlistActions, playlistQueue");
+        $this->hxTrigger("loadPlaylist");
         return $this->play($tracks[0]['hash']);
     }
 

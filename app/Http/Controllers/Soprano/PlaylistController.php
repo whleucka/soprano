@@ -39,7 +39,6 @@ class PlaylistController extends Controller
     #[Get("/playlist/actions", "playlist.actions")]
     public function actions(): string
     {
-        $playlist = $this->playlist->getPlaylist();
         return $this->render("playlist/actions.html.twig", [
             "playlist" => $this->playlist->getPlaylist(),
         ]);

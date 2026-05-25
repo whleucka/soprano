@@ -21,7 +21,7 @@ class SearchController extends Controller
 
         if ($term && trim($term) !== '') {
             $this->search->setSearch($term);
-            $this->hxTrigger("loadTop, searchResults");
+            $this->hxTrigger("loadTop, searchResults, searchActions");
         }
 
         return $this->render("search/index.html.twig");
@@ -40,6 +40,7 @@ class SearchController extends Controller
     public function actions(): string
     {
         return $this->render("search/actions.html.twig", [
+            "search" => $this->search->getSearch(),
         ]);
     }
 
@@ -55,6 +56,6 @@ class SearchController extends Controller
     public function clear()
     {
         $this->search->setSearch('');
-        $this->hxTrigger("loadTop, searchResults");
+        $this->hxTrigger("loadTop, searchResults, searchActions");
     }
 }

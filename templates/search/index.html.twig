@@ -3,7 +3,7 @@
 {% block title %}Soprano - Search {% endblock %}
 
 {% block view %}
-<section id="search" class="h-100">
+<section id="search" class="h-100 d-flex flex-column">
   <div class="hero d-flex align-items-center p-3">
     <div class="d-flex align-items-center">
       <div class="d-flex flex-column">
@@ -11,7 +11,7 @@
       </div>
     </div>
   </div>
-  <div class="actions" class="d-flex" hx-get="{{ uri("search.actions") }}" hx-trigger="load, searchActions from:body"></div>
+  <div class="actions d-flex p-2" hx-get="{{ uri("search.actions") }}" hx-trigger="load, searchActions from:body"></div>
   <div class="tracks scrollable" hx-get="{{ uri('search.results') }}" hx-trigger="load, searchResults from:body"></div>
 </section>
 {% endblock %}
