@@ -17,6 +17,7 @@ function togglePlaylist() {
   playlist.classList.toggle("d-none");
   view.classList.toggle("d-none");
   view.classList.toggle("d-lg-block");
+  updateActiveTrack();
 }
 
 async function copyClipboard(e) {
