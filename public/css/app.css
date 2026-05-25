@@ -236,8 +236,8 @@ body {
 }
 
 #playlist .actions {
-  height: 60px;
-  max-height: 60px;
+  height: 34px;
+  max-height: 34px;
 }
 
 #playlist #now-playing #cover {
@@ -663,7 +663,6 @@ body {
     width: 30%;
     min-width: 375px;
   }
-
 }
 
 @media (min-width: 1200px) {
