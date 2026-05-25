@@ -178,6 +178,12 @@ body {
   overflow: hidden;
 }
 
+#view .cover {
+  border-radius: 12px;
+  width: 90px;
+  height: 90px;
+}
+
 #view h1 {
   font-size: 2.5rem;
   font-weight: 800;
@@ -190,7 +196,6 @@ body {
 
 #view .hero {
   min-height: 120px;
-  border-radius: 12px;
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
   overflow: hidden;
 }
@@ -226,8 +231,8 @@ body {
 }
 
 #playlist {
-  width: 352px;
-  min-width: 352px;
+  width: 100%;
+  min-width: 100%;
 }
 
 #playlist #now-playing #cover {
@@ -338,13 +343,11 @@ body {
 }
 
 #home .cover {
-  border-radius: 12px;
   width: 80px;
   height: 80px;
 }
 
 .hero .cover {
-  border-radius: 12px;
   width: 90px;
   height: 90px;
 }
@@ -574,21 +577,26 @@ body {
 
 /** SM */
 @media (min-width: 576px) {
-  #playlist {
-    width: 320px;
-    min-width: 320px;
-  }
 }
 
 /** MD */
 @media (min-width: 768px) {
-  .hero .cover {
-    width: 170px;
-    height: 170px;
+  .album-cont {
+    width: 120px;
   }
 
   #view .hero {
     min-height: 260px;
+  }
+
+  #view .hero .cover {
+    width: 170px;
+    height: 170px;
+  }
+
+  #view .cover {
+    width: 120px;
+    height: 120px;
   }
 
   #view h1 {
@@ -622,10 +630,6 @@ body {
   #album .tracks .artist {
     font-size: 0.8rem;
   }
-  #home .cover {
-    width: 120px;
-    height: 120px;
-  }
 
   #home .cover-wrap {
     width: 120px;
@@ -650,6 +654,11 @@ body {
 
 /** LG */
 @media (min-width: 992px) {
+  #playlist {
+    width: 30%;
+    min-width: 375px;
+  }
+
 }
 
 @media (min-width: 1200px) {

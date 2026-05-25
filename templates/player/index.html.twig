@@ -21,7 +21,6 @@ var progressBar = document.querySelector("#playback .progress .progress-bar");
 var progressContainer = document.querySelector('.progress');
 var audio = document.getElementById("audio");
 var playBtn = document.getElementById("play");
-var playlist = document.getElementById("playlist");
 
 async function removeActiveTrack() {
   var tracks = document.querySelectorAll(".track");
@@ -53,7 +52,7 @@ async function updateActiveTrack() {
   }
 
   audio.onloadeddata = function () {
-    updateActiveTrack();
+    updateActiveTrack('{{ player.hash }}');
   }
 
   audio.onpause = function () {
