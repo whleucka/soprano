@@ -64,6 +64,19 @@ class PlayerController extends Controller
         return $this->play($tracks[$index]['hash']);
     }
 
+    #[Get("/player/play/artist/{hash}", "player.play-artist")]
+    public function playArtist(string $hash)
+    {
+        $tracks = $this->music->artistTracks($hash);
+        if (empty($tracks)) {
+            return;
+        }
+        $playlist = $this->playlist->getPlaylist();
+        $this->playlist->setPlaylist($tracks, 0, $playlist["shuffle"]);
+        $this->hxTrigger("loadPlaylist");
+        return $this->play($tracks[0]['hash']);
+    }
+
     #[Get("/player/play/playlist/{index}", "player.play-playlist-track")]
     public function playPlaylistTrack(int $index)
     {

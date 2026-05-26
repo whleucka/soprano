@@ -18,7 +18,7 @@
     <div id="top-tracks" class="pb-3" hx-get="{{ uri("artist.top-tracks", [artist_hash]) }}" hx-trigger="load, topTracks from:body"></div>
 
     <h2 class="mt-3">Discography</h2>
-    <div id="discography" class="d-flex justify-content-start pb-3" hx-get="{{ uri("artist.discography", [artist_hash]) }}" hx-trigger="load"></div>
+    <div id="discography" class="d-flex justify-content-start scrollable pb-3" hx-get="{{ uri("artist.discography", [artist_hash]) }}" hx-trigger="load"></div>
   </div>
 </section>
 {% endblock %}

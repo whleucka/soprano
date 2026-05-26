@@ -30,7 +30,13 @@ class ArtistController extends Controller
     #[Get("/artist/{hash}/actions", "artist.actions")]
     public function actions(string $hash): string
     {
+        $artist = $this->music->getArtistByHash($hash);
+        if (!$artist) {
+            return $this->pageNotFound();
+        }
+
         return $this->render("artist/actions.html.twig", [
+            "artist_hash" => $artist->hash,
         ]);
     }
 

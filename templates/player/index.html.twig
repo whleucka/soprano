@@ -10,7 +10,7 @@
   <button id="play" onclick="play()" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
   <button id="next" onclick="next()" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-end-circle"></i></button>
 </div>
-<div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-5">
+<div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-2">
   <div class="progress w-100" onclick="updateProgress()">
     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
   </div>

@@ -394,7 +394,7 @@ body {
 }
 
 #album #play-album {
-  font-size: 3rem;
+  font-size: 2rem;
 }
 
 #album .btn:hover {
@@ -504,6 +504,10 @@ body {
   font-weight: 900;
 }
 
+#artist #play-artist {
+  font-size: 2.rem;
+}
+
 #artist #top-tracks .track {
   cursor: pointer;
 }
@@ -598,6 +602,12 @@ body {
 
 /** MD */
 @media (min-width: 768px) {
+  #album #play-album {
+    font-size: 3rem;
+  }
+  #artist #play-artist {
+    font-size: 3rem;
+  }
   .album-cont {
     width: 120px;
   }

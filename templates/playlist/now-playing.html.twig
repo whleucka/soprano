@@ -1,6 +1,6 @@
 <div class="d-flex align-items-center p-2">
   <img id="cover" src="{{ current.cover }}" />
-  <div class="d-flex flex-column truncate p-2 mt-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+  <div class="d-flex flex-column truncate p-2 mt-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="togglePlaylist()">
     <h1 id="title" class="m-0 mb-2 truncate">{{ current.title }}</h1>
     <h3 id="artist" class="truncate"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [current.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ current.artist }}</a></h3>
     <h3 id="album" class="truncate"><a class="text-reset text-decoration-none" href="{{ uri("album.index", [current.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ current.album }}</a></h3>

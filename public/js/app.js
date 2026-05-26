@@ -20,6 +20,15 @@ function togglePlaylist() {
   updateActiveTrack();
 }
 
+function hidePlaylist() {
+  var playlist = document.getElementById("playlist");
+  var view = document.getElementById("view");
+  playlist.classList.add("d-none");
+  view.classList.remove("d-none");
+  view.classList.remove("d-lg-block");
+  updateActiveTrack();
+}
+
 async function copyClipboard(e) {
     const icon = e.currentTarget.querySelector('i');
     const original = icon ? icon.className : null;

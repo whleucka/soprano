@@ -1,4 +1,4 @@
-<form class="w-100" hx-get="{{ uri("search.index") }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-push-url="true">
+<form class="w-100" hx-get="{{ uri("search.index") }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()" hx-push-url="true">
   <div class="input-group">
     <input type="text" class="form-control border-0 shadow-none p-3" name="term" value="{{ search.term }}" placeholder="What do you want to play?" />
     {% if search.term %}
