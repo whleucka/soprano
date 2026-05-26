@@ -447,11 +447,11 @@ body {
   outline: none;
 } 
 .track.active {
-  font-weight: bold;
-  background: #333;
+  font-weight: 800;
+  background: #222;
 }
 .track:hover {
-  background: #333;
+  background: #222;
 }
 .track .track {
   cursor: pointer;
