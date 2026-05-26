@@ -10,7 +10,7 @@
   <button class="btn dropdown-toggle border-0 shadow-none" type="button" id="menu-button" data-bs-toggle="dropdown" aria-expanded="false">
     <i class="bi bi-person-circle"></i>
   </button>
-  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-button" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-button" hx-on::before-request="hidePlaylist()" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
     <li class="d-block"><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-in-right me-1"></i> Sign In</a></li>
     <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a></li>
     <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("search.index") }}"><i class="bi bi-search pe-1"></i> Search</a></li>
