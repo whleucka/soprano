@@ -2,7 +2,7 @@
   {% for track in tracks %}
     <div id="{{ track.hash }}" tabindex="-1" class="track mb-2 px-1 {% if player.hash == track.hash %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
       <div class="d-flex align-items-center flex-grow-1 truncate" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
-        <span class="rank text-end me-3">{{ loop.index }}</span>
+        <span class="rank text-end me-3">#{{ loop.index }}</span>
         <img class="cover me-3" src="{{ track.cover }}" alt="{{ track.album }}" />
         <div class="d-flex flex-column flex-grow-1 truncate">
           <span title="{{ track.title }}" class="title truncate">{{ track.title}}</span>
