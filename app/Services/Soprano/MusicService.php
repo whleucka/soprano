@@ -142,7 +142,7 @@ class MusicService
             'title'           => $row['title'] ?? '',
             'artist'          => $row['artist'] ?? '',
             'album'           => $row['album'] ?? '',
-            'cover'           => $row['cover'],
+            'cover'           => $row['cover'] ?? '/images/no-album-art.png',
             'year'            => $row['year'] ?? '',
             'track_number'    => $row['track_number'] ?? '',
             'playtime_string' => $row['playtime_string'] ?? '',
@@ -156,7 +156,7 @@ class MusicService
             'artist_hash' => $row['artist_hash'],
             'album'       => $row['album'],
             'artist'      => $row['artist'],
-            'cover'       => $row['cover'],
+            'cover'       => $row['cover'] ?? '/images/no-album-art.png',
             'year'        => $row['year'],
         ];
     }
