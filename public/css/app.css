@@ -98,13 +98,6 @@ body {
 }
 
 /** Sections */
-.track:focus {
-  border-color: inherit;
-  -webkit-box-shadow: none;
-  box-shadow: none;
-  outline: none;
-} 
-
 #app {
   color: #fff;
   background: #000;
@@ -185,48 +178,6 @@ body {
   overflow: hidden;
 }
 
-#view .cover {
-  border-radius: 12px;
-  width: 90px;
-  height: 90px;
-}
-
-#view h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-}
-
-#view h2 {
-  font-size: 1.5rem;
-  font-weight: 800;
-}
-
-#view .hero {
-  min-height: 120px;
-  background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
-  overflow: hidden;
-}
-
-#home .hero {
-  background: linear-gradient(180deg,rgba(60, 140, 22, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#search .hero {
-  background: linear-gradient(180deg,rgba(224, 66, 245) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#music .hero {
-  background: linear-gradient(180deg,rgba(23, 96, 255, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#radio .hero {
-  background: linear-gradient(180deg,rgba(255, 157, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#podcasts .hero {
-  background: linear-gradient(180deg,rgba(255, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
 #view .content {
   overflow: hidden;
 }
@@ -255,24 +206,6 @@ body {
   color: #999;
   font-size: 0.9rem;
 }
-#playlist .tracks .title {
-  font-size: 1rem;
-}
-
-#playlist .tracks .artist {
-  font-size: 0.8rem;
-  color: #999;
-}
-#playlist .tracks .track {
-  cursor: pointer;
-}
-#playlist .tracks .track:hover {
-  background: #222;
-}
-#playlist .tracks .playtime-string {
-  font-size: 0.8rem;
-  color: #999;
-}
 
 #app .content {
   margin: 6px;
@@ -288,11 +221,6 @@ body {
 #home h2 {
   font-weight: 800;
   color: #ddd;
-}
-
-#home .cover-wrap {
-  width: 80px;
-  height: 80px;
 }
 
 #home .play-count-badge {
@@ -316,79 +244,6 @@ body {
   font-size: 0.75rem;
 }
 
-.album-cont {
-  width: 80px;
-  margin-right: 15px;
-  cursor: pointer;
-  color: #999;
-}
-
-.album-cont a:link,
-.album-cont a:visited {
-  color: #999;
-}
-
-.album-cont .title {
-  color: #fff;
-  font-size: 1rem;
-}
-
-.album-cont .artist {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.album-cont .year {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-#home .cover {
-  width: 80px;
-  height: 80px;
-}
-
-.hero .cover {
-  width: 90px;
-  height: 90px;
-}
-
-.actions {
-  overflow-x: auto;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-}
-
-.actions > * {
-  flex-shrink: 0;
-}
-
-.actions .share .active {
-  font-weight: 800;
-  color: lime;
-  font-size: 1.3rem;
-}
-
-.actions .btn {
-  color: #999;
-  font-size: 1.0rem;
-}
-
-#album .hero .album {
-  font-size: 1.8rem;
-  font-weight: 900;
-}
-
-#album .hero .artist {
-  font-size: 1rem;
-  color: #999;
-}
-
-#album .hero .year {
-  font-size: 0.9rem;
-  color: #999;
-}
-
 #album #play {
   font-size: 4rem;
 }
@@ -404,41 +259,6 @@ body {
 #album {
   display: flex;
   flex-direction: column;
-}
-
-.track.active {
-  background: #222;
-}
-
-#album .tracks .track {
-  cursor: pointer;
-}
-#album .tracks .track:focus {
-  outline: none;
-}
-
-#album .tracks .track:hover {
-  background: #222;
-}
-
-#album .tracks .track-number {
-  text-align: right;
-  font-weight: 800;
-  color: #999;
-}
-
-#album .tracks .title {
-  font-size: 1rem;
-}
-
-#album .tracks .artist {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-#album .tracks .playtime-string {
-  font-size: 0.9rem;
-  color: #999;
 }
 
 #player {
@@ -499,54 +319,11 @@ body {
   background: linear-gradient(90deg, rgba(50,50,50,0.5) 41%, rgba(125,125,125,0.5) 100%);
 }
 
-#artist .hero .artist {
-  font-size: 1.8rem;
-  font-weight: 900;
-}
-
 #artist #play-artist {
-  font-size: 2.rem;
+  font-size: 2rem;
 }
-
-#artist #top-tracks .track {
-  cursor: pointer;
-}
-#artist .track:hover {
-  background: #222;
-}
-#artist #top-tracks .title {
-  cursor: pointer;
-  font-size: 1rem;
-}
-#artist #top-tracks .artist {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-#artist #top-tracks .cover {
-  border-radius: 6px;
-  width: 40px;
-  height: 40px;
-}
-
 #artist .album {
   color: #999;
-}
-
-#artist .top-tracks .rank {
-  text-align: right;
-  width: 20px;
-  color: #999 !important;
-}
-
-#artist .top-tracks .album {
-  color: #999 !important;
-}
-
-
-#artist .top-tracks .plays {
-  font-size: 0.9rem;
-  color: #999 !important;
 }
 
 #search {
@@ -554,47 +331,160 @@ body {
   flex-direction: column;
 }
 
-#search .tracks .track {
-  cursor: pointer;
-}
-#search .tracks .track:focus {
-  outline: none;
-}
-#search .tracks .track:hover {
-  background: #222;
-}
-
-#search .tracks .track-number {
-  text-align: right;
-  font-weight: 800;
-  color: #999;
+/**
+* Hero
+*/
+.hero {
+  min-height: 120px;
+  background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+  overflow: hidden;
 }
 
-#search .tracks .cover {
-  border-radius: 4px;
-  width: 40px;
-  height: 40px;
+#home .hero {
+  background: linear-gradient(180deg,rgba(60, 140, 22, 1) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
-#search .tracks .title {
+#search .hero {
+  background: linear-gradient(180deg,rgba(224, 66, 245) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+#music .hero {
+  background: linear-gradient(180deg,rgba(23, 96, 255, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+#radio .hero {
+  background: linear-gradient(180deg,rgba(255, 157, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+#podcasts .hero {
+  background: linear-gradient(180deg,rgba(255, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+.hero .cover {
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+}
+
+.hero h1 {
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.hero h3 {
   font-size: 1rem;
-}
-
-#search .tracks .album {
-  font-size: 0.8rem;
   color: #999;
 }
 
-#search .tracks .artist {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-#search .tracks .playtime-string {
+.hero h5 {
   font-size: 0.9rem;
   color: #999;
 }
 
+
+/** Actions */
+.actions {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.actions > * {
+  flex-shrink: 0;
+}
+
+.actions .share .active {
+  font-weight: 800;
+  color: lime;
+  font-size: 1.3rem;
+}
+
+.actions .btn {
+  color: #999;
+  font-size: 1.0rem;
+}
+
+/** Album Container */
+.album-cont {
+  width: 80px;
+  margin-right: 15px;
+  cursor: pointer;
+  color: #999;
+}
+.album-cont .cover {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+}
+
+.album-cont a:link,
+.album-cont a:visited {
+  color: #999;
+}
+
+.album-cont .title {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.album-cont .artist {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.album-cont .year {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/** Track */
+.track .dropdown-toggle {
+  color: #fff;
+}
+.track:focus {
+  border-color: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  outline: none;
+} 
+.track.active {
+  font-weight: bold;
+}
+.track:hover {
+  background: #555;
+}
+.track .track {
+  cursor: pointer;
+}
+.track .title {
+  font-size: 1rem;
+}
+.track .artist {
+  font-size: 0.8rem;
+  color: #999;
+}
+.track .playtime-string {
+  font-size: 0.8rem;
+  color: #999;
+}
+.track .track-number {
+  font-weight: 800;
+  color: #999;
+  font-size: 0.9rem;
+}
+.track .cover {
+  border-radius: 4px;
+  width: 40px;
+  height: 40px;
+}
+.track .plays {
+  font-size: 0.9rem;
+  color: #fff;
+}
+.track .rank {
+  font-weight: 800;
+  color: #999;
+  font-size: 0.9rem;
+}
 
 /** SM */
 @media (min-width: 576px) {
@@ -602,14 +492,20 @@ body {
 
 /** MD */
 @media (min-width: 768px) {
+
   #album #play-album {
     font-size: 3rem;
   }
   #artist #play-artist {
     font-size: 3rem;
   }
-  .album-cont {
-    width: 120px;
+
+  #view h1 {
+    font-size: 3.5rem;
+  }
+
+  #view h2 {
+    font-size: 1.5rem;
   }
 
   #view .hero {
@@ -621,59 +517,30 @@ body {
     height: 170px;
   }
 
-  #view .cover {
-    width: 120px;
-    height: 120px;
+  .hero h1 {
+    font-size: 2.5rem;
   }
 
-  #view h1 {
-    font-size: 3.5rem;
+  .hero h3 {
+    font-size: 2rem;
   }
 
-  #view h2 {
-    font-size: 1.5rem;
-  }
-
-  #artist .hero .artist {
-    font-size: 3rem;
-  }
-
-  #album .hero .album {
-    font-size: 3rem;
-  }
-
-  #album .hero .artist {
-    font-size: 1.5rem;
-  }
-
-  #album .hero .year {
+  .hero h5 {
     font-size: 1rem;
   }
 
-  #album .tracks .title {
-    font-size: 1rem;
+  .album-cont {
+    width: 120px;
   }
-
-  #album .tracks .artist {
-    font-size: 0.8rem;
-  }
-
-  #home .cover-wrap {
+  .album-cont .cover {
     width: 120px;
     height: 120px;
   }
-
-  #home .info {
+  .info {
     font-size: 1.0rem;
     width: 120px;
   }
-
-  #artist #discography .cover {
-    width: 120px;
-    height: 120px;
-  }
-
-  #artist .info {
+  .info {
     font-size: 1.0rem;
     width: 120px;
   }

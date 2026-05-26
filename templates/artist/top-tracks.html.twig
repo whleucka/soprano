@@ -1,18 +1,25 @@
 {% if tracks %}
-  <ol class="top-tracks list-unstyled m-0">
-    {% for track in tracks %}
-      <li id="{{ track.hash }}" class="track d-flex align-items-center mb-2 {% if player.hash == track.hash %}active{% endif %}" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
-        <span class="rank text-muted me-3">{{ loop.index }}</span>
+  {% for track in tracks %}
+    <div id="{{ track.hash }}" tabindex="-1" class="track mb-2 px-1 {% if player.hash == track.hash %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
+      <div class="d-flex align-items-center flex-grow-1 truncate" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
+        <span class="rank text-end me-3">{{ loop.index }}</span>
         <img class="cover me-3" src="{{ track.cover }}" alt="{{ track.album }}" />
-        <div class="d-flex flex-column flex-grow-1 min-width-0 truncate" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-          <span title="{{ track.title }}" class="truncate title">{{ track.title }}</span>
-          <span title="{{ track.album }}" class="truncate album small"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("album.index", [track.album_hash]) }}" onclick="event.stopPropagation()">{{ track.album }}</a></span>
+        <div class="d-flex flex-column flex-grow-1 truncate">
+          <span title="{{ track.title }}" class="title truncate">{{ track.title}}</span>
+          <span title="{{ track.artist }}" class="artist small truncate">{{ track.artist}}</span>
         </div>
-        <i class="bi bi-play-fill"></i>
-        <span class="plays text-muted badge badge-dark text-end" title="{{ track.plays }} plays">{{ track.plays }}</span>
-      </li>
-    {% endfor %}
-  </ol>
+      </div>
+      <div class="dropdown">
+        <button class="btn dropdown-toggle" type="button" id="{{ track.hash }}-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-play-fill text-success"></i>
+          <span class="plays badge badge-dark text-end" title="{{ track.plays }} plays">{{ track.plays }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ track.hash }}-dropdown" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+          <li><a class="dropdown-item" href="{{ uri("album.index", [track.album_hash]) }}">{{ track.album }}</a></li>
+        </ul>
+      </div>
+    </div>
+  {% endfor %}
 {% else %}
   <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No plays recorded for this artist yet</p>
 {% endif %}
