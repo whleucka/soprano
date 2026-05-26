@@ -23,10 +23,15 @@ function togglePlaylist() {
 function hidePlaylist() {
   var playlist = document.getElementById("playlist");
   var view = document.getElementById("view");
-  playlist.classList.add("d-none");
-  view.classList.remove("d-none");
-  view.classList.remove("d-lg-block");
-  updateActiveTrack();
+  // Mobile only
+  // if the view is hidden, then we should 
+  // hide the playlist and show the view
+  if (view.classList.contains("d-none")) {
+    playlist.classList.add("d-none");
+    view.classList.remove("d-none");
+    view.classList.remove("d-lg-block");
+    updateActiveTrack();
+  }
 }
 
 async function copyClipboard(e) {
