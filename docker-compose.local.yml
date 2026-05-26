@@ -6,8 +6,8 @@
 services:
   php:
     volumes:
-      - $HOME/Music:/music
+      - ${MUSIC_DIR}:/music
 
   nginx:
     volumes:
-      - $HOME/Music:/music:ro
+      - ${MUSIC_DIR}:/music:ro
