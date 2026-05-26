@@ -17,7 +17,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.${DEV_HOSTNAME:?DEV_HOSTNAME must be set in .env}.rule=HostRegexp(`^(.+\.)?${DEV_HOSTNAME}\.localhost$`)
+      - traefik.http.routers.${DEV_HOSTNAME}.rule=Host(`soprano`) || HostRegexp(`^(.+\.)?${DEV_HOSTNAME}\.localhost$`)
       - traefik.http.routers.${DEV_HOSTNAME}.entrypoints=web
       - traefik.http.services.${DEV_HOSTNAME}.loadbalancer.server.port=80
 
