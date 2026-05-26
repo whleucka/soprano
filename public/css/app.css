@@ -452,8 +452,6 @@ body {
 }
 .track:hover {
   background: #222;
-}
-.track .track {
   cursor: pointer;
 }
 .track .title {
