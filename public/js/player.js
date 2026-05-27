@@ -13,6 +13,26 @@ function updateProgress() {
   requestAnimationFrame(updateProgress);
 }
 
+// Active track
+async function removeActiveTrack() {
+  var tracks = document.querySelectorAll(".track");
+  // remove the active class from the current rows
+  tracks.forEach((track) => {
+    // player_hash comes from player template
+    if (track.id == player_hash) {
+      track.focus();
+      track.classList.add("active");
+    } else {
+      track.classList.remove("active");
+    }
+  })
+}
+
+async function updateActiveTrack() {
+  await removeActiveTrack();
+}
+
+
 (function() {
   progressContainer.addEventListener('click', (e) => {
       const rect = progressContainer.getBoundingClientRect();
