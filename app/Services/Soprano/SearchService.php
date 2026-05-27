@@ -36,10 +36,10 @@ class SearchService
         JOIN albums al ON al.id = t.album_id
         JOIN artists ar ON ar.id = t.artist_id
         LEFT JOIN track_meta tm ON tm.track_id = t.id
-        WHERE ar.name LIKE ? OR al.title LIKE ? OR tm.title LIKE ?
+        WHERE ar.name LIKE ? OR al.title LIKE ? OR tm.title LIKE ? OR al.title LIKE ?
         ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
         LIMIT 2500",
-        [$like, $like, $like]);
+        [$like, $like, $like, $like]);
 
         return array_map(fn($row) => [
             'hash'            => $row['track_hash'],
