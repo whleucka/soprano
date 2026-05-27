@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\HomeService;
+use App\Services\Soprano\MusicService;
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
 class HomeController extends Controller
 {
-    public function __construct(private HomeService $home) {}
+    public function __construct(private MusicService $music) {}
 
     #[Get("/", "home.root")]
     public function index(): void
@@ -26,7 +26,7 @@ class HomeController extends Controller
     public function recentlyAdded(): string
     {
         return $this->render("home/recently-added.html.twig", [
-            "items" => $this->home->recentlyAdded(),
+            "items" => $this->music->recentlyAdded(),
         ]);
     }
 
@@ -34,7 +34,7 @@ class HomeController extends Controller
     public function recentlyplayed(): string
     {
         return $this->render("home/recently-played.html.twig", [
-            "items" => $this->home->recentlyPlayed(),
+            "items" => $this->music->recentlyPlayed(),
         ]);
     }
 
@@ -42,7 +42,7 @@ class HomeController extends Controller
     public function topPlayed(): string
     {
         return $this->render("home/top-played.html.twig", [
-            "items" => $this->home->topPlayed(),
+            "items" => $this->music->topPlayed(),
         ]);
     }
 }
