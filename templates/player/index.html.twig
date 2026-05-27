@@ -1,3 +1,12 @@
+{% block head_js %}
+<script>
+var player_hash = '{{ player.hash }}';
+var next_track_url = '{{ uri("player.next-track") }}';
+var prev_track_url = '{{ uri("player.prev-track") }}';
+</script>
+<script src="/js/player.js"></script>
+{% endblock %}
+
 <div id="album-cover" class="d-flex align-items-center justify-content-center d-none d-md-flex" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
   <a class="text-decoration-none" href="{{ uri("album.index", [player.album_hash]) }}"><img src="{{ player.cover }}" class="cover ms-2 me-3"></a>
 </div>
@@ -16,90 +25,3 @@
   </div>
 </div>
 <audio id="audio" src="{{ player.src }}"></audio>
-<script>
-var progressBar = document.querySelector("#playback .progress .progress-bar");
-var progressContainer = document.querySelector('.progress');
-var audio = document.getElementById("audio");
-var playBtn = document.getElementById("play");
-
-async function removeActiveTrack() {
-  var tracks = document.querySelectorAll(".track");
-  // remove the active class from the current rows
-  tracks.forEach((track) => {
-    if (track.id == '{{ player.hash }}') {
-      track.focus();
-      track.classList.add("active");
-    } else {
-      track.classList.remove("active");
-    }
-  })
-}
-
-async function updateActiveTrack() {
-  await removeActiveTrack();
-}
-
-(function() {
-  progressContainer.addEventListener('click', (e) => {
-      const rect = progressContainer.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const percent = clickX / rect.width;
-      media.currentTime = percent * media.duration;
-      });
-
-  audio.onloadedmetadata = function() {
-    play();
-  }
-
-  audio.onloadeddata = function () {
-    updateActiveTrack('{{ player.hash }}');
-  }
-
-  audio.onpause = function () {
-    progressBar.classList.add("disabled");
-    playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
-  }
-
-  audio.onplaying = function () {
-    progressBar.classList.remove("disabled");
-    playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
-  }
-
-  audio.onended = function () {
-    progressBar.style.width = 0; 
-    next();
-  }
-
-  requestAnimationFrame(updateProgress);
-})();
-
-// Player controls
-function play() {
-  if (audio.paused) {
-    audio.play();
-  } else {
-    audio.pause();
-  }
-}
-
-// These next/prev handlers are for playlists
-function next() {
-  // Try next track
-  htmx.ajax('GET', '{{ uri("player.next-track") }}', {swap: 'none'});
-}
-
-function prev() {
-  // Try prev track
-  htmx.ajax('GET', '{{ uri("player.prev-track") }}', {swap: 'none'});
-}
-
-// Progress bar stuff
-function updateProgress() {
-  if (!audio.paused) {
-    const percent = (audio.currentTime / audio.duration) * 100;
-    progressBar.style.width = percent + '%';
-    progressBar.setAttribute('aria-valuenow', percent);
-  }
-  requestAnimationFrame(updateProgress);
-}
-</script>
