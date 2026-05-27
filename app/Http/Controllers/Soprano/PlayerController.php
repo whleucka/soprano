@@ -60,7 +60,7 @@ class PlayerController extends Controller
         }
         $playlist = $this->playlist->getPlaylist();
         $this->playlist->setPlaylist($tracks, $index, $playlist["shuffle"]);
-        $this->hxTrigger("loadPlaylist");
+        $this->hxTrigger("nowPlaying, playlistQueue");
         return $this->play($tracks[$index]['hash']);
     }
 
@@ -73,7 +73,7 @@ class PlayerController extends Controller
         }
         $playlist = $this->playlist->getPlaylist();
         $this->playlist->setPlaylist($tracks, 0, $playlist["shuffle"]);
-        $this->hxTrigger("loadPlaylist");
+        $this->hxTrigger("nowPlaying, playlistQueue");
         return $this->play($tracks[0]['hash']);
     }
 
@@ -83,7 +83,7 @@ class PlayerController extends Controller
         $playlist = $this->playlist->getPlaylist();
         if (!empty($playlist['tracks'][$index])) {
             $this->playlist->setPlaylist($playlist['tracks'], $index, $playlist["shuffle"]);
-            $this->hxTrigger("nowPlaying");
+            $this->hxTrigger("nowPlaying, playlistQueue");
             return $this->play($playlist['tracks'][$index]['hash']);
         }
     }
@@ -95,7 +95,7 @@ class PlayerController extends Controller
         $search = $this->search->getSearch();
         if (!empty($search['tracks'])) {
             $this->playlist->setPlaylist($search['tracks'], 0, $playlist["shuffle"]);
-            $this->hxTrigger("loadPlaylist");
+            $this->hxTrigger("nowPlaying, playlistQueue");
             return $this->play($search['tracks'][0]['hash']);
         }
     }
@@ -113,7 +113,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks);
-        $this->hxTrigger("loadPlaylist");
+        $this->hxTrigger("nowPlaying, playlistQueue");
         return $this->play($tracks[0]['hash']);
     }
 
