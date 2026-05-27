@@ -182,6 +182,11 @@ body {
   overflow: hidden;
 }
 
+#view h2 {
+  font-weight: 800;
+  color: #ddd;
+}
+
 #playlist {
   width: 100%;
   min-width: 100%;
@@ -216,11 +221,6 @@ body {
 
 .placeholder {
   opacity: 0.1;
-}
-
-#home h2 {
-  font-weight: 800;
-  color: #ddd;
 }
 
 #home .play-count-badge {
