@@ -2,7 +2,7 @@
   <div class="input-group">
     <input type="text" class="form-control border-0 shadow-none p-3" name="term" value="{{ search.term }}" placeholder="What do you want to play?" />
     {% if search.term %}
-      <button type="button" class="btn border-0" hx-get="{{ uri('search.clear') }}" hx-swap="none"><i class='bi bi-trash'></i></button>
+      <button type="button" class="btn border-0" hx-get="{{ uri('search.clear') }}" hx-swap="none" hx-push-url="{{ uri("search.index") }}"><i class='bi bi-trash'></i></button>
     {% endif %}
   </div>
 </form>
