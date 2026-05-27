@@ -83,7 +83,7 @@ class PlayerController extends Controller
         $playlist = $this->playlist->getPlaylist();
         if (!empty($playlist['tracks'][$index])) {
             $this->playlist->setPlaylist($playlist['tracks'], $index, $playlist["shuffle"]);
-            $this->hxTrigger("nowPlaying, playlistQueue");
+            $this->hxTrigger("nowPlaying");
             return $this->play($playlist['tracks'][$index]['hash']);
         }
     }
