@@ -11,7 +11,7 @@
         <button class="btn dropdown-toggle" type="button" id="{{ track.hash }}-queue-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
           <span class="playtime-string">{{ track.playtime_string }}</span>
         </button>
-        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ track.hash }}-queue-dropdown" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="togglePlaylist()">
+        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ track.hash }}-queue-dropdown" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
           <li><a class="dropdown-item" href="{{ uri("artist.index", [track.artist_hash]) }}">{{ track.artist }}</a></li>
           <li><a class="dropdown-item" href="{{ uri("album.index", [track.album_hash]) }}">{{ track.album }}</a></li>
         </ul>

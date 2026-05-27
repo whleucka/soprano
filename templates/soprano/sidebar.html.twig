@@ -1,7 +1,7 @@
 <div class="p-3">
   <h1><i class="bi bi-music-note-beamed pe-1"></i> Soprano</h1>
 
-  <nav class="nav flex-column mt-4" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+  <nav class="nav flex-column mt-4" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
     <a class="nav-link shadow-none border-0" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a>
     <a class="nav-link shadow-none border-0" href="{{ uri("search.index") }}"><i class="bi bi-search pe-1"></i> Search</a>
     <a class="nav-link shadow-none border-0" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a>

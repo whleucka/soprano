@@ -491,7 +491,6 @@ body {
 
 /** MD */
 @media (min-width: 768px) {
-
   #album #play-album {
     font-size: 3rem;
   }
@@ -547,14 +546,18 @@ body {
 
 /** LG */
 @media (min-width: 992px) {
-  #playlist {
-    width: 30%;
-    min-width: 375px;
-  }
 }
 
 @media (min-width: 1200px) {
+  #playlist {
+    width: 450px;
+    min-width: 450px;
+  }
 }
 
 @media (min-width: 1400px) {
+  #playlist {
+    width: 500px;
+    min-width: 500px;
+  }
 }
