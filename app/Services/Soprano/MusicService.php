@@ -51,10 +51,10 @@ class MusicService
             [$albumId],
         );
 
-        return array_map([$this, 'mapTrackRow'], $rows);
+        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
-    public function discography(int $artistId, int $limit = 20): array
+    public function discography(int $artistId, int $limit = 50): array
     {
         $rows = db()->fetchAll(
             "SELECT al.hash AS album_hash,
@@ -71,7 +71,7 @@ class MusicService
             [$artistId],
         );
 
-        return array_map([$this, 'mapAlbumRow'], $rows);
+        return array_map(fn($row) => $this->mapAlbumRow($row), $rows);
     }
 
     public function artistTracks(string $artistHash): array
@@ -133,34 +133,6 @@ class MusicService
         }, $rows);
     }
 
-    private function mapTrackRow(array $row): array
-    {
-        return [
-            'hash'            => $row['track_hash'],
-            'album_hash'      => $row['album_hash'],
-            'artist_hash'     => $row['artist_hash'],
-            'title'           => $row['title'] ?? '',
-            'artist'          => $row['artist'] ?? '',
-            'album'           => $row['album'] ?? '',
-            'cover'           => $row['cover'] ?? '/images/no-album-art.png',
-            'year'            => $row['year'] ?? '',
-            'track_number'    => $row['track_number'] ?? '',
-            'playtime_string' => $row['playtime_string'] ?? '',
-        ];
-    }
-
-    private function mapAlbumRow(array $row): array
-    {
-        return [
-            'album_hash'  => $row['album_hash'],
-            'artist_hash' => $row['artist_hash'],
-            'album'       => $row['album'],
-            'artist'      => $row['artist'],
-            'cover'       => $row['cover'] ?? '/images/no-album-art.png',
-            'year'        => $row['year'],
-        ];
-    }
-
     public function recentlyAdded(int $albumCount = 50): array
     {
         $albumCount = (int) $albumCount;
@@ -177,17 +149,10 @@ class MusicService
              LIMIT $albumCount",
         );
 
-        return array_map(fn($row) => [
-            'album_hash'  => $row['album_hash'],
-            'artist_hash' => $row['artist_hash'],
-            'album'       => $row['album'],
-            'artist'      => $row['artist'],
-            'cover'       => $row['cover'] ?? '/images/no-album-art.png',
-            'year'        => $row['year'],
-        ], $rows);
+        return array_map(fn($row) => $this->mapAlbumRow($row), $rows);
     }
 
-    public function recentlyPlayed(int $trackCount = 20): array
+    public function recentlyPlayed(int $trackCount = 50): array
     {
         $trackCount = (int) $trackCount;
         $since = (new \DateTime('- 1 WEEK'))->format('Y-m-d H:i:s');
@@ -216,20 +181,10 @@ class MusicService
             [$since],
         );
 
-        return array_map(fn($row) => [
-            'hash'        => $row['track_hash'],
-            'album_hash'  => $row['album_hash'],
-            'artist_hash' => $row['artist_hash'],
-            'client'      => $row['client'],
-            'title'       => $row['title'] ?? '',
-            'artist'      => $row['artist'],
-            'album'       => $row['album'],
-            'cover'       => $row['cover'] ?? '/images/no-album-art.png',
-            'year'        => $row['year'],
-        ], $rows);
+        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
-    public function topPlayed(int $trackCount = 20): array
+    public function topPlayed(int $trackCount = 50): array
     {
         $trackCount = (int) $trackCount;
         $rows = db()->fetchAll(
@@ -253,16 +208,38 @@ class MusicService
              LIMIT $trackCount",
         );
 
-        return array_map(fn($row) => [
-            'hash'        => $row['track_hash'],
+        return array_map(function (array $row) {
+            $entry = $this->mapTrackRow($row);
+            $entry['plays'] = (int) $row['plays'];
+            return $entry;
+        }, $rows);
+    }
+
+    private function mapTrackRow(array $row): array
+    {
+        return [
+            'hash'            => $row['track_hash'],
+            'album_hash'      => $row['album_hash'],
+            'artist_hash'     => $row['artist_hash'],
+            'title'           => $row['title'] ?? '',
+            'artist'          => $row['artist'] ?? '',
+            'album'           => $row['album'] ?? '',
+            'cover'           => $row['cover'] ?? '/images/no-album-art.png',
+            'year'            => $row['year'] ?? '',
+            'track_number'    => $row['track_number'] ?? '',
+            'playtime_string' => $row['playtime_string'] ?? '',
+        ];
+    }
+
+    private function mapAlbumRow(array $row): array
+    {
+        return [
             'album_hash'  => $row['album_hash'],
             'artist_hash' => $row['artist_hash'],
-            'title'       => $row['title'] ?? '',
-            'artist'      => $row['artist'],
             'album'       => $row['album'],
+            'artist'      => $row['artist'],
             'cover'       => $row['cover'] ?? '/images/no-album-art.png',
             'year'        => $row['year'],
-            'plays'       => (int) $row['plays'],
-        ], $rows);
+        ];
     }
 }
