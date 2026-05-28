@@ -18,14 +18,3 @@ function hidePlaylist() {
     view.classList.remove("d-md-block");
   }
 }
-
-function updateActiveTrack(hash) {
-  document.querySelectorAll(".track").forEach((track) => {
-    if (track.id == 'playlist-'+hash) {
-      track.focus();
-      track.classList.add("active");
-    } else {
-      track.classList.remove("active");
-    }
-  });
-}

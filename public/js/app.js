@@ -9,6 +9,18 @@ document.addEventListener('htmx:afterRequest', () => {
   document.querySelector('.hx-indicator')?.classList.remove('htmx-request');
 });
 
+
+function updateActiveTrack(hash) {
+  document.querySelectorAll(".track").forEach((track) => {
+    if (track.id == 'playlist-'+hash) {
+      track.focus();
+      track.classList.add("active");
+    } else {
+      track.classList.remove("active");
+    }
+  });
+}
+
 async function copyClipboard(e) {
     const icon = e.currentTarget.querySelector('i');
     const original = icon ? icon.className : null;
