@@ -192,6 +192,10 @@ body {
   min-width: 100%;
 }
 
+#playlist #now-playing {
+  border-radius: 12px 12px 0 0;
+}
+
 #playlist #now-playing #cover {
   border-radius: 6px;
   width: 90px;

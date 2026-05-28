@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{PlaylistService};
+use App\Services\Soprano\{CoverArtService, PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
@@ -10,6 +10,7 @@ class PlaylistController extends Controller
 {
     public function __construct(
         private PlaylistService $playlist,
+        private CoverArtService $coverArt,
     ) {}
 
     #[Get("/playlist", "playlist.index")]
@@ -24,6 +25,9 @@ class PlaylistController extends Controller
         $playlist = $this->playlist->getPlaylist();
         $index = $playlist["index"];
         return $this->render("playlist/now-playing.html.twig", [
+            "dominant" => isset($playlist["tracks"][$index])
+                ? $this->coverArt->dominantColor($playlist["tracks"][$index]["cover"]) 
+                : [18,18,18],
             "current" => $playlist["tracks"][$index] ?? [
                 "hash"        => "#",
                 "album_hash"  => "#",

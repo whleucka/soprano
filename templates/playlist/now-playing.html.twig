@@ -6,3 +6,8 @@
     <h3 id="album" class="truncate"><a class="text-reset text-decoration-none" href="{{ uri("album.index", [current.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ current.album }}</a></h3>
   </div>
 </div>
+<script>
+(function() {
+  document.getElementById('now-playing').style.background = "linear-gradient(180deg, rgba({{ dominant[0] }}, {{ dominant[1] }}, {{ dominant[2] }}, 0.5) 0%, rgba(0, 0, 0, 0) 100%)";
+})();
+</script>
