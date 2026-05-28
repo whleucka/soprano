@@ -21,6 +21,7 @@ function play() {
     audio.pause();
   }
 }
+
 function next() {
   // Try next track
   htmx.ajax('GET', next_track_url, {swap: 'none'});

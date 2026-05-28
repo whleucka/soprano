@@ -1,4 +1,8 @@
 {% block head_js %}
+<script>
+var next_track_url = '{{ uri("player.next-track") }}';
+var prev_track_url = '{{ uri("player.prev-track") }}';
+</script>
 <script src="/js/player.js"></script>
 {% endblock %}
 
