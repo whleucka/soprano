@@ -1,18 +1,14 @@
 {% for track in tracks %}
-  <div id="{{ track.hash }}" tabindex="-1" class="track p-1 d-flex align-items-center justify-content-center shadow-none border-0">
-    <div class="d-flex align-items-center flex-grow-1 truncate" hx-get="{{ uri("player.play-album-track", [album_hash, loop.index0]) }}" hx-swap="none">
+  {% embed 'components/track-row.html.twig' with {
+    track: track,
+    play_uri: uri('player.play-album-track', [album_hash, loop.index0])
+  } %}
+    {% block leading %}
       <span class="track-number text-end me-3">{% if track.track_number %}{{ track.track_number }}{% else %}#{% endif %}</span>
-      <div class="d-flex flex-column flex-grow-1 truncate">
-        <span title="{{ track.title }}" class="title truncate">{{ track.title}}</span>
-      </div>
-    </div>
-    <div class="dropdown">
-      <button class="btn dropdown-toggle" type="button" id="{{ track.hash }}-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        <span class="playtime-string">{{ track.playtime_string }}</span>
-      </button>
-      <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ track.hash }}-dropdown" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-        <li><a class="dropdown-item" href="{{ uri("artist.index", [track.artist_hash]) }}">{{ track.artist }}</a></li>
-      </ul>
-    </div>
-  </div>
+    {% endblock %}
+    {% block subtitle %}{% endblock %}
+    {% block menu %}
+      <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}">{{ track.artist }}</a></li>
+    {% endblock %}
+  {% endembed %}
 {% endfor %}

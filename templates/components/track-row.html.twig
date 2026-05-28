@@ -1,0 +1,30 @@
+<div id="{{ dom_id|default(track.hash) }}" tabindex="-1"
+     class="track p-1 {% if active|default(false) %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
+  <div class="d-flex align-items-center flex-grow-1 truncate"
+       hx-get="{{ play_uri }}" hx-swap="none">
+    {% block leading %}{% endblock %}
+    <div class="d-flex flex-column flex-grow-1 truncate">
+      <span title="{{ track.title }}" class="title truncate">{{ track.title }}</span>
+      {% block subtitle %}
+        <span title="{{ track.artist }}" class="artist small truncate">{{ track.artist }}</span>
+      {% endblock %}
+    </div>
+  </div>
+  <div class="dropdown">
+    {% set ddid = track.hash ~ '-' ~ (dropdown_suffix|default('dropdown')) %}
+    <button class="btn dropdown-toggle" type="button" id="{{ ddid }}"
+            data-bs-toggle="dropdown" aria-expanded="false">
+      {% block trailing %}
+        <span class="playtime-string">{{ track.playtime_string }}</span>
+      {% endblock %}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ ddid }}"
+        hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML"
+        {% if dropdown_before_request|default(null) %}hx-on::before-request="{{ dropdown_before_request }}"{% endif %}>
+      {% block menu %}
+        <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}">{{ track.artist }}</a></li>
+        <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}">{{ track.album }}</a></li>
+      {% endblock %}
+    </ul>
+  </div>
+</div>

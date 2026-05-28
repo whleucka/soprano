@@ -1,24 +1,22 @@
 {% if tracks %}
   {% for track in tracks %}
-    <div id="{{ track.hash }}" tabindex="-1" class="track p-1 d-flex align-items-center justify-content-center shadow-none border-0">
-      <div class="d-flex align-items-center flex-grow-1 truncate" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
-        <span class="rank text-end me-3">#{{ loop.index }}</span>
+    {% embed 'components/track-row.html.twig' with {
+      track: track,
+      play_uri: uri('player.play', [track.hash]),
+      rank: loop.index
+    } %}
+      {% block leading %}
+        <span class="rank text-end me-3">#{{ rank }}</span>
         <img class="cover me-3" src="{{ track.cover }}" alt="{{ track.album }}" />
-        <div class="d-flex flex-column flex-grow-1 truncate">
-          <span title="{{ track.title }}" class="title truncate">{{ track.title}}</span>
-          <span title="{{ track.artist }}" class="artist small truncate">{{ track.artist}}</span>
-        </div>
-      </div>
-      <div class="dropdown">
-        <button class="btn dropdown-toggle" type="button" id="{{ track.hash }}-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="bi bi-play-fill text-success"></i>
-          <span class="plays badge badge-dark text-end" title="{{ track.plays }} plays">{{ track.plays }}</span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ track.hash }}-dropdown" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-          <li><a class="dropdown-item" href="{{ uri("album.index", [track.album_hash]) }}">{{ track.album }}</a></li>
-        </ul>
-      </div>
-    </div>
+      {% endblock %}
+      {% block trailing %}
+        <i class="bi bi-play-fill text-success"></i>
+        <span class="plays badge badge-dark text-end" title="{{ track.plays }} plays">{{ track.plays }}</span>
+      {% endblock %}
+      {% block menu %}
+        <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}">{{ track.album }}</a></li>
+      {% endblock %}
+    {% endembed %}
   {% endfor %}
 {% else %}
   <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No plays recorded for this artist yet</p>
