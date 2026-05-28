@@ -13,9 +13,6 @@ function updateProgress() {
   requestAnimationFrame(updateProgress);
 }
 
-// removeActiveTrack / updateActiveTrack live in app.js so they're shared with
-// playlist.js and defined globally before either htmx fragment runs.
-
 (function() {
   progressContainer.addEventListener('click', (e) => {
       const rect = progressContainer.getBoundingClientRect();
@@ -26,10 +23,6 @@ function updateProgress() {
 
   audio.onloadedmetadata = function() {
     play();
-  }
-
-  audio.onloadeddata = function () {
-    updateActiveTrack();
   }
 
   audio.onpause = function () {
@@ -57,16 +50,4 @@ function play() {
   } else {
     audio.pause();
   }
-}
-
-// These next/prev handlers are for playlists
-// urls come from player template
-function next() {
-  // Try next track
-  htmx.ajax('GET', next_track_url, {swap: 'none'});
-}
-
-function prev() {
-  // Try prev track
-  htmx.ajax('GET', prev_track_url, {swap: 'none'});
 }

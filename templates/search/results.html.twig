@@ -1,6 +1,6 @@
 {% if search.tracks %}
   {% for track in search.tracks %}
-    <div id="{{ track.hash }}" tabindex="-1" class="track mb-2 px-1 {% if player.hash == track.hash %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
+    <div id="{{ track.hash }}" tabindex="-1" class="track p-1 d-flex align-items-center justify-content-center shadow-none border-0">
       <div class="d-flex align-items-center flex-grow-1 truncate" hx-get="{{ uri("player.play", [track.hash]) }}" hx-swap="none">
         <img title="{{ track.album }}" class="cover me-2" src="{{ track.cover }}" loading="lazy"/>
         <div class="d-flex flex-column flex-grow-1 truncate">

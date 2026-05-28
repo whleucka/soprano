@@ -1,9 +1,4 @@
 {% block head_js %}
-<script>
-var player_hash = '{{ player.hash }}';
-var next_track_url = '{{ uri("player.next-track") }}';
-var prev_track_url = '{{ uri("player.prev-track") }}';
-</script>
 <script src="/js/player.js"></script>
 {% endblock %}
 
@@ -15,9 +10,9 @@ var prev_track_url = '{{ uri("player.prev-track") }}';
   <span class="artist truncate"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [player.artist_hash]) }}">{{ player.artist }}</a></span>
 </div>
 <div id="controls" class="d-flex justify-content-center align-items-center px-2">
-  <button id="prev" onclick="prev()" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-start-circle"></i></button>
+  <button id="prev" hx-get="{{ uri("player.prev-track") }}" hx-swap="none" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-start-circle"></i></button>
   <button id="play" onclick="play()" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
-  <button id="next" onclick="next()" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-end-circle"></i></button>
+  <button id="next" hx-get="{{ uri("player.next-track") }}" hx-swap="none" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-end-circle"></i></button>
 </div>
 <div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-2">
   <div class="progress w-100" onclick="updateProgress()">

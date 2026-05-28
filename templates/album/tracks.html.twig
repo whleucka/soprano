@@ -1,5 +1,5 @@
 {% for track in tracks %}
-  <div id="{{ track.hash }}" tabindex="-1" class="track mb-2 px-1 {% if player.hash == track.hash %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
+  <div id="{{ track.hash }}" tabindex="-1" class="track p-1 d-flex align-items-center justify-content-center shadow-none border-0">
     <div class="d-flex align-items-center flex-grow-1 truncate" hx-get="{{ uri("player.play-album-track", [album_hash, loop.index0]) }}" hx-swap="none">
       <span class="track-number text-end me-3">{% if track.track_number %}{{ track.track_number }}{% else %}#{% endif %}</span>
       <div class="d-flex flex-column flex-grow-1 truncate">

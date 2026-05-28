@@ -9,5 +9,6 @@
 <script>
 (function() {
   document.getElementById('now-playing').style.background = "linear-gradient(180deg, rgba({{ dominant[0] }}, {{ dominant[1] }}, {{ dominant[2] }}, 0.5) 0%, rgba(0, 0, 0, 0) 100%)";
+  updateActiveTrack('{{ current.hash }}');
 })();
 </script>

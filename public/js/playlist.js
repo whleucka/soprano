@@ -5,7 +5,6 @@ function togglePlaylist() {
   playlist.classList.toggle("d-none");
   view.classList.toggle("d-none");
   view.classList.toggle("d-md-block");
-  updateActiveTrack();
 }
 
 function hidePlaylist() {
@@ -17,6 +16,16 @@ function hidePlaylist() {
     playlist.classList.add("d-none");
     view.classList.remove("d-none");
     view.classList.remove("d-md-block");
-    updateActiveTrack();
   }
+}
+
+function updateActiveTrack(hash) {
+  document.querySelectorAll(".track").forEach((track) => {
+    if (track.id == 'playlist-'+hash) {
+      track.focus();
+      track.classList.add("active");
+    } else {
+      track.classList.remove("active");
+    }
+  });
 }

@@ -443,6 +443,11 @@ body {
 /** Track */
 .track .dropdown-toggle {
   color: #fff;
+  text-align: right;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  padding-right: 4px;
 }
 .track:focus {
   border-color: inherit;

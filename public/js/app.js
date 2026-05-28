@@ -9,26 +9,6 @@ document.addEventListener('htmx:afterRequest', () => {
   document.querySelector('.hx-indicator')?.classList.remove('htmx-request');
 });
 
-// Active track highlighting. Shared by player.js and playlist.js, which load
-// as separate htmx fragments — keeping these here guarantees they're defined
-// globally before either fragment runs. player_hash comes from the player
-// template and only exists once the player fragment has loaded, so guard it.
-function removeActiveTrack() {
-  if (typeof player_hash === 'undefined') return;
-  document.querySelectorAll(".track").forEach((track) => {
-    if (track.id == player_hash) {
-      track.focus();
-      track.classList.add("active");
-    } else {
-      track.classList.remove("active");
-    }
-  });
-}
-
-function updateActiveTrack() {
-  removeActiveTrack();
-}
-
 async function copyClipboard(e) {
     const icon = e.currentTarget.querySelector('i');
     const original = icon ? icon.className : null;
