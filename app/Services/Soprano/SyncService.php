@@ -76,6 +76,11 @@ class SyncService
                     $inserted++;
                 } catch (\Throwable $e) {
                     $failed++;
+                    error_log(sprintf(
+                        '[soprano sync] ingest failed for %s: %s',
+                        $pathname,
+                        $e->getMessage(),
+                    ));
                 }
             }
         } catch (\Throwable $e) {

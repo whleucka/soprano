@@ -67,8 +67,8 @@ class MusicService
              JOIN artists ar ON ar.id = al.artist_id
              WHERE al.artist_id = ?
              ORDER BY al.year DESC, al.title ASC
-             LIMIT $limit",
-            [$artistId],
+             LIMIT ?",
+            [$artistId, $limit],
         );
 
         return array_map(fn($row) => $this->mapAlbumRow($row), $rows);
@@ -122,8 +122,8 @@ class MusicService
              WHERE t.artist_id = ?
              GROUP BY t.id
              ORDER BY plays DESC, tm.title ASC
-             LIMIT $limit",
-            [$artistId],
+             LIMIT ?",
+            [$artistId, $limit],
         );
 
         return array_map(function (array $row) {
@@ -135,7 +135,6 @@ class MusicService
 
     public function recentlyAdded(int $albumCount = 50): array
     {
-        $albumCount = (int) $albumCount;
         $rows = db()->fetchAll(
             "SELECT al.hash AS album_hash,
                     al.title AS album,
@@ -146,7 +145,8 @@ class MusicService
              FROM albums al
              JOIN artists ar ON ar.id = al.artist_id
              ORDER BY al.id DESC
-             LIMIT $albumCount",
+             LIMIT ?",
+            [$albumCount],
         );
 
         return array_map(fn($row) => $this->mapAlbumRow($row), $rows);
@@ -154,7 +154,6 @@ class MusicService
 
     public function recentlyPlayed(int $trackCount = 50): array
     {
-        $trackCount = (int) $trackCount;
         $since = (new \DateTime('- 1 WEEK'))->format('Y-m-d H:i:s');
 
         $rows = db()->fetchAll(
@@ -177,8 +176,8 @@ class MusicService
              WHERE tp.created_at > ?
              GROUP BY t.id
              ORDER BY last_play_id DESC
-             LIMIT $trackCount",
-            [$since],
+             LIMIT ?",
+            [$since, $trackCount],
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
@@ -186,7 +185,6 @@ class MusicService
 
     public function topPlayed(int $trackCount = 50): array
     {
-        $trackCount = (int) $trackCount;
         $rows = db()->fetchAll(
             "SELECT t.hash AS track_hash,
                     al.hash AS album_hash,
@@ -205,7 +203,8 @@ class MusicService
              LEFT JOIN track_meta tm ON tm.track_id = t.id
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
-             LIMIT $trackCount",
+             LIMIT ?",
+            [$trackCount],
         );
 
         return array_map(function (array $row) {
