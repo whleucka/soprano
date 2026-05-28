@@ -10,9 +10,9 @@
   <span class="artist truncate"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [player.artist_hash]) }}">{{ player.artist }}</a></span>
 </div>
 <div id="controls" class="d-flex justify-content-center align-items-center px-2">
-  <button id="prev" hx-get="{{ uri("player.prev-track") }}" hx-swap="none" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-start-circle"></i></button>
+  <button id="prev" onclick="prev()" hx-swap="none" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-start-circle"></i></button>
   <button id="play" onclick="play()" class="btn border-0 shadow-none"><i class="bi bi-play-circle-fill"></i></button>
-  <button id="next" hx-get="{{ uri("player.next-track") }}" hx-swap="none" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-end-circle"></i></button>
+  <button id="next" onclick="next()" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-end-circle"></i></button>
 </div>
 <div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-2">
   <div class="progress w-100" onclick="updateProgress()">

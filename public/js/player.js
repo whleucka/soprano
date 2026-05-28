@@ -13,6 +13,24 @@ function updateProgress() {
   requestAnimationFrame(updateProgress);
 }
 
+// Player controls
+function play() {
+  if (audio.paused) {
+    audio.play();
+  } else {
+    audio.pause();
+  }
+}
+function next() {
+  // Try next track
+  htmx.ajax('GET', next_track_url, {swap: 'none'});
+}
+
+function prev() {
+  // Try prev track
+  htmx.ajax('GET', prev_track_url, {swap: 'none'});
+}
+
 (function() {
   progressContainer.addEventListener('click', (e) => {
       const rect = progressContainer.getBoundingClientRect();
@@ -42,12 +60,3 @@ function updateProgress() {
 
   requestAnimationFrame(updateProgress);
 })();
-
-// Player controls
-function play() {
-  if (audio.paused) {
-    audio.play();
-  } else {
-    audio.pause();
-  }
-}
