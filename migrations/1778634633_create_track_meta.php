@@ -23,7 +23,7 @@ return new class implements MigrationInterface
             $table->varchar("replaygain_track_gain")->nullable();
             $table->varchar("replaygain_track_peak")->nullable();
             $table->text("lyrics")->nullable();
-            $table->char("musicbrainz_track_id", 36)->nullable();
+            $table->varchar("musicbrainz_track_id")->nullable();
             $table->timestamps();
             $table->primaryKey("id");
             $table->foreignKey("track_id")

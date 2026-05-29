@@ -19,7 +19,7 @@ return new class implements MigrationInterface
             $table->varchar("year");
             $table->varchar("replaygain_album_gain")->nullable();
             $table->varchar("replaygain_album_peak")->nullable();
-            $table->char("musicbrainz_album_id", 36)->nullable();
+            $table->varchar("musicbrainz_album_id")->nullable();
             $table->timestamps();
             $table->unique("hash");
             $table->primaryKey("id");

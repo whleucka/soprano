@@ -12,7 +12,7 @@ return new class implements MigrationInterface
             $table->id();
             $table->char("hash", 32);
             $table->varchar("name");
-            $table->char("musicbrainz_artist_id", 36)->nullable();
+            $table->varchar("musicbrainz_artist_id")->nullable();
             $table->timestamps();
             $table->unique("hash");
             $table->primaryKey("id");
