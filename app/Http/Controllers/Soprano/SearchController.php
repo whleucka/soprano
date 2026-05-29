@@ -30,7 +30,7 @@ class SearchController extends Controller
     #[Get("/search/recently-played", "search.recently-played")]
     public function recentlyPlayed(): string
     {
-        $tracks = $this->music->topPlayed(1000);
+        $tracks = $this->music->recentlyPlayed(1000);
         if ($tracks) {
             $this->search->setSearchResults($tracks);
             $this->hxTrigger("searchResults, searchActions");
