@@ -4,13 +4,15 @@ namespace App\Services\Soprano;
 
 class PlaylistService
 {
+    private const DEFAULT_STATE = [
+        "tracks" => [],
+        "index" => 0,
+        "shuffle" => false
+    ];
+
     public function getPlaylist(): array
     {
-        return session()->get("playlist") ?? [
-            "tracks" => [],
-            "index" => 0,
-            "shuffle" => false
-        ];
+        return session()->get("playlist") ?? self::DEFAULT_STATE;
     }
 
     public function setPlaylist(array $tracks, int $index = 0, bool $shuffle = false)

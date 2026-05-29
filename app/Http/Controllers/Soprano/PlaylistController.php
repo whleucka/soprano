@@ -6,18 +6,18 @@ use App\Services\Soprano\{CoverArtService, PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
-define("DEFAULT_PLAYLIST", [
-    "hash"        => "#",
-    "album_hash"  => "#",
-    "artist_hash" => "#",
-    "artist"      => "N/A",
-    "cover"       => "/images/no-album-art.png",
-    "album"       => "N/A",
-    "title"       => "N/A",
-]);
-
 class PlaylistController extends Controller
 {
+    private const DEFAULT_CURRENT = [
+        "hash"        => "#",
+        "album_hash"  => "#",
+        "artist_hash" => "#",
+        "artist"      => "N/A",
+        "cover"       => "/images/no-album-art.png",
+        "album"       => "N/A",
+        "title"       => "N/A",
+    ];
+
     public function __construct(
         private PlaylistService $playlist,
         private CoverArtService $coverArt,
@@ -38,7 +38,7 @@ class PlaylistController extends Controller
             "dominant" => isset($playlist["tracks"][$index])
                 ? $this->coverArt->dominantColor($playlist["tracks"][$index]["cover"]) 
                 : [18,18,18],
-            "current" => $playlist["tracks"][$index] ?? DEFAULT_PLAYLIST
+            "current" => $playlist["tracks"][$index] ?? self::DEFAULT_CURRENT
         ]);
     }
 

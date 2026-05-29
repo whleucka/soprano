@@ -4,6 +4,11 @@ namespace App\Services\Soprano;
 
 class SearchService
 {
+    private const DEFAULT_STATE = [
+        'tracks' => [],
+        'term'   => '',
+    ];
+
     public function setSearch(string $term): void
     {
         if ($term) {
@@ -12,11 +17,13 @@ class SearchService
                 'term'   => $term,
             ]);
         } else {
-            session()->set('search', [
-                'tracks' => [],
-                'term'   => '',
-            ]);
+            session()->set('search', self::DEFAULT_STATE);
         }
+    }
+
+    public function getSearch()
+    {
+        return session()->get('search') ?? self::DEFAULT_STATE;
     }
 
     public function search(string $term): array
@@ -53,10 +60,5 @@ class SearchService
             'track_number'    => $row['track_number'] ?? '',
             'playtime_string' => $row['playtime_string'] ?? '',
         ], $rows);
-    }
-
-    public function getSearch()
-    {
-        return session()->get('search');
     }
 }
