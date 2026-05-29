@@ -26,7 +26,7 @@ class HomeController extends Controller
     public function recentlyAdded(): string
     {
         return $this->render("home/recently-added.html.twig", [
-            "items" => $this->music->recentlyAdded(),
+            "tracks" => $this->music->recentlyAdded(),
         ]);
     }
 
@@ -34,7 +34,7 @@ class HomeController extends Controller
     public function recentlyplayed(): string
     {
         return $this->render("home/recently-played.html.twig", [
-            "items" => $this->music->recentlyPlayed(),
+            "tracks" => $this->music->recentlyPlayed(),
         ]);
     }
 
@@ -42,7 +42,7 @@ class HomeController extends Controller
     public function topPlayed(): string
     {
         return $this->render("home/top-played.html.twig", [
-            "items" => $this->music->topPlayed(),
+            "tracks" => $this->music->topPlayed(),
         ]);
     }
 }

@@ -236,6 +236,7 @@ class MusicService
             'album_hash'  => $row['album_hash'],
             'artist_hash' => $row['artist_hash'],
             'album'       => $row['album'],
+            'title'       => $row['album'],
             'artist'      => $row['artist'],
             'cover'       => $row['cover'] ?? '/images/no-album-art.png',
             'year'        => $row['year'],

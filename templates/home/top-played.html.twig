@@ -1,13 +1,12 @@
-{% if items %}
-  {% for item in items %}
-    <div class="d-flex flex-column album-cont" hx-push-url="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-      <div class="cover-wrap position-relative">
-        <img title="{{ item.artist }} - {{ item.album }}" hx-get="{{ uri("album.index", [item.album_hash]) }}" class="cover" src="{{ item.cover }}" loading="lazy" />
-        <span class="play-count-badge" title="{{ item.plays }} plays"><i class="bi bi-play-fill pe-1"></i>{{ item.plays }}</span>
-      </div>
-      <span title="{{ item.title }}" class="title truncate fw-bold mt-1">{{ item.title }}</span>
-      <span title="{{ item.artist }}" class="artist small truncate"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("artist.index", [item.artist_hash]) }}">{{ item.artist }}</a></span>
-    </div>
+{% if tracks %}
+  {% for track in tracks %}
+    {% embed 'components/album-cont.html.twig' with {
+      track: track,
+    } %}
+    {% block badge %}
+      <span class="play-count-badge" title="{{ track.plays }} plays"><i class="bi bi-play-fill pe-1"></i>{{ track.plays }}</span>
+    {% endblock %}
+    {% endembed %}
   {% endfor %}
 {% else %}
   <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No top played tracks yet</p>

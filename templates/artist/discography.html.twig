@@ -1,10 +1,12 @@
 {% if tracks %}
   {% for track in tracks %}
-    <div class="d-flex flex-column album-cont" hx-push-url="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-      <img title="{{ track.album }}" hx-get="{{ uri("album.index", [track.album_hash]) }}" class="cover" src="{{ track.cover }}" />
-      <span title="{{ track.album }}" class="title truncate fw-bold mt-1"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("album.index", [track.album_hash]) }}">{{ track.album }}</a></span>
+    {% embed 'components/album-cont.html.twig' with {
+      track: track,
+    } %}
+    {% block extra %}
       <span title="{{ track.year }}" class="year truncate">{{ track.year }}</span>
-    </div>
+    {% endblock %}
+    {% endembed %}
   {% endfor %}
 {% else %}
   <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No albums found for this artist</p>
