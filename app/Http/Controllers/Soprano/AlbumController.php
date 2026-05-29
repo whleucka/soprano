@@ -32,7 +32,7 @@ class AlbumController extends Controller
             "cover"       => $album->cover,
             "album"       => $album->title,
             "artist"      => $artist?->name,
-            "dominant"    => $this->coverArt->dominantColor($album->cover),
+            "dominant"    => $this->coverArt->hexToRgb($album->dominant_color),
         ]);
     }
 

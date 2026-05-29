@@ -13,9 +13,17 @@ return new class implements MigrationInterface
             $table->unsignedBigInteger("track_id");
             $table->varchar("title");
             $table->varchar("track_number");
+            $table->varchar("disc_number")->nullable();
             $table->varchar("playtime_string");
+            $table->unsignedInteger("length_ms")->nullable();
             $table->varchar("bitrate");
             $table->varchar("mime_type");
+            $table->varchar("composer")->nullable();
+            $table->varchar("bpm")->nullable();
+            $table->varchar("replaygain_track_gain")->nullable();
+            $table->varchar("replaygain_track_peak")->nullable();
+            $table->text("lyrics")->nullable();
+            $table->char("musicbrainz_track_id", 36)->nullable();
             $table->timestamps();
             $table->primaryKey("id");
             $table->foreignKey("track_id")

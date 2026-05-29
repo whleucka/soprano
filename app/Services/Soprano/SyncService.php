@@ -23,6 +23,7 @@ class SyncService
     private const UNKNOWN_ALBUM  = 'Unknown Album';
     private const UNKNOWN_GENRE  = 'Unknown';
     private const UNKNOWN_YEAR   = '';
+    private const VARIOUS_ARTISTS = 'Various Artists';
 
     private GetID3 $analyzer;
 
@@ -35,8 +36,9 @@ class SyncService
     private string $coversPath;
     private string $publicCovers;
 
-    public function __construct()
-    {
+    public function __construct(
+        private CoverArtService $coverArt,
+    ) {
         $this->analyzer = new GetID3();
         $this->analyzer->option_md5_data        = false;
         $this->analyzer->option_md5_data_source = false;
@@ -104,13 +106,19 @@ class SyncService
         $info     = $this->analyze($pathname);
         $tags     = $this->extractTags($info, $file);
 
-        $artistId = $this->resolveArtist($tags['album_artist']);
+        $artistId = $this->resolveArtist(
+            $tags['album_artist'],
+            $tags['musicbrainz_artist_id'],
+        );
         $albumId  = $this->resolveAlbum(
             $artistId,
             $tags['album_artist'],
             $tags['album'],
             $tags['genre'],
             $tags['year'],
+            $tags['replaygain_album_gain'],
+            $tags['replaygain_album_peak'],
+            $tags['musicbrainz_album_id'],
             $info,
         );
 
@@ -127,16 +135,24 @@ class SyncService
         }
 
         TrackMeta::create([
-            'track_id'        => (int) $track->id,
-            'title'           => $tags['title'],
-            'track_number'    => $tags['track_number'],
-            'playtime_string' => $tags['playtime_string'],
-            'bitrate'         => $tags['bitrate'],
-            'mime_type'       => $tags['mime_type'],
+            'track_id'              => (int) $track->id,
+            'title'                 => $tags['title'],
+            'track_number'          => $tags['track_number'],
+            'disc_number'           => $tags['disc_number'] ?: null,
+            'playtime_string'       => $tags['playtime_string'],
+            'length_ms'             => $tags['length_ms'],
+            'bitrate'               => $tags['bitrate'],
+            'mime_type'             => $tags['mime_type'],
+            'composer'              => $tags['composer'] ?: null,
+            'bpm'                   => $tags['bpm'] ?: null,
+            'replaygain_track_gain' => $tags['replaygain_track_gain'],
+            'replaygain_track_peak' => $tags['replaygain_track_peak'],
+            'lyrics'                => $tags['lyrics'] ?: null,
+            'musicbrainz_track_id'  => $tags['musicbrainz_track_id'] ?: null,
         ]);
     }
 
-    private function resolveArtist(string $name): int
+    private function resolveArtist(string $name, string $musicbrainzId): int
     {
         $hash = $this->artistHash($name);
         if (isset($this->artistsCache[$hash])) {
@@ -145,7 +161,10 @@ class SyncService
 
         $artist = Artist::firstOrCreate(
             ['hash' => $hash],
-            ['name' => $name],
+            [
+                'name'                  => $name,
+                'musicbrainz_artist_id' => $musicbrainzId ?: null,
+            ],
         );
 
         if (!$artist instanceof Artist) {
@@ -163,6 +182,9 @@ class SyncService
         string $album,
         string $genre,
         string $year,
+        ?string $replayGainAlbumGain,
+        ?string $replayGainAlbumPeak,
+        string $musicbrainzAlbumId,
         array $info,
     ): int {
         $hash = $this->albumHash($albumArtist, $album, $year);
@@ -177,15 +199,19 @@ class SyncService
             return $id;
         }
 
-        $coverUrl = $this->extractAndStoreCover($info);
+        ['url' => $coverUrl, 'dominant' => $dominant] = $this->extractAndStoreCover($info);
 
         $created = Album::create([
-            'hash'      => $hash,
-            'artist_id' => $artistId,
-            'title'     => $album,
-            'cover'     => $coverUrl,
-            'genre'     => $genre,
-            'year'      => $year,
+            'hash'                  => $hash,
+            'artist_id'             => $artistId,
+            'title'                 => $album,
+            'cover'                 => $coverUrl,
+            'dominant_color'        => $dominant,
+            'genre'                 => $genre,
+            'year'                  => $year,
+            'replaygain_album_gain' => $replayGainAlbumGain,
+            'replaygain_album_peak' => $replayGainAlbumPeak,
+            'musicbrainz_album_id'  => $musicbrainzAlbumId ?: null,
         ]);
 
         if (!$created instanceof Album) {
@@ -246,6 +272,12 @@ class SyncService
         if ($artist === '') {
             $artist = $albumArtist;
         }
+
+        // iTunes TCMP / MP4 cpil / Vorbis COMPILATION — collapse comps to one album row.
+        if ($tag('part_of_a_compilation') === '1' || $tag('compilation') === '1') {
+            $albumArtist = self::VARIOUS_ARTISTS;
+        }
+
         if ($albumArtist === '') {
             $albumArtist = $artist;
         }
@@ -278,28 +310,72 @@ class SyncService
             $bitrate = (string) (int) round($bitrate / 1000);
         }
 
+        $lengthMs = isset($info['playtime_seconds']) && is_numeric($info['playtime_seconds'])
+            ? (int) round(((float) $info['playtime_seconds']) * 1000)
+            : null;
+
         return [
-            'album_artist'    => $albumArtist,
-            'album'           => $album,
-            'title'           => $title,
-            'genre'           => $genre,
-            'year'            => $year,
-            'track_number'    => $tag('track_number'),
-            'playtime_string' => (string) ($info['playtime_string'] ?? ''),
-            'bitrate'         => (string) $bitrate,
-            'mime_type'       => (string) ($info['mime_type'] ?? ''),
+            'album_artist'           => $albumArtist,
+            'album'                  => $album,
+            'title'                  => $title,
+            'genre'                  => $genre,
+            'year'                   => $year,
+            'track_number'           => $tag('track_number'),
+            'disc_number'            => $tag('part_of_a_set'),
+            'playtime_string'        => (string) ($info['playtime_string'] ?? ''),
+            'length_ms'              => $lengthMs,
+            'bitrate'                => (string) $bitrate,
+            'mime_type'              => (string) ($info['mime_type'] ?? ''),
+            'composer'               => $tag('composer'),
+            'bpm'                    => $tag('bpm'),
+            'lyrics'                 => $tag('unsynchronised_lyric'),
+            'replaygain_track_gain'  => $this->replayGain($info, 'track', 'adjustment'),
+            'replaygain_track_peak'  => $this->replayGain($info, 'track', 'peak'),
+            'replaygain_album_gain'  => $this->replayGain($info, 'album', 'adjustment'),
+            'replaygain_album_peak'  => $this->replayGain($info, 'album', 'peak'),
+            'musicbrainz_artist_id'  => $this->mbid($info, 'musicbrainz_artistid', 'MusicBrainz Artist Id'),
+            'musicbrainz_album_id'   => $this->mbid($info, 'musicbrainz_albumid',  'MusicBrainz Album Id'),
+            'musicbrainz_track_id'   => $this->mbid($info, 'musicbrainz_releasetrackid', 'MusicBrainz Release Track Id')
+                ?: $this->mbid($info, 'musicbrainz_trackid', 'MusicBrainz Track Id'),
         ];
     }
 
-    private function extractAndStoreCover(array $info): ?string
+    private function replayGain(array $info, string $scope, string $key): ?string
     {
+        $val = $info['replay_gain'][$scope][$key] ?? null;
+        if ($val === null || $val === '') {
+            return null;
+        }
+        return (string) $val;
+    }
+
+    private function mbid(array $info, string $vorbisKey, string $txxxDescription): string
+    {
+        if (isset($info['comments'][$vorbisKey][0])) {
+            return trim((string) $info['comments'][$vorbisKey][0]);
+        }
+        foreach ($info['id3v2']['TXXX'] ?? [] as $txxx) {
+            if (strcasecmp((string) ($txxx['description'] ?? ''), $txxxDescription) === 0) {
+                return trim((string) ($txxx['data'] ?? ''));
+            }
+        }
+        return '';
+    }
+
+    /**
+     * @return array{url: ?string, dominant: ?string}
+     */
+    private function extractAndStoreCover(array $info): array
+    {
+        $empty = ['url' => null, 'dominant' => null];
+
         $data = $info['comments']['picture'][0]['data']
             ?? $info['id3v2']['APIC'][0]['data']
             ?? $info['id3v2']['PIC'][0]['data']
             ?? null;
 
         if (!is_string($data) || $data === '') {
-            return null;
+            return $empty;
         }
 
         $hash     = md5($data);
@@ -309,14 +385,17 @@ class SyncService
         if (!is_file($fullPath)) {
             $img = @imagecreatefromstring($data);
             if ($img === false) {
-                return null;
+                return $empty;
             }
             if (!@imagepng($img, $fullPath)) {
-                return null;
+                return $empty;
             }
         }
 
-        return $this->publicCovers . $filename;
+        return [
+            'url'      => $this->publicCovers . $filename,
+            'dominant' => $this->coverArt->computeDominantHex($fullPath),
+        ];
     }
 
     private function ensureCoversDir(): void

@@ -4,24 +4,13 @@ namespace App\Services\Soprano;
 
 class CoverArtService
 {
-    public function dominantColor(?string $coverUrl): ?array
+    public function computeDominantHex(string $imagePath): ?string
     {
-        if (!$coverUrl) {
+        if (!is_file($imagePath)) {
             return null;
         }
 
-        $publicPrefix = config("soprano.public_covers");
-        if (!str_starts_with($coverUrl, $publicPrefix)) {
-            return null;
-        }
-
-        $filename = substr($coverUrl, strlen($publicPrefix));
-        $path = rtrim(config("soprano.covers_path"), '/') . '/' . $filename;
-        if (!is_file($path)) {
-            return null;
-        }
-
-        $data = @file_get_contents($path);
+        $data = @file_get_contents($imagePath);
         if ($data === false) {
             return null;
         }
@@ -73,10 +62,20 @@ class CoverArtService
             }
         }
 
-        return [
+        return sprintf(
+            '#%02x%02x%02x',
             (int) ($top['r'] / $top['count']),
             (int) ($top['g'] / $top['count']),
             (int) ($top['b'] / $top['count']),
-        ];
+        );
+    }
+
+    public function hexToRgb(?string $hex): ?array
+    {
+        if ($hex === null || !preg_match('/^#([0-9a-f]{6})$/i', $hex, $m)) {
+            return null;
+        }
+        $int = hexdec($m[1]);
+        return [($int >> 16) & 0xFF, ($int >> 8) & 0xFF, $int & 0xFF];
     }
 }

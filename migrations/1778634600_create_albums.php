@@ -14,8 +14,12 @@ return new class implements MigrationInterface
             $table->unsignedBigInteger("artist_id");
             $table->varchar("title");
             $table->varchar("cover")->nullable();
+            $table->char("dominant_color", 7)->nullable();
             $table->varchar("genre");
             $table->varchar("year");
+            $table->varchar("replaygain_album_gain")->nullable();
+            $table->varchar("replaygain_album_peak")->nullable();
+            $table->char("musicbrainz_album_id", 36)->nullable();
             $table->timestamps();
             $table->unique("hash");
             $table->primaryKey("id");

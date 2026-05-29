@@ -36,6 +36,7 @@ class MusicService
                     al.hash AS album_hash,
                     al.title AS album,
                     al.cover AS cover,
+                    al.dominant_color AS dominant_color,
                     al.year AS year,
                     ar.hash AS artist_hash,
                     ar.name AS artist,
@@ -60,6 +61,7 @@ class MusicService
             "SELECT al.hash AS album_hash,
                     al.title AS album,
                     al.cover AS cover,
+                    al.dominant_color AS dominant_color,
                     al.year AS year,
                     ar.hash AS artist_hash,
                     ar.name AS artist
@@ -81,6 +83,7 @@ class MusicService
                     al.hash AS album_hash,
                     al.title AS album,
                     al.cover AS cover,
+                    al.dominant_color AS dominant_color,
                     al.year AS year,
                     ar.hash AS artist_hash,
                     ar.name AS artist,
@@ -107,6 +110,7 @@ class MusicService
                     al.hash AS album_hash,
                     al.title AS album,
                     al.cover AS cover,
+                    al.dominant_color AS dominant_color,
                     al.year AS year,
                     ar.hash AS artist_hash,
                     ar.name AS artist,
@@ -139,6 +143,7 @@ class MusicService
             "SELECT al.hash AS album_hash,
                     al.title AS album,
                     al.cover AS cover,
+                    al.dominant_color AS dominant_color,
                     al.year AS year,
                     ar.hash AS artist_hash,
                     ar.name AS artist
@@ -161,6 +166,7 @@ class MusicService
                     al.hash AS album_hash,
                     al.title AS album,
                     al.cover AS cover,
+                    al.dominant_color AS dominant_color,
                     al.year AS year,
                     ar.hash AS artist_hash,
                     ar.name AS artist,
@@ -190,6 +196,7 @@ class MusicService
                     al.hash AS album_hash,
                     al.title AS album,
                     al.cover AS cover,
+                    al.dominant_color AS dominant_color,
                     al.year AS year,
                     ar.hash AS artist_hash,
                     ar.name AS artist,
@@ -224,6 +231,7 @@ class MusicService
             'artist'          => $row['artist'] ?? '',
             'album'           => $row['album'] ?? '',
             'cover'           => $row['cover'] ?? '/images/no-album-art.png',
+            'dominant_color'  => $row['dominant_color'] ?? null,
             'year'            => $row['year'] ?? '',
             'track_number'    => $row['track_number'] ?? '',
             'playtime_string' => $row['playtime_string'] ?? '',
@@ -233,13 +241,14 @@ class MusicService
     private function mapAlbumRow(array $row): array
     {
         return [
-            'album_hash'  => $row['album_hash'],
-            'artist_hash' => $row['artist_hash'],
-            'album'       => $row['album'],
-            'title'       => $row['album'],
-            'artist'      => $row['artist'],
-            'cover'       => $row['cover'] ?? '/images/no-album-art.png',
-            'year'        => $row['year'],
+            'album_hash'     => $row['album_hash'],
+            'artist_hash'    => $row['artist_hash'],
+            'album'          => $row['album'],
+            'title'          => $row['album'],
+            'artist'         => $row['artist'],
+            'cover'          => $row['cover'] ?? '/images/no-album-art.png',
+            'dominant_color' => $row['dominant_color'] ?? null,
+            'year'           => $row['year'],
         ];
     }
 }
