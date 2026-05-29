@@ -100,7 +100,6 @@ class PlayerController extends Controller
         }
     }
 
-
     #[Get("/player/play/album/{hash}", "player.play-album")]
     public function playAlbum(string $hash)
     {

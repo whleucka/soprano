@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\PlayerService;
-use App\Services\Soprano\SearchService;
+use App\Services\Soprano\{SearchService, MusicService, PlayerService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
@@ -11,6 +10,7 @@ class SearchController extends Controller
 {
     public function __construct(
         private SearchService $search, 
+        private MusicService $music, 
         private PlayerService $player
     ) {}
 
@@ -25,6 +25,39 @@ class SearchController extends Controller
         }
 
         return $this->render("search/index.html.twig");
+    }
+
+    #[Get("/search/recently-played", "search.recently-played")]
+    public function recentlyPlayed(): string
+    {
+        $tracks = $this->music->topPlayed(1000);
+        if ($tracks) {
+            $this->search->setSearchResults($tracks);
+            $this->hxTrigger("searchResults, searchActions");
+        }
+        return $this->index();
+    }
+
+    #[Get("/search/top-played", "search.top-played")]
+    public function topPlayed(): string
+    {
+        $tracks = $this->music->topPlayed(1000);
+        if ($tracks) {
+            $this->search->setSearchResults($tracks);
+            $this->hxTrigger("searchResults, searchActions");
+        }
+        return $this->index();
+    }
+
+    #[Get("/search/recently-added", "search.recently-added")]
+    public function recentlyAdded(): string
+    {
+        $tracks = $this->music->recentlyAddedTracks(1000);
+        if ($tracks) {
+            $this->search->setSearchResults($tracks);
+            $this->hxTrigger("searchResults, searchActions");
+        }
+        return $this->index();
     }
 
     #[Get("/search/results", "search.results")]
