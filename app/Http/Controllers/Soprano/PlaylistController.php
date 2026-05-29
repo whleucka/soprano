@@ -6,6 +6,16 @@ use App\Services\Soprano\{CoverArtService, PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Route\Get;
 
+define("DEFAULT_PLAYLIST", [
+    "hash"        => "#",
+    "album_hash"  => "#",
+    "artist_hash" => "#",
+    "artist"      => "N/A",
+    "cover"       => "/images/no-album-art.png",
+    "album"       => "N/A",
+    "title"       => "N/A",
+]);
+
 class PlaylistController extends Controller
 {
     public function __construct(
@@ -28,15 +38,7 @@ class PlaylistController extends Controller
             "dominant" => isset($playlist["tracks"][$index])
                 ? $this->coverArt->dominantColor($playlist["tracks"][$index]["cover"]) 
                 : [18,18,18],
-            "current" => $playlist["tracks"][$index] ?? [
-                "hash"        => "#",
-                "album_hash"  => "#",
-                "artist_hash" => "#",
-                "artist"      => "N/A",
-                "cover"       => "/images/no-album-art.png",
-                "album"       => "N/A",
-                "title"       => "N/A",
-            ]
+            "current" => $playlist["tracks"][$index] ?? DEFAULT_PLAYLIST
         ]);
     }
 
@@ -51,8 +53,11 @@ class PlaylistController extends Controller
     #[Get("/playlist/queue", "playlist.queue")]
     public function queue(): string
     {
+        $playlist = $this->playlist->getPlaylist();
+        $index = $playlist["index"];
         return $this->render("playlist/queue.html.twig", [
             "playlist" => $this->playlist->getPlaylist(),
+            "current" => $playlist["tracks"][$index] ?? false
         ]);
     }
 

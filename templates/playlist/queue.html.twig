@@ -4,13 +4,18 @@
       track: track,
       play_uri: uri('player.play-playlist-track', [loop.index0]),
       dom_id: 'playlist-' ~ track.hash,
-      active: player.hash == track.hash,
+      active: current.hash == track.hash,
       dropdown_suffix: 'queue-dropdown',
       dropdown_before_request: 'hidePlaylist()'
     } %}
       {% block leading %}{% endblock %}
     {% endembed %}
   {% endfor %}
+  <script>
+  (function() {
+    updateActiveTrack('{{ current.hash }}');
+  })();
+  </script>
 {% else %}
   <div class="p-2">
       <p class="lead"><i class="bi bi-info text-warning pe-1"></i> Playlist is empty</p>
