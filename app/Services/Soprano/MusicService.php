@@ -73,7 +73,7 @@ class MusicService
             [$artistId, $limit],
         );
 
-        return array_map(fn($row) => $this->mapAlbumRow($row), $rows);
+        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
     public function artistTracks(string $artistHash): array
@@ -154,7 +154,7 @@ class MusicService
             [$albumCount],
         );
 
-        return array_map(fn($row) => $this->mapAlbumRow($row), $rows);
+        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
     public function recentlyPlayed(int $trackCount = 50): array
@@ -224,9 +224,9 @@ class MusicService
     private function mapTrackRow(array $row): array
     {
         return [
-            'hash'            => $row['track_hash'],
-            'album_hash'      => $row['album_hash'],
-            'artist_hash'     => $row['artist_hash'],
+            'hash'            => $row['track_hash'] ?? null,
+            'album_hash'      => $row['album_hash'] ?? null,
+            'artist_hash'     => $row['artist_hash'] ?? null,
             'title'           => $row['title'] ?? '',
             'artist'          => $row['artist'] ?? '',
             'album'           => $row['album'] ?? '',
@@ -235,20 +235,6 @@ class MusicService
             'year'            => $row['year'] ?? '',
             'track_number'    => $row['track_number'] ?? '',
             'playtime_string' => $row['playtime_string'] ?? '',
-        ];
-    }
-
-    private function mapAlbumRow(array $row): array
-    {
-        return [
-            'album_hash'     => $row['album_hash'],
-            'artist_hash'    => $row['artist_hash'],
-            'album'          => $row['album'],
-            'title'          => $row['album'],
-            'artist'         => $row['artist'],
-            'cover'          => $row['cover'] ?? '/images/no-album-art.png',
-            'dominant_color' => $row['dominant_color'] ?? null,
-            'year'           => $row['year'],
         ];
     }
 }

@@ -352,14 +352,31 @@ class SyncService
     private function mbid(array $info, string $vorbisKey, string $txxxDescription): string
     {
         if (isset($info['comments'][$vorbisKey][0])) {
-            return trim((string) $info['comments'][$vorbisKey][0]);
+            return $this->cleanMbid((string) $info['comments'][$vorbisKey][0]);
         }
         foreach ($info['id3v2']['TXXX'] ?? [] as $txxx) {
             if (strcasecmp((string) ($txxx['description'] ?? ''), $txxxDescription) === 0) {
-                return trim((string) ($txxx['data'] ?? ''));
+                return $this->cleanMbid((string) ($txxx['data'] ?? ''));
             }
         }
         return '';
+    }
+
+    private function cleanMbid(string $value): string
+    {
+        // Some taggers write TXXX MusicBrainz frames as UTF-16; getid3 leaves the
+        // raw bytes (BOM + interleaved nulls) in $info['id3v2']['TXXX'] data.
+        $value = preg_replace('/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF)/', '', $value) ?? $value;
+        if (str_contains($value, "\0")) {
+            $decoded = @mb_convert_encoding($value, 'UTF-8', 'UTF-16LE,UTF-16BE');
+            $value = (is_string($decoded) && $decoded !== '') ? $decoded : str_replace("\0", '', $value);
+        }
+        $value = trim($value);
+        // MBIDs are UUIDs (hex + dashes), optionally joined with "/" for multi-artist.
+        if ($value === '' || !preg_match('~^[0-9a-f\-/]+$~i', $value)) {
+            return '';
+        }
+        return $value;
     }
 
     /**

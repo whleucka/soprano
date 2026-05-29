@@ -18,7 +18,7 @@ return new class implements MigrationInterface
             $table->unsignedInteger("length_ms")->nullable();
             $table->varchar("bitrate");
             $table->varchar("mime_type");
-            $table->varchar("composer")->nullable();
+            $table->text("composer")->nullable();
             $table->varchar("bpm")->nullable();
             $table->varchar("replaygain_track_gain")->nullable();
             $table->varchar("replaygain_track_peak")->nullable();
