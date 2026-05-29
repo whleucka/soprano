@@ -187,7 +187,7 @@ class SyncService
         string $musicbrainzAlbumId,
         array $info,
     ): int {
-        $hash = $this->albumHash($albumArtist, $album, $year);
+        $hash = $this->albumHash($albumArtist, $album, $year, $musicbrainzAlbumId);
         if (isset($this->albumsCache[$hash])) {
             return $this->albumsCache[$hash];
         }
@@ -228,8 +228,11 @@ class SyncService
         return md5($this->normalize($name));
     }
 
-    private function albumHash(string $albumArtist, string $album, string $year): string
+    private function albumHash(string $albumArtist, string $album, string $year, string $mbid): string
     {
+        if ($mbid !== '') {
+            return md5($mbid);
+        }
         return md5(
             $this->normalize($albumArtist)
             . '|' . $this->normalize($album)
