@@ -199,7 +199,7 @@ input:-webkit-autofill:active {
 #view .content h2 {
   font-weight: 800;
   color: #ddd;
-  margin-bottom: 15px !important;
+  font-size: 1.6rem;
 }
 .cover {
   border-radius: 6px;
