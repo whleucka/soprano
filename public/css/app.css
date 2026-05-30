@@ -196,9 +196,10 @@ input:-webkit-autofill:active {
   overflow: hidden;
 }
 
-#view h2 {
+#view .content h2 {
   font-weight: 800;
   color: #ddd;
+  margin-bottom: 15px !important;
 }
 .cover {
   border-radius: 6px;
