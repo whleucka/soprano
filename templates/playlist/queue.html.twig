@@ -8,7 +8,9 @@
       dropdown_suffix: 'queue-dropdown',
       dropdown_before_request: 'hidePlaylist()'
     } %}
-      {% block leading %}{% endblock %}
+      {% block leading %}
+        <img title="{{ track.album }}" class="cover me-2" src="{{ track.cover }}" loading="lazy"/>
+      {% endblock %}
     {% endembed %}
   {% endfor %}
 {% else %}

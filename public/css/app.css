@@ -200,7 +200,9 @@ input:-webkit-autofill:active {
   font-weight: 800;
   color: #ddd;
 }
-
+.cover {
+  border-radius: 6px;
+}
 #playlist {
   width: 100%;
   min-width: 100%;
@@ -210,22 +212,21 @@ input:-webkit-autofill:active {
   border-radius: 12px 12px 0 0;
 }
 
-#playlist #now-playing #cover {
-  border-radius: 6px;
+#playlist #now-playing .cover {
   width: 90px;
   height: 90px;
 }
 
-#playlist #now-playing #title {
+#playlist #now-playing .title {
   font-weight: bold;
   font-size: 1.5rem;
 }
 
-#playlist #now-playing #artist {
+#playlist #now-playing .artist {
   color: #999;
   font-size: 0.9rem;
 }
-#playlist #now-playing #album {
+#playlist #now-playing .album {
   color: #999;
   font-size: 0.9rem;
 }
@@ -292,7 +293,6 @@ input:-webkit-autofill:active {
 
 #player .cover {
   padding: 8px;
-  border-radius: 12px;
   width: 80px;
   height: 80px;
 }
@@ -380,11 +380,10 @@ input:-webkit-autofill:active {
 .hero .cover {
   width: 90px;
   height: 90px;
-  border-radius: 12px;
 }
 
 .hero h1 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 900;
 }
 
@@ -394,7 +393,7 @@ input:-webkit-autofill:active {
 }
 
 .hero h5 {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #999;
 }
 
@@ -431,7 +430,6 @@ input:-webkit-autofill:active {
 .album-cont .cover {
   width: 80px;
   height: 80px;
-  border-radius: 12px;
 }
 
 .album-cont a:link,
@@ -498,9 +496,9 @@ input:-webkit-autofill:active {
   font-size: 0.9rem;
 }
 .track .cover {
-  border-radius: 4px;
   width: 40px;
   height: 40px;
+  border-radius: 4px;
 }
 .track .plays {
   font-size: 0.9rem;
@@ -524,30 +522,25 @@ input:-webkit-autofill:active {
   #artist #play-artist {
     font-size: 3rem;
   }
-
-  #view h1 {
-    font-size: 3.5rem;
-  }
-
-  #view h2 {
-    font-size: 1.5rem;
+  .cover {
+    border-radius: 12px;
   }
 
   #view .hero {
-    min-height: 260px;
+    min-height: 200px;
   }
 
   #view .hero .cover {
-    width: 170px;
-    height: 170px;
+    width: 160px;
+    height: 160px;
   }
 
   .hero h1 {
-    font-size: 2.5rem;
+    font-size: 4rem;
   }
 
   .hero h3 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .hero h5 {
@@ -555,19 +548,15 @@ input:-webkit-autofill:active {
   }
 
   .album-cont {
-    width: 120px;
+    width: 160px;
   }
   .album-cont .cover {
-    width: 120px;
-    height: 120px;
+    width: 160px;
+    height: 160px;
   }
   .info {
     font-size: 1.0rem;
-    width: 120px;
-  }
-  .info {
-    font-size: 1.0rem;
-    width: 120px;
+    width: 160px;
   }
 }
 

@@ -59,7 +59,7 @@ class MusicService
     {
         $rows = db()->fetchAll(
             "SELECT al.hash AS album_hash,
-                    al.title AS title,
+                    al.title AS album,
                     al.cover AS cover,
                     al.dominant_color AS dominant_color,
                     al.year AS year,
@@ -141,7 +141,7 @@ class MusicService
     {
         $rows = db()->fetchAll(
             "SELECT al.hash AS album_hash,
-                    al.title AS title,
+                    al.title AS album,
                     al.cover AS cover,
                     al.dominant_color AS dominant_color,
                     al.year AS year,
