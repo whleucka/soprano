@@ -25,7 +25,7 @@
     <div id="top-played" class="d-flex justify-content-start pt-2 pb-3 scrollable" hx-get="{{ uri("home.top-played") }}" hx-trigger="load, topPlayed from:body"></div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
-      <h2 class="mb-0"><i class="bi bi-plus-lg text-danger pe-1"></i> Recently Added</h2>
+      <h2 class="mb-0"><i class="bi bi-plus-lg pe-1"></i> Recently Added</h2>
       <span class="badge bg-dark ms-1">
           <a hx-boost="true" href="{{ uri('search.recently-added') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
