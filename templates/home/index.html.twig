@@ -9,23 +9,23 @@
   </div>
   <div class="p-3 scrollable">
     <div class="d-inline-flex align-items-center gap-2">
-      <h2 class="mb-0">Recently Played</h2>
+      <h2 class="mb-0"><i class="bi bi-clock text-secondary pe-1"></i> Recently Played</h2>
       <span class="badge bg-dark ms-1">
           <a hx-boost="true" href="{{ uri('search.recently-played') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
     <div id="recently-played" class="d-flex justify-content-start pt-2 pb-3 scrollable" hx-get="{{ uri("home.recently-played") }}" hx-trigger="load, recentlyPlayed from:body"></div>
 
-    <div class="d-inline-flex align-items-center gap-2 mt-3">
-      <h2 class="mb-0">Top Played</h2>
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
+      <h2 class="mb-0"><i class="bi bi-star-fill text-warning pe-1"></i> Top Played</h2>
       <span class="badge bg-dark ms-1">
           <a hx-boost="true" href="{{ uri('search.top-played') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
     <div id="top-played" class="d-flex justify-content-start pt-2 pb-3 scrollable" hx-get="{{ uri("home.top-played") }}" hx-trigger="load, topPlayed from:body"></div>
 
-    <div class="d-inline-flex align-items-center gap-2 mt-3">
-      <h2 class="mb-0">Recently Added</h2>
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
+      <h2 class="mb-0"><i class="bi bi-plus-lg text-danger pe-1"></i> Recently Added</h2>
       <span class="badge bg-dark ms-1">
           <a hx-boost="true" href="{{ uri('search.recently-added') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
