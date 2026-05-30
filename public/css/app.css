@@ -490,6 +490,7 @@ input:-webkit-autofill:active {
 .track .playtime-string {
   font-size: 0.8rem;
   color: #999;
+  padding-right: 3px;
 }
 .track .track-number {
   font-weight: 800;
