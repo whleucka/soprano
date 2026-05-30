@@ -424,7 +424,7 @@ input:-webkit-autofill:active {
 /** Album Container */
 .album-cont {
   width: 80px;
-  margin-right: 15px;
+  margin-right: 20px;
   cursor: pointer;
   color: #999;
 }
