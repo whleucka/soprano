@@ -3,6 +3,8 @@
 return [
     "authenticated_route" => uri("dashboard.admin.index"),
     "register_enabled" => env("AUTH_REGISTER_ENABLED", false),
+    "client_authenticated_route" => "/home",
+    "client_register_enabled" => env("CLIENT_REGISTER_ENABLED", true),
     "trusted_proxies" => array_filter(explode(',', env('TRUSTED_PROXIES') ?? '')),
     "whitelist" => [
     ],

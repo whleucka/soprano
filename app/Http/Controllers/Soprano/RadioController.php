@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Soprano;
 
 use Echo\Framework\Http\Controller;
+use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
 
+#[Group(middleware: ["client"])]
 class RadioController extends Controller
 {
     public function __construct()

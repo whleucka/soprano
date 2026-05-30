@@ -1,0 +1,124 @@
+{% extends "layout/base.html.twig" %}
+
+{% block title %}{{ parent() }} - Register{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/bootstrap-icons/bootstrap-icons.min.css">
+{% endblock %}
+
+{% block content %}
+<style>
+html, body { height: 100%; background: #000; }
+#client-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  color: #fff;
+  padding: 1rem;
+}
+#client-auth .auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #121212;
+  border-radius: 12px;
+  padding: 2rem 1.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+#client-auth .auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #b30404, #ff00aa, #aa00ff, #00aaff, #00ffaa, #ffff00, #b30404);
+  background-size: 300% 100%;
+}
+#client-auth h1 {
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.5px;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+#client-auth .auth-subtext {
+  color: #999;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+#client-auth .form-floating > label { color: #777; }
+#client-auth .form-floating > label::after { background-color: #1e1e1e !important; }
+#client-auth .form-floating > .form-control:focus ~ label,
+#client-auth .form-floating > .form-control:not(:placeholder-shown) ~ label { color: #999; }
+#client-auth .form-control {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+}
+#client-auth .form-control:focus {
+  background: #1e1e1e;
+  border-color: #555;
+  color: #fff;
+  box-shadow: none;
+}
+#client-auth .btn-success {
+  background: #ff00aa;
+  border-color: #ff00aa;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.65rem;
+}
+#client-auth .btn-success:hover { background: #d9008f; border-color: #d9008f; color: #fff; }
+#client-auth .btn-success:focus { background: #d9008f; border-color: #d9008f; color: #fff; box-shadow: 0 0 0 0.25rem rgba(255, 0, 170, 0.35); }
+#client-auth a { color: #fff; }
+#client-auth a:hover { color: #ccc; }
+#client-auth .auth-footer { color: #999; }
+#client-auth .alert {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+}
+#client-auth .alert-success { background: rgba(34, 197, 94, 0.12); border-color: rgba(34, 197, 94, 0.35); color: #4ade80; }
+#client-auth .alert-warning { background: rgba(250, 204, 21, 0.10); border-color: rgba(250, 204, 21, 0.35); color: #facc15; }
+#client-auth .alert-danger  { background: rgba(248, 113, 113, 0.12); border-color: rgba(248, 113, 113, 0.35); color: #f87171; }
+#client-auth .alert-info    { background: rgba(56, 189, 248, 0.10); border-color: rgba(56, 189, 248, 0.35); color: #67e8f9; }
+#client-auth .alert .bi { fill: currentColor; width: 1.15rem; height: 1.15rem; }
+#client-auth .alert ul { color: inherit; }
+</style>
+<section id="client-auth">
+  <form class="auth-card" method="POST" hx-post="{{ uri('client.auth.register.post') }}" hx-swap="outerHTML" hx-target="#client-auth" hx-select="#client-auth">
+    {{ csrf()|raw }}
+    <h1><i class="bi bi-music-note-beamed pe-1"></i> Soprano</h1>
+    <p class="auth-subtext">Create your account.</p>
+    {% include "components/flash.html.twig" %}
+    <div class="form-floating mb-3">
+      <input type="text" value="{{ old('username') }}" class="form-control {% if validationErrors.username is defined %}is-invalid{% endif %}" id="username" name="username" placeholder="Username" autocomplete="username" autofocus>
+      <label for="username">Username</label>
+      {% include 'components/validation.html.twig' with {'validate': 'username'} %}
+    </div>
+    <div class="form-floating mb-3">
+      <input type="password" class="form-control {% if validationErrors.password is defined %}is-invalid{% endif %}" id="password" name="password" placeholder="Password" autocomplete="new-password">
+      <label for="password">Password</label>
+      {% include 'components/validation.html.twig' with {'validate': 'password'} %}
+    </div>
+    <div class="form-floating mb-3">
+      <input type="password" class="form-control {% if validationErrors.password_match is defined %}is-invalid{% endif %}" id="password-match" name="password_match" placeholder="Password (again)" autocomplete="new-password">
+      <label for="password-match">Password (again)</label>
+      {% include 'components/validation.html.twig' with {'validate': 'password_match'} %}
+    </div>
+    <div class="d-grid mt-4 mb-3">
+      <button type="submit" class="btn btn-success">Sign Up</button>
+    </div>
+    <div class="text-center mt-3 auth-footer small">
+      <span>Already have an account?</span>
+      <a href="{{ uri('client.auth.sign-in.index') }}">Sign in</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -21,6 +21,7 @@ class Kernel extends HttpKernel
         \Echo\Framework\Http\Middleware\ApiVersion::class,
         // 8–10. Authentication and context
         \Echo\Framework\Http\Middleware\Auth::class,
+        \App\Http\Middleware\ClientAuth::class,
         \Echo\Framework\Http\Middleware\AuditContext::class,
         \Echo\Framework\Http\Middleware\BearerAuth::class,
         // 11. CSRF protection (requires session)

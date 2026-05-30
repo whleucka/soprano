@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Soprano;
 
 use App\Services\Soprano\MusicService;
 use Echo\Framework\Http\Controller;
+use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
 
+#[Group(middleware: ["client"])]
 class HomeController extends Controller
 {
     public function __construct(private MusicService $music) {}

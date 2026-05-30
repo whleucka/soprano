@@ -133,6 +133,16 @@ body {
   color: #555;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff !important;
+  -webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
+  caret-color: #fff;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 #top #profile-icon {
   width: 22px;
   height: 22px;

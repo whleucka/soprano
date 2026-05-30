@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\Auth\ClientRegistered;
+use App\Events\Auth\ClientSignedIn;
+use App\Events\Auth\ClientSignedOut;
+use App\Events\Auth\ClientSignInFailed;
 use App\Events\Auth\PasswordResetCompleted;
 use App\Events\Auth\PasswordResetRequested;
 use App\Events\Auth\SignInFailed;
@@ -60,6 +64,20 @@ class EventServiceProvider extends BaseEventServiceProvider
             AuthListener::class,
         ],
         PasswordResetCompleted::class => [
+            AuthListener::class,
+        ],
+
+        // Client authentication events
+        ClientSignedIn::class => [
+            AuthListener::class,
+        ],
+        ClientSignInFailed::class => [
+            AuthListener::class,
+        ],
+        ClientSignedOut::class => [
+            AuthListener::class,
+        ],
+        ClientRegistered::class => [
             AuthListener::class,
         ],
     ];

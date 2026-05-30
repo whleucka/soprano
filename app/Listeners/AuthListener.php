@@ -2,6 +2,10 @@
 
 namespace App\Listeners;
 
+use App\Events\Auth\ClientRegistered;
+use App\Events\Auth\ClientSignedIn;
+use App\Events\Auth\ClientSignedOut;
+use App\Events\Auth\ClientSignInFailed;
 use App\Events\Auth\PasswordResetCompleted;
 use App\Events\Auth\PasswordResetRequested;
 use App\Events\Auth\SignInFailed;
@@ -29,6 +33,10 @@ class AuthListener implements ListenerInterface
                 $event instanceof UserRegistered => $this->onRegistered($event),
                 $event instanceof PasswordResetRequested => $this->onResetRequested($event),
                 $event instanceof PasswordResetCompleted => $this->onResetCompleted($event),
+                $event instanceof ClientSignedIn => $this->onClientSignedIn($event),
+                $event instanceof ClientSignInFailed => $this->onClientSignInFailed($event),
+                $event instanceof ClientSignedOut => $this->onClientSignedOut($event),
+                $event instanceof ClientRegistered => $this->onClientRegistered($event),
                 default => null,
             };
         } catch (\Exception|\Error $e) {
@@ -86,6 +94,42 @@ class AuthListener implements ListenerInterface
         logger()->channel('auth')->info('Password reset successful', [
             'user_id' => $event->user->id,
             'email' => $event->user->email,
+            'ip' => $event->ip,
+        ]);
+    }
+
+    private function onClientSignedIn(ClientSignedIn $event): void
+    {
+        logger()->channel('auth')->info('Client login successful', [
+            'client_id' => $event->client->id,
+            'username' => $event->client->username,
+            'ip' => $event->ip,
+        ]);
+    }
+
+    private function onClientSignInFailed(ClientSignInFailed $event): void
+    {
+        logger()->channel('auth')->warning('Client login failed', [
+            'username' => $event->username,
+            'ip' => $event->ip,
+            'reason' => $event->reason,
+        ]);
+    }
+
+    private function onClientSignedOut(ClientSignedOut $event): void
+    {
+        logger()->channel('auth')->info('Client logout', [
+            'client_id' => $event->clientId,
+            'username' => $event->username,
+            'ip' => $event->ip,
+        ]);
+    }
+
+    private function onClientRegistered(ClientRegistered $event): void
+    {
+        logger()->channel('auth')->info('Client registration successful', [
+            'client_id' => $event->client->id,
+            'username' => $event->client->username,
             'ip' => $event->ip,
         ]);
     }
