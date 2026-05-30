@@ -96,7 +96,7 @@ class MusicService
              LEFT JOIN track_meta tm ON tm.track_id = t.id
              WHERE ar.hash = ?
              GROUP BY t.id
-             ORDER BY tm.title ASC",
+             ORDER BY al.hash, CAST(tm.track_number AS UNSIGNED), tm.track_number",
             [$artistHash],
         );
 
@@ -175,7 +175,7 @@ class MusicService
             JOIN albums al ON al.id = t.album_id
             JOIN artists ar ON ar.id = t.artist_id
             LEFT JOIN track_meta tm ON tm.track_id = t.id
-            ORDER BY t.created_at DESC
+            ORDER BY t.id DESC
             LIMIT ?",
             [$albumCount],
         );
