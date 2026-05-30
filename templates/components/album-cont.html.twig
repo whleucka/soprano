@@ -5,7 +5,7 @@
     {% endblock %}
   </div>
   <span title="{{ track.title }}" class="title truncate fw-bold mt-1">{{ track.title }}</span>
-  <span title="{{ track.artist }}" class="artist small truncate"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("artist.index", [track.artist_hash]) }}">{{ track.artist }}</a></span>
+  <span title="{{ track.artist }}" class="artist small truncate"><a hx-boost="true" class="text-reset text-decoration-none" href="{{ uri("artist.index", [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></span>
   {% block extra %}
   {% endblock %}
 </div>

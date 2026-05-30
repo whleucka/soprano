@@ -3,6 +3,9 @@
     {% embed 'components/album-cont.html.twig' with {
       track: track,
     } %}
+    {% block extra %}
+      <span title="{{ track.client }}" class="client truncate"><i class="bi bi-person-circle pe-1"></i> {{ track.client ?? 'unknown' }}</span>
+    {% endblock %}
     {% endembed %}
   {% endfor %}
 {% else %}

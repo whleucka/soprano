@@ -223,6 +223,7 @@ class MusicService
                     ar.hash AS artist_hash,
                     ar.name AS artist,
                     tm.title AS title,
+                    tm.playtime_string AS playtime_string,
                     c.username AS client,
                     MAX(tp.id) AS last_play_id
              FROM track_plays tp
@@ -253,6 +254,7 @@ class MusicService
                     ar.hash AS artist_hash,
                     ar.name AS artist,
                     tm.title AS title,
+                    tm.playtime_string AS playtime_string,
                     COUNT(tp.id) AS plays,
                     MAX(tp.id) AS last_play_id
              FROM track_plays tp
@@ -287,6 +289,7 @@ class MusicService
             'year'            => $row['year'] ?? '',
             'track_number'    => $row['track_number'] ?? '',
             'playtime_string' => $row['playtime_string'] ?? '',
+            'client'          => $row['client'] ?? null,
         ];
     }
 }

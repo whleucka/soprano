@@ -25,12 +25,11 @@ class RegisterController extends AuthController
     #[Post("/register", "register.post", ["max_requests" => 10, "decay_seconds" => 60])]
     public function post(): string|Response
     {
-        $this->setValidationMessage("password.min_length", "Must be at least 10 characters");
-        $this->setValidationMessage("password.regex", "Must contain 1 upper case, 1 digit, 1 symbol");
+        $this->setValidationMessage("password.min_length", "Must be at least 4 characters");
         $this->setValidationMessage("password_match.match", "Password does not match");
         $valid = $this->validate([
             "username" => ["required", "min_length:3", "unique:clients"],
-            "password" => ["required", "min_length:10", "regex:^(?=.*[A-Z])(?=.*\W)(?=.*\d).+$"],
+            "password" => ["required", "min_length:4"],
             "password_match" => ["required", "match:password"],
         ]);
         if ($valid) {

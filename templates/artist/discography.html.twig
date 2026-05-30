@@ -3,8 +3,8 @@
     {% embed 'components/album-cont.html.twig' with {
       track: track,
     } %}
-    {% block extra %}
-      <span title="{{ track.year }}" class="year truncate">{{ track.year }}</span>
+    {% block badge %}
+      <span class="year-badge" title="{{ track.year }}">{{ track.year }}</span>
     {% endblock %}
     {% endembed %}
   {% endfor %}

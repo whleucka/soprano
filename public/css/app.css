@@ -123,6 +123,10 @@ body {
   min-height: 60px !important;
 }
 
+#top form:hover {
+  background: #52575C;
+}
+
 #top .content input,
 #top .content button {
   background: #121212;
@@ -237,7 +241,7 @@ input:-webkit-autofill:active {
   opacity: 0.1;
 }
 
-#home .play-count-badge {
+#home .play-count-badge, #artist .year-badge {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -446,6 +450,11 @@ input:-webkit-autofill:active {
 }
 
 .album-cont .year {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.album-cont .client {
   font-size: 0.8rem;
   color: #999;
 }
