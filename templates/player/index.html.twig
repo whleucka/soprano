@@ -3,6 +3,12 @@
 var player_hash = '{{ player.hash }}';
 var next_track_url = '{{ uri("player.next-track") }}';
 var prev_track_url = '{{ uri("player.prev-track") }}';
+var player_track = {
+  title:  {{ player.title|json_encode|raw }},
+  artist: {{ player.artist|json_encode|raw }},
+  album:  {{ player.album|json_encode|raw }},
+  cover:  {{ player.cover|json_encode|raw }},
+};
 </script>
 <script src="/js/player.js"></script>
 {% endblock %}
