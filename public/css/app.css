@@ -38,6 +38,7 @@ body {
 
 /** Utils */
 .lead {
+  font-size: 1.1rem;
   color: #999;
   text-decoration: italic;
 }
@@ -199,7 +200,7 @@ input:-webkit-autofill:active {
 #view .content h2 {
   font-weight: 800;
   color: #ddd;
-  font-size: 1.6rem;
+  font-size: 1.2rem;
 }
 .cover {
   border-radius: 6px;
@@ -518,6 +519,9 @@ input:-webkit-autofill:active {
 
 /** MD */
 @media (min-width: 768px) {
+  .lead {
+    font-size: 1.3rem;
+  }
   #album #play-album {
     font-size: 3rem;
   }
@@ -535,6 +539,10 @@ input:-webkit-autofill:active {
   #view .hero .cover {
     width: 160px;
     height: 160px;
+  }
+
+  #view .content h2 {
+    font-size: 1.6rem;
   }
 
   .hero h1 {
