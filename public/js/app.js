@@ -2,6 +2,14 @@ if (window.htmx) {
   window.htmx.config.scrollIntoViewOnBoost = false;
 }
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
 document.addEventListener('htmx:beforeRequest', () => {
   document.querySelector('.hx-indicator')?.classList.add('htmx-request');
 });
