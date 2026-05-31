@@ -33,10 +33,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.soprano.rule=Host(`${PROD_HOSTNAME}`)
+      - traefik.http.routers.soprano.rule=Host(`${PROD_HOSTNAME}`) || Host(`admin.${PROD_HOSTNAME}`)
       - traefik.http.routers.soprano.entrypoints=websecure
       - traefik.http.routers.soprano.tls.certresolver=cloudflare
-      - traefik.http.routers.soprano-http.rule=Host(`${PROD_HOSTNAME}`)
+      - traefik.http.routers.soprano.tls.domains[0].main=${PROD_HOSTNAME}
+      - traefik.http.routers.soprano.tls.domains[0].sans=*.${PROD_HOSTNAME}
+      - traefik.http.routers.soprano-http.rule=Host(`${PROD_HOSTNAME}`) || Host(`admin.${PROD_HOSTNAME}`)
       - traefik.http.routers.soprano-http.entrypoints=web
       - traefik.http.routers.soprano-http.middlewares=soprano-redirect
       - traefik.http.middlewares.soprano-redirect.redirectscheme.scheme=https
