@@ -300,6 +300,7 @@ input:-webkit-autofill:active {
 }
 
 #player #info .title {
+  font-weight: 800;
   font-size: 1rem;
 }
 
