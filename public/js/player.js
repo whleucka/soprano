@@ -48,12 +48,17 @@ function setupMediaSession() {
   if (typeof player_track === 'undefined') return;
   if (!audio.src || audio.src.endsWith('#')) return;
 
+  const coverUrl = new URL(player_track.cover, location.origin).href;
   navigator.mediaSession.metadata = new MediaMetadata({
     title:  player_track.title,
     artist: player_track.artist,
     album:  player_track.album,
     artwork: [
-      { src: player_track.cover, sizes: '512x512' },
+      { src: coverUrl, sizes: '96x96',   type: 'image/png' },
+      { src: coverUrl, sizes: '192x192', type: 'image/png' },
+      { src: coverUrl, sizes: '256x256', type: 'image/png' },
+      { src: coverUrl, sizes: '384x384', type: 'image/png' },
+      { src: coverUrl, sizes: '512x512', type: 'image/png' },
     ],
   });
 
