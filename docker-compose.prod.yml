@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./:/var/www/html
-      - $HOME/Music:/music
+      - ${MUSIC_DIR}:/music
       # Override: mount prod.ini instead of dev.ini
       - ./php/prod.ini:/usr/local/etc/php/conf.d/zz-env.ini:ro
     deploy:
@@ -26,7 +26,7 @@ services:
   nginx:
     restart: unless-stopped
     volumes:
-      - $HOME/Music:/music:ro
+      - ${MUSIC_DIR}:/music:ro
     networks:
       - net
       - proxy
