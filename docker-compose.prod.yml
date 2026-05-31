@@ -1,6 +1,10 @@
 # Production overrides
 # Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-# Host-level reverse proxy (e.g. Caddy) handles TLS on ports 80/443
+#
+# Requires:
+#   - The shared Traefik stack at ~/Projects/traefik to be running first
+#     (it owns the external `proxy` network and terminates TLS).
+#   - PROD_HOSTNAME set in .env (e.g. PROD_HOSTNAME=soprano.example.com).
 
 services:
   php:
@@ -23,6 +27,20 @@ services:
     restart: unless-stopped
     volumes:
       - $HOME/Music:/music:ro
+    networks:
+      - net
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.soprano.rule=Host(`${PROD_HOSTNAME}`)
+      - traefik.http.routers.soprano.entrypoints=websecure
+      - traefik.http.routers.soprano.tls.certresolver=cloudflare
+      - traefik.http.routers.soprano-http.rule=Host(`${PROD_HOSTNAME}`)
+      - traefik.http.routers.soprano-http.entrypoints=web
+      - traefik.http.routers.soprano-http.middlewares=soprano-redirect
+      - traefik.http.middlewares.soprano-redirect.redirectscheme.scheme=https
+      - traefik.http.services.soprano.loadbalancer.server.port=80
     deploy:
       resources:
         limits:
@@ -50,3 +68,7 @@ services:
       resources:
         limits:
           memory: 192M
+
+networks:
+  proxy:
+    external: true
