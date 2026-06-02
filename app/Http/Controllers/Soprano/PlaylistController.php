@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{CoverArtService, PlaylistService};
+use App\Services\Soprano\{CoverArtService, MusicService, PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -22,6 +22,7 @@ class PlaylistController extends Controller
 
     public function __construct(
         private PlaylistService $playlist,
+        private MusicService $music,
         private CoverArtService $coverArt,
     ) {}
 
@@ -76,5 +77,14 @@ class PlaylistController extends Controller
         $playlist = $this->playlist->getPlaylist();
         $this->playlist->setPlaylist($playlist["tracks"], $playlist["index"], !$playlist["shuffle"]);
         $this->hxTrigger("playlistActions");
+    }
+
+    #[Get("/playlist/random", "playlist.random")]
+    public function random()
+    {
+        $playlist = $this->playlist->getPlaylist();
+        $tracks = $this->music->randomTracks();
+        $this->playlist->setPlaylist($tracks, 0, !$playlist["shuffle"]);
+        $this->hxTrigger("nowPlaying, playlistActions, playlistQueue");
     }
 }

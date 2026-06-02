@@ -1,5 +1,6 @@
 {% if playlist.tracks %}
-  <button class="btn btn-sm btn-dark me-2" hx-get="{{ uri("player.play-playlist-track", [0]) }}" hx-swap="none"><i class="bi bi-play-fill text-success"></i></button>
-  <button class="btn btn-sm btn-dark me-2" hx-get="{{ uri("playlist.shuffle") }}"><i class="bi bi-shuffle {% if playlist.shuffle %}text-success{% else %}text-danger{% endif %}"></i></button>
-  <button class="btn btn-sm btn-dark" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash text-danger"></i></button>
+  <button title="Play" class="btn btn-sm btn-dark me-2" hx-get="{{ uri("player.play-playlist-track", [0]) }}" hx-swap="none"><i class="bi bi-play-fill text-success"></i></button>
+  <button title="Shuffle" class="btn btn-sm btn-dark me-2" hx-get="{{ uri("playlist.shuffle") }}"><i class="bi bi-shuffle {% if playlist.shuffle %}text-success{% else %}text-danger{% endif %}"></i></button>
+  <button title="Clear" class="btn btn-sm btn-dark me-2" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash text-danger"></i></button>
 {% endif %}
+<button title="Random playlist" class="btn btn-sm btn-dark me-2" hx-get="{{ uri("playlist.random") }}"><i class="bi bi-dice-6-fill text-light"></i></button>
