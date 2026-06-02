@@ -37,9 +37,9 @@ class PlaylistController extends Controller
         $playlist = $this->playlist->getPlaylist();
         $index = $playlist["index"];
         return $this->render("playlist/now-playing.html.twig", [
-            "dominant" => isset($playlist["tracks"][$index])
+            "dominant" => (isset($playlist["tracks"][$index])
                 ? $this->coverArt->hexToRgb($playlist["tracks"][$index]["dominant_color"] ?? null)
-                : [18,18,18],
+                : null) ?? [18,18,18],
             "current" => $playlist["tracks"][$index] ?? self::DEFAULT_CURRENT
         ]);
     }
