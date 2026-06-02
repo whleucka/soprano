@@ -84,7 +84,7 @@ class PlaylistController extends Controller
     {
         $playlist = $this->playlist->getPlaylist();
         $tracks = $this->music->randomTracks();
-        $this->playlist->setPlaylist($tracks, 0, !$playlist["shuffle"]);
+        $this->playlist->setPlaylist($tracks, 0, false);
         $this->hxTrigger("nowPlaying, playlistActions, playlistQueue");
     }
 }
