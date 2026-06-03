@@ -14,7 +14,9 @@ class SearchService
 
     public function setSearchResults(array $tracks): void
     {
-        state()->search['tracks'] = $tracks;
+        state()->search = [
+            'tracks' => $tracks,
+        ];
     }
 
     public function clearSearch()
