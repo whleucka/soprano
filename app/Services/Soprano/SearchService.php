@@ -4,34 +4,30 @@ namespace App\Services\Soprano;
 
 class SearchService
 {
-    private const DEFAULT_STATE = [
-        'tracks' => [],
-        'term'   => '',
-    ];
-
     public function setSearch(string $term): void
     {
-        if ($term) {
-            session()->set('search', [
-                'tracks' => $this->search($term),
-                'term'   => $term,
-            ]);
-        } else {
-            session()->set('search', self::DEFAULT_STATE);
-        }
+        state()->search = [
+            'tracks' => $this->search($term),
+            'term' => $term,
+        ];
     }
 
     public function setSearchResults(array $tracks): void
     {
-        session()->set('search', [
-            'tracks' => $tracks,
-            'term'   => '',
-        ]);
+        state()->search['tracks'] = $tracks;
+    }
+
+    public function clearSearch()
+    {
+        state()->search = [
+            'tracks' => [],
+            'term' => "",
+        ];
     }
 
     public function getSearch()
     {
-        return session()->get('search') ?? self::DEFAULT_STATE;
+        return state()->search;
     }
 
     public function search(string $term, int $limit = 2500): array

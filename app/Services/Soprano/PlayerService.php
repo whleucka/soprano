@@ -4,25 +4,14 @@ namespace App\Services\Soprano;
 
 class PlayerService
 {
-    private const DEFAULT_STATE = [
-        'hash'        => '#',
-        'album_hash'  => '#',
-        'artist_hash' => '#',
-        'title'       => 'N/A',
-        'artist'      => 'N/A',
-        'album'       => 'N/A',
-        'cover'       => '/images/no-album-art.png',
-        'src'         => '#',
-    ];
-
     public function getPlayer(): array
     {
-        return session()->get('player') ?? self::DEFAULT_STATE;
+        return state()->player;
     }
 
     public function setPlayer(array $state): void
     {
-        session()->set('player', [
+        state()->player = [
             'hash'        => $state['hash']        ?? '#',
             'album_hash'  => $state['album_hash']  ?? '#',
             'artist_hash' => $state['artist_hash'] ?? '#',
@@ -31,6 +20,6 @@ class PlayerService
             'album'       => $state['album']       ?? 'N/A',
             'cover'       => $state['cover']       ?? '/images/no-album-art.png',
             'src'         => $state['src']         ?? '#',
-        ]);
+        ];
     }
 }

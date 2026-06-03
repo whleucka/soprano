@@ -90,7 +90,7 @@ class SearchController extends Controller
     #[Get("/search/clear", "search.clear")]
     public function clear()
     {
-        $this->search->setSearch('');
+        $this->search->clearSearch();
         $this->hxTrigger("loadTop, searchResults, searchActions");
     }
 }

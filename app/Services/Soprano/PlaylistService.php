@@ -4,28 +4,46 @@ namespace App\Services\Soprano;
 
 class PlaylistService
 {
-    private const DEFAULT_STATE = [
-        "tracks" => [],
-        "index" => 0,
-        "shuffle" => false
-    ];
-
     public function getPlaylist(): array
     {
-        return session()->get("playlist") ?? self::DEFAULT_STATE;
+        return state()->playlist;
     }
 
-    public function setPlaylist(array $tracks, int $index = 0, bool $shuffle = false)
+    public function setPlaylist(array $tracks, int $index = 0)
     {
-        session()->set("playlist", [
+        state()->playlist = [
             "tracks" => $tracks,
             "index" => $index,
-            "shuffle" => $shuffle,
-        ]);
+        ];
     }
 
-    public function changePlaylistTrack(array $playlist, $forward = true): array|false
+    public function clearPlaylist()
     {
+        state()->playlist = [
+            "tracks" => [],
+            "index" => 0,
+        ];
+    }
+
+    public function setPlaylistIndex(int $index = 0)
+    {
+        state()->playlist = [
+            "index" => $index,
+        ];
+    }
+
+    public function toggleShuffle()
+    {
+        $shuffle = state()->playlist['shuffle'];
+        state()->playlist = [
+            'shuffle' => !$shuffle,
+        ];
+    }
+
+    public function changePlaylistTrack($forward = true): array|false
+    {
+        $playlist = state()->playlist;
+
         $playlist_count = count($playlist["tracks"]);
 
         if (!$playlist || $playlist_count < 2) return false;
@@ -45,7 +63,7 @@ class PlaylistService
 
         if (!isset($playlist["tracks"][$new_index])) return false;
 
-        $this->setPlaylist($playlist["tracks"], $new_index, $playlist["shuffle"]);
+        $this->setPlaylist($playlist["tracks"], $new_index);
 
         $next_track = $playlist["tracks"][$new_index];
 

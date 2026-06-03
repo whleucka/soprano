@@ -67,24 +67,25 @@ class PlaylistController extends Controller
     #[Get("/playlist/queue/clear", "playlist.queue-clear")]
     public function queueClear(): void
     {
-        $this->playlist->setPlaylist([], 0);
+        $this->playlist->clearPlaylist();
         $this->hxTrigger("loadPlaylist");
     }
 
     #[Get("/playlist/shuffle", "playlist.shuffle")]
     public function shuffle()
     {
-        $playlist = $this->playlist->getPlaylist();
-        $this->playlist->setPlaylist($playlist["tracks"], $playlist["index"], !$playlist["shuffle"]);
+        $this->playlist->toggleShuffle();
         $this->hxTrigger("playlistActions");
     }
 
     #[Get("/playlist/random", "playlist.random")]
     public function random()
     {
-        $playlist = $this->playlist->getPlaylist();
         $tracks = $this->music->randomTracks();
-        $this->playlist->setPlaylist($tracks, 0, false);
+        if (empty($tracks)) {
+            return;
+        }
+        $this->playlist->setPlaylist($tracks);
         $this->hxTrigger("nowPlaying, playlistActions, playlistQueue");
     }
 }

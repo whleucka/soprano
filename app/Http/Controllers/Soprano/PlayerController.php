@@ -30,8 +30,7 @@ class PlayerController extends Controller
     #[Get("/player/next-track", "player.next-track")]
     public function nextTrack()
     {
-        $playlist = $this->playlist->getPlaylist();
-        $next = $this->playlist->changePlaylistTrack($playlist, true);
+        $next = $this->playlist->changePlaylistTrack(true);
         if ($next) {
             $this->hxTrigger("nowPlaying");
             return $this->play($next['hash']);
@@ -41,8 +40,7 @@ class PlayerController extends Controller
     #[Get("/player/prev-track", "player.prev-track")]
     public function prevTrack()
     {
-        $playlist = $this->playlist->getPlaylist();
-        $prev = $this->playlist->changePlaylistTrack($playlist, false);
+        $prev = $this->playlist->changePlaylistTrack(false);
         if ($prev) {
             $this->hxTrigger("nowPlaying");
             return $this->play($prev['hash']);
@@ -60,8 +58,7 @@ class PlayerController extends Controller
         if (empty($tracks[$index])) {
             return;
         }
-        $playlist = $this->playlist->getPlaylist();
-        $this->playlist->setPlaylist($tracks, $index, $playlist["shuffle"]);
+        $this->playlist->setPlaylist($tracks, $index);
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[$index]['hash']);
     }
@@ -73,8 +70,7 @@ class PlayerController extends Controller
         if (empty($tracks)) {
             return;
         }
-        $playlist = $this->playlist->getPlaylist();
-        $this->playlist->setPlaylist($tracks, 0, $playlist["shuffle"]);
+        $this->playlist->setPlaylist($tracks);
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[0]['hash']);
     }
@@ -84,7 +80,7 @@ class PlayerController extends Controller
     {
         $playlist = $this->playlist->getPlaylist();
         if (!empty($playlist['tracks'][$index])) {
-            $this->playlist->setPlaylist($playlist['tracks'], $index, $playlist["shuffle"]);
+            $this->playlist->setPlaylistIndex($index);
             $this->hxTrigger("nowPlaying");
             return $this->play($playlist['tracks'][$index]['hash']);
         }
@@ -93,10 +89,9 @@ class PlayerController extends Controller
     #[Get("/player/play/search", "player.play-search")]
     public function playSearch()
     {
-        $playlist = $this->playlist->getPlaylist();
         $search = $this->search->getSearch();
         if (!empty($search['tracks'])) {
-            $this->playlist->setPlaylist($search['tracks'], 0, $playlist["shuffle"]);
+            $this->playlist->setPlaylist($search['tracks']);
             $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
             return $this->play($search['tracks'][0]['hash']);
         }

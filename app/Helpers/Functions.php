@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Http\Kernel as HttpKernel;
 use App\Console\Kernel as ConsoleKernel;
 use App\Models\Client;
+use App\State\Soprano;
 use Echo\Framework\Container\Container;
 use Echo\Framework\Database\Connection;
 use Echo\Framework\Database\QueryBuilder;
@@ -115,6 +116,14 @@ function db(): ?Connection
 function session()
 {
     return Session::getInstance();
+}
+
+/**
+ * Get app state
+ */
+function state()
+{
+    return Soprano::getInstance();
 }
 
 /**
