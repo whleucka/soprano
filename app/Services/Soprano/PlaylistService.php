@@ -45,6 +45,7 @@ class PlaylistService
         $playlist = state()->playlist;
 
         $playlist_count = count($playlist["tracks"]);
+        $playlist_index = $playlist["index"];
 
         if (!$playlist || $playlist_count < 2) return false;
 
@@ -57,13 +58,19 @@ class PlaylistService
             $new_index = $mod_index % $playlist_count;
         }
 
+        // Wrap around playlist
         if ($new_index < 0) {
             $new_index = $playlist_count - 1;
         }
 
+        // Does it exist?
         if (!isset($playlist["tracks"][$new_index])) return false;
 
-        $this->setPlaylist($playlist["tracks"], $new_index);
+        // Handle collision
+        if ($new_index === $playlist_index) return $this->changePlaylistTrack($forward);
+
+        // Safe to set playlist index
+        $this->setPlaylistIndex($new_index);
 
         $next_track = $playlist["tracks"][$new_index];
 
