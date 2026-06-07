@@ -31,7 +31,7 @@ class AlbumController extends Controller
             "album_hash"  => $album->hash,
             "artist_hash" => $artist?->hash,
             "year"        => $album->year,
-            "cover"       => $album->cover,
+            "cover"       => $album->cover ?? '/images/no-album-art.png',
             "album"       => $album->title,
             "artist"      => $artist?->name,
             "dominant"    => $this->coverArt->hexToRgb($album->dominant_color),
