@@ -55,17 +55,20 @@ class SyncService
         $inserted = 0;
         $skipped  = 0;
         $failed   = 0;
+        $removed  = 0;
         $success  = true;
         $error    = null;
 
         try {
             $this->ensureCoversDir();
             $existing = $this->loadExistingHashes();
+            $seen     = [];
 
             foreach ($this->iterateMediaFiles($path) as $file) {
                 $scanned++;
                 $pathname = $file->getPathname();
                 $trackHash = md5($pathname);
+                $seen[$trackHash] = true;
 
                 if (isset($existing[$trackHash])) {
                     $skipped++;
@@ -85,6 +88,12 @@ class SyncService
                     ));
                 }
             }
+
+            // Only prune when the scan actually saw files — an unmounted or
+            // empty library path must not be mistaken for "everything deleted".
+            if ($scanned > 0) {
+                $removed = $this->removeOrphans($existing, $seen);
+            }
         } catch (\Throwable $e) {
             $success = false;
             $error   = $e->getMessage();
@@ -96,8 +105,53 @@ class SyncService
             'inserted' => $inserted,
             'skipped'  => $skipped,
             'failed'   => $failed,
+            'removed'  => $removed,
             'error'    => $error,
         ];
+    }
+
+    /**
+     * Delete tracks whose files no longer exist on disk (hashes in the DB
+     * that the scan did not see). track_meta and track_plays cascade.
+     *
+     * @param array<string,bool> $existing hashes loaded from the DB (plus this run's inserts)
+     * @param array<string,bool> $seen     hashes encountered during the scan
+     */
+    private function removeOrphans(array $existing, array $seen): int
+    {
+        $orphans = array_keys(array_diff_key($existing, $seen));
+        if (!$orphans) {
+            return 0;
+        }
+
+        $removed = 0;
+        foreach (array_chunk($orphans, 500) as $chunk) {
+            foreach (Track::whereIn('hash', $chunk)->get() as $track) {
+                if ($track->delete()) {
+                    $removed++;
+                }
+            }
+        }
+
+        if ($removed > 0) {
+            $this->pruneEmptyAlbumsAndArtists();
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Remove albums left with no tracks, then artists left with no tracks
+     * and no albums.
+     */
+    private function pruneEmptyAlbumsAndArtists(): void
+    {
+        $db = db();
+        $db->execute("DELETE FROM albums WHERE id NOT IN (SELECT DISTINCT album_id FROM tracks)");
+        $db->execute(
+            "DELETE FROM artists WHERE id NOT IN (SELECT DISTINCT artist_id FROM tracks)
+             AND id NOT IN (SELECT DISTINCT artist_id FROM albums)"
+        );
     }
 
     private function ingestFile(SplFileInfo $file, string $trackHash): void

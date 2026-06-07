@@ -10,6 +10,13 @@ $scheduler = new Scheduler();
 $jobs = config("paths.jobs");
 $logs = config("paths.logs");
 
+// Soprano sync - ingest new tracks, remove orphans every 2 minutes.
+// onlyOne() skips the run if the previous sync is still going (lock file).
+$scheduler->php($jobs . "/soprano_sync.php")
+    ->everyMinute(2)
+    ->onlyOne()
+    ->output($logs . "soprano-sync-" . date("Y-m-d") . ".log", true);
+
 // Mail worker - process queued emails
 $scheduler->php($jobs . "/mail_worker.php")
     ->everyMinute()

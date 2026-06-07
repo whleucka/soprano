@@ -24,9 +24,10 @@ class SyncCommand extends Command
         $result = $service->sync($path);
 
         $stats = sprintf(
-            "  scanned: %d, inserted: %d, skipped: %d, failed: %d",
+            "  scanned: %d, inserted: %d, removed: %d, skipped: %d, failed: %d",
             $result->scanned,
             $result->inserted,
+            $result->removed,
             $result->skipped,
             $result->failed
         );
