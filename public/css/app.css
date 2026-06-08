@@ -518,6 +518,9 @@ input:-webkit-autofill:active {
   font-size: 1.3rem;
   color: #333;
 }
+.text-heart {
+  color: rgba(179, 4, 4, 1)
+}
 .track .liked:hover {
   color: rgba(179, 4, 4, 1);
 }
