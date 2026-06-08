@@ -47,4 +47,12 @@ class HomeController extends Controller
             "tracks" => $this->music->topPlayed(),
         ]);
     }
+
+    #[Get("/home/recently-liked", "home.recently-liked")]
+    public function recentlyLiked(): string
+    {
+        return $this->render("home/recently-liked.html.twig", [
+            "tracks" => $this->music->recentlyLiked(),
+        ]);
+    }
 }

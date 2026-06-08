@@ -62,6 +62,17 @@ class SearchController extends Controller
         return $this->index();
     }
 
+    #[Get("/search/recently-liked", "search.recently-liked")]
+    public function recentlyLiked(): string
+    {
+        $tracks = $this->music->recentlyLiked(1000);
+        if ($tracks) {
+            $this->search->setSearchResults($tracks);
+            $this->hxTrigger("searchResults, searchActions");
+        }
+        return $this->index();
+    }
+
     #[Get("/search/results", "search.results")]
     public function results()
     {
