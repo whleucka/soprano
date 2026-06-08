@@ -123,6 +123,89 @@ class MusicService
         return strtolower(trim(preg_replace('/\s+/u', ' ', $value) ?? $value));
     }
 
+    /**
+     * Remove tracks: move each file to the trash folder, then delete the DB row
+     * (track_meta and track_plays cascade). Empty albums/artists are pruned
+     * afterwards. Files are recoverable from the trash path until cleared by
+     * hand. Returns a summary of what happened.
+     *
+     * @param array<int,int> $trackIds
+     * @return object{trashed_files: int, deleted_rows: int, missing_files: array<int,string>, trash_path: string}
+     */
+    public function removeTracks(array $trackIds): object
+    {
+        $trashPath = rtrim((string) config('soprano.trash_path'), '/');
+
+        $trashedFiles = 0;
+        $deletedRows  = 0;
+        $missing      = [];
+
+        foreach ($trackIds as $id) {
+            $track = Track::find((string) $id);
+            if (!$track) {
+                continue;
+            }
+
+            $pathname = (string) ($track->pathname ?? '');
+            if ($pathname !== '') {
+                if (is_file($pathname)) {
+                    if ($this->trashFile($pathname, $trashPath, (int) $id)) {
+                        $trashedFiles++;
+                    }
+                } else {
+                    $missing[] = $pathname;
+                }
+            }
+
+            if ($track->delete()) {
+                $deletedRows++;
+            }
+        }
+
+        if ($deletedRows > 0) {
+            $this->pruneEmptyAlbumsAndArtists();
+        }
+
+        return (object) [
+            'trashed_files' => $trashedFiles,
+            'deleted_rows'  => $deletedRows,
+            'missing_files' => $missing,
+            'trash_path'    => $trashPath,
+        ];
+    }
+
+    /**
+     * Move a file into the trash folder. The track id prefixes the basename so
+     * copies that share a filename across albums never collide.
+     */
+    private function trashFile(string $pathname, string $trashPath, int $trackId): bool
+    {
+        if ($trashPath === '') {
+            return false;
+        }
+        if (!is_dir($trashPath) && !@mkdir($trashPath, 0775, true) && !is_dir($trashPath)) {
+            return false;
+        }
+
+        $dest = $trashPath . '/' . $trackId . '__' . basename($pathname);
+
+        return @rename($pathname, $dest);
+    }
+
+    /**
+     * Remove albums left with no tracks, then artists left with no tracks
+     * and no albums. Mirrors SyncService's orphan cleanup.
+     */
+    private function pruneEmptyAlbumsAndArtists(): void
+    {
+        $db = db();
+        $db->execute("DELETE FROM albums WHERE id NOT IN (SELECT DISTINCT album_id FROM tracks)");
+        $db->execute(
+            "DELETE FROM artists WHERE id NOT IN (SELECT DISTINCT artist_id FROM tracks)
+             AND id NOT IN (SELECT DISTINCT artist_id FROM albums)"
+        );
+    }
+
     public function discography(int $artistId, int $limit = 50): array
     {
         $rows = db()->fetchAll(

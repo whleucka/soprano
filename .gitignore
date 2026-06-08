@@ -14,6 +14,7 @@ composer.phar
 /storage/geoip/*.tar.gz
 /storage/geoip/*.tar
 /storage/covers
+/storage/trash
 /public/covers
 
 CLAUDE.local.md

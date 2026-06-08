@@ -80,5 +80,6 @@ class Kernel extends ConsoleKernel
         // Soprano
         AppCommands\SyncCommand::class,
         AppCommands\DuplicatesCommand::class,
+        AppCommands\TrashCommand::class,
     ];
 }
