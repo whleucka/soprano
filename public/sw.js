@@ -2,7 +2,7 @@
 // Scope: site-wide. Caches static assets only — never HTML, HTMX partials, or audio streams.
 // Bump CACHE_VERSION to invalidate old caches after a deploy.
 
-const CACHE_VERSION = '2026-06-08v1';
+const CACHE_VERSION = '2026-06-08v2';
 const STATIC_CACHE  = `soprano-static-${CACHE_VERSION}`;
 
 const STATIC_PATH = /^\/(css|js|fonts|icons|images|covers)\//;

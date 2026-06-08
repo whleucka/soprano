@@ -74,14 +74,15 @@ class MusicService
                     ar.name AS artist,
                     tm.title AS title,
                     tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM tracks t
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = t.artist_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
              WHERE t.album_id = ?
              ORDER BY CAST(tm.track_number AS UNSIGNED), tm.track_number",
-            [$albumId],
+            [client()->id, $albumId],
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
@@ -272,14 +273,15 @@ class MusicService
                     ar.name AS artist,
                     tm.title AS title,
                     tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM tracks t
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = t.artist_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
             ORDER BY RAND()
             LIMIT ?",
-            [$limit]
+            [client()->id, $limit]
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
@@ -298,7 +300,8 @@ class MusicService
                     ar.name AS artist,
                     tm.title AS title,
                     tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string
+                    tm.playtime_string AS playtime_string,
+                    1 AS liked
              FROM tracks t
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = t.artist_id
@@ -325,7 +328,8 @@ class MusicService
                     ar.name AS artist,
                     tm.title AS title,
                     tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM tracks t
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = t.artist_id
@@ -333,7 +337,7 @@ class MusicService
              WHERE ar.hash = ?
              GROUP BY t.id
              ORDER BY al.hash, CAST(tm.track_number AS UNSIGNED), tm.track_number",
-            [$artistHash],
+            [client()->id, $artistHash],
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
@@ -353,7 +357,8 @@ class MusicService
                     tm.title AS title,
                     tm.track_number AS track_number,
                     tm.playtime_string AS playtime_string,
-                    COUNT(tp.id) AS plays
+                    COUNT(tp.id) AS plays,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM tracks t
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = t.artist_id
@@ -363,7 +368,7 @@ class MusicService
              GROUP BY t.id
              ORDER BY plays DESC, tm.title ASC
              LIMIT ?",
-            [$artistId, $limit],
+            [client()->id, $artistId, $limit],
         );
 
         return array_map(function (array $row) {
@@ -406,14 +411,15 @@ class MusicService
                     ar.name AS artist,
                     tm.title AS title,
                     tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
             FROM tracks t
             JOIN albums al ON al.id = t.album_id
             JOIN artists ar ON ar.id = t.artist_id
             LEFT JOIN track_meta tm ON tm.track_id = t.id
             ORDER BY t.id DESC
             LIMIT ?",
-            [$albumCount],
+            [client()->id, $albumCount],
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
@@ -435,7 +441,8 @@ class MusicService
                     tm.title AS title,
                     tm.playtime_string AS playtime_string,
                     c.username AS client,
-                    MAX(tp.id) AS last_play_id
+                    MAX(tp.id) AS last_play_id,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              JOIN albums al ON al.id = t.album_id
@@ -446,7 +453,7 @@ class MusicService
              GROUP BY t.id
              ORDER BY last_play_id DESC
              LIMIT ?",
-            [$since, $trackCount],
+            [client()->id, $since, $trackCount],
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
@@ -466,7 +473,8 @@ class MusicService
                     tm.title AS title,
                     tm.playtime_string AS playtime_string,
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id
+                    MAX(tp.id) AS last_play_id,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              JOIN albums al ON al.id = t.album_id
@@ -476,7 +484,7 @@ class MusicService
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
-            [client()->id, $trackCount],
+            [client()->id, client()->id, $trackCount],
         );
 
         return array_map(function (array $row) {
@@ -502,7 +510,8 @@ class MusicService
                     tm.title AS title,
                     tm.playtime_string AS playtime_string,
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id
+                    MAX(tp.id) AS last_play_id,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              JOIN albums al ON al.id = t.album_id
@@ -512,7 +521,7 @@ class MusicService
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
-            [client()->id, $since, $trackCount],
+            [client()->id, client()->id, $since, $trackCount],
         );
 
         return array_map(function (array $row) {
@@ -538,7 +547,8 @@ class MusicService
                     tm.title AS title,
                     tm.playtime_string AS playtime_string,
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id
+                    MAX(tp.id) AS last_play_id,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              JOIN albums al ON al.id = t.album_id
@@ -549,7 +559,7 @@ class MusicService
              HAVING COUNT(tp.id) >= 3 AND MAX(tp.created_at) < ?
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
-            [client()->id, $since, $trackCount],
+            [client()->id, client()->id, $since, $trackCount],
         );
 
         return array_map(function (array $row) {
@@ -571,7 +581,8 @@ class MusicService
                     ar.hash AS artist_hash,
                     ar.name AS artist,
                     tm.title AS title,
-                    tm.playtime_string AS playtime_string
+                    tm.playtime_string AS playtime_string,
+                    1 AS liked
              FROM track_likes tl
              JOIN tracks t ON t.id = tl.track_id
              JOIN albums al ON al.id = t.album_id
@@ -601,6 +612,7 @@ class MusicService
             'track_number'    => $row['track_number'] ?? '',
             'playtime_string' => $row['playtime_string'] ?? '',
             'client'          => $row['client'] ?? null,
+            'liked'           => (int) ($row['liked'] ?? 0),
         ];
     }
 }
