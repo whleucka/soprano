@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Echo\Framework\Database\Model;
+
+class TrackLike extends Model
+{
+    protected string $tableName = 'track_likes';
+
+    public function track(): ?Track
+    {
+        return $this->belongsTo(Track::class);
+    }
+
+    public function client(): ?Track
+    {
+        return $this->belongsTo(Client::class);
+    }
+}

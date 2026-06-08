@@ -2,7 +2,7 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\{Album, Artist, Track, TrackPlay};
+use App\Models\{Album, Artist, Track, TrackLike, TrackPlay};
 
 class MusicService
 {
@@ -21,12 +21,44 @@ class MusicService
         return Artist::where('hash', $hash)->first();
     }
 
-    public function trackPlay(int $trackId, ?int $clientId): void
+    public function trackPlay(int $trackId): void
     {
         TrackPlay::create([
             'track_id'  => $trackId,
-            'client_id' => $clientId,
+            'client_id' => client()->id,
         ]);
+    }
+
+    public function isTrackLiked(string $hash): bool
+    {
+        $track = $this->getTrack($hash);
+        $trackId = $track->id;
+        $clientId = client()->id;
+        $like = TrackLike::where("track_id", $trackId)
+            ->andWhere("client_id", $clientId)->first();
+
+        if ($like) {
+            return true;
+        } 
+        return false;
+    }
+
+    public function toggleTrackLike(string $hash)
+    {
+        $track = $this->getTrack($hash);
+        $trackId = $track->id;
+        $clientId = client()->id;
+        $like = TrackLike::where("track_id", $trackId)
+            ->andWhere("client_id", $clientId)->first();
+
+        if ($like) {
+            $like->delete();
+        } else {
+            TrackLike::create([
+                'track_id'  => $trackId,
+                'client_id' => $clientId,
+            ]);
+        }
     }
 
     public function albumTracks(int $albumId): array

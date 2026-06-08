@@ -46,7 +46,8 @@ class SearchService
                     ar.name AS artist,
                     tm.title AS title,
                     tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) as liked
             FROM tracks t
             JOIN albums al ON al.id = t.album_id
             JOIN artists ar ON ar.id = t.artist_id
@@ -54,7 +55,7 @@ class SearchService
             WHERE ar.name LIKE ? OR al.title LIKE ? OR tm.title LIKE ? OR al.title LIKE ?
             ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
             LIMIT ?",
-            [$like, $like, $like, $like, $limit]
+            [client()->id, $like, $like, $like, $like, $limit]
         );
 
         return array_map(fn($row) => [
@@ -69,6 +70,7 @@ class SearchService
             'year'            => $row['year'],
             'track_number'    => $row['track_number'] ?? '',
             'playtime_string' => $row['playtime_string'] ?? '',
+            'liked'           => $row['liked'],
         ], $rows);
     }
 }

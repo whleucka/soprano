@@ -126,7 +126,7 @@ class PlayerController extends Controller
         $meta   = $track->meta();
         $src    = uri("player.stream", $track->hash);
 
-        $this->music->trackPlay((int) $track->id, client()?->id);
+        $this->music->trackPlay($track->id);
         $this->player->setPlayer([
             'hash'        => $track->hash,
             'album_hash'  => $album?->hash  ?? '#',

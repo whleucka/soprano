@@ -1,4 +1,5 @@
 html {
+  opacity: 1;
   color-scheme: dark;
 }
 
@@ -512,6 +513,17 @@ input:-webkit-autofill:active {
   font-weight: 800;
   color: #999;
   font-size: 0.9rem;
+}
+.track .liked {
+  font-size: 1.3rem;
+  color: #333;
+}
+.track .liked:hover {
+  color: rgba(179, 4, 4, 1);
+}
+.track .liked .active {
+  opacity: 1;
+  color: rgba(179, 4, 4, 1);
 }
 
 /** SM */
