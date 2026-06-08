@@ -137,7 +137,7 @@ class PlayerController extends Controller
             'cover'       => $album?->cover,
             'src'         => $src,
         ]);
-        $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topTracks");
+        $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks");
     }
 
     #[Get("/player/stream/{hash}", "player.stream")]

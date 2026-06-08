@@ -25,12 +25,28 @@
     <div id="top-played" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.top-played") }}" hx-trigger="every 2m, load, topPlayed from:body"></div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
+      <h2 class="mb-0"><i class="bi bi-graph-up-arrow text-success pe-1"></i> Top This Month</h2>
+      <span class="badge bg-dark ms-1">
+          <a hx-boost="true" href="{{ uri('search.top-played-month') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
+      </span>
+    </div>
+    <div id="top-played-month" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.top-played-month") }}" hx-trigger="every 2m, load, topPlayedMonth from:body"></div>
+
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-heart-fill text-danger pe-1"></i> Recently Liked</h2>
       <span class="badge bg-dark ms-1">
           <a hx-boost="true" href="{{ uri('search.recently-liked') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
     <div id="recently-liked" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-liked") }}" hx-trigger="every 2m, load, recentlyLiked from:body"></div>
+
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
+      <h2 class="mb-0"><i class="bi bi-gem text-info pe-1"></i> Rediscover</h2>
+      <span class="badge bg-dark ms-1">
+          <a hx-boost="true" href="{{ uri('search.rediscover') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
+      </span>
+    </div>
+    <div id="rediscover" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.rediscover") }}" hx-trigger="every 5m, load, rediscover from:body"></div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-plus-lg pe-1"></i> Recently Added</h2>

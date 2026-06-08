@@ -73,6 +73,28 @@ class SearchController extends Controller
         return $this->index();
     }
 
+    #[Get("/search/top-played-month", "search.top-played-month")]
+    public function topPlayedThisMonth(): string
+    {
+        $tracks = $this->music->topPlayedThisMonth(1000);
+        if ($tracks) {
+            $this->search->setSearchResults($tracks);
+            $this->hxTrigger("searchResults, searchActions");
+        }
+        return $this->index();
+    }
+
+    #[Get("/search/rediscover", "search.rediscover")]
+    public function rediscover(): string
+    {
+        $tracks = $this->music->rediscover(1000);
+        if ($tracks) {
+            $this->search->setSearchResults($tracks);
+            $this->hxTrigger("searchResults, searchActions");
+        }
+        return $this->index();
+    }
+
     #[Get("/search/results", "search.results")]
     public function results()
     {

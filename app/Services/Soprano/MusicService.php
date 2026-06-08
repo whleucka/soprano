@@ -486,6 +486,79 @@ class MusicService
         }, $rows);
     }
 
+    public function topPlayedThisMonth(int $trackCount = 50): array
+    {
+        $since = (new \DateTime('- 1 MONTH'))->format('Y-m-d H:i:s');
+
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.dominant_color AS dominant_color,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    tm.playtime_string AS playtime_string,
+                    COUNT(tp.id) AS plays,
+                    MAX(tp.id) AS last_play_id
+             FROM track_plays tp
+             JOIN tracks t ON t.id = tp.track_id
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE tp.client_id = ? AND tp.created_at > ?
+             GROUP BY t.id
+             ORDER BY plays DESC, last_play_id DESC
+             LIMIT ?",
+            [client()->id, $since, $trackCount],
+        );
+
+        return array_map(function (array $row) {
+            $entry = $this->mapTrackRow($row);
+            $entry['plays'] = (int) $row['plays'];
+            return $entry;
+        }, $rows);
+    }
+
+    public function rediscover(int $trackCount = 50): array
+    {
+        $since = (new \DateTime('- 30 DAY'))->format('Y-m-d H:i:s');
+
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.dominant_color AS dominant_color,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    tm.playtime_string AS playtime_string,
+                    COUNT(tp.id) AS plays,
+                    MAX(tp.id) AS last_play_id
+             FROM track_plays tp
+             JOIN tracks t ON t.id = tp.track_id
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE tp.client_id = ?
+             GROUP BY t.id
+             HAVING COUNT(tp.id) >= 3 AND MAX(tp.created_at) < ?
+             ORDER BY plays DESC, last_play_id DESC
+             LIMIT ?",
+            [client()->id, $since, $trackCount],
+        );
+
+        return array_map(function (array $row) {
+            $entry = $this->mapTrackRow($row);
+            $entry['plays'] = (int) $row['plays'];
+            return $entry;
+        }, $rows);
+    }
+
     public function recentlyLiked(int $trackCount = 50): array
     {
         $rows = db()->fetchAll(

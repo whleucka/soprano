@@ -55,4 +55,20 @@ class HomeController extends Controller
             "tracks" => $this->music->recentlyLiked(),
         ]);
     }
+
+    #[Get("/home/top-played-month", "home.top-played-month")]
+    public function topPlayedThisMonth(): string
+    {
+        return $this->render("home/top-played-month.html.twig", [
+            "tracks" => $this->music->topPlayedThisMonth(),
+        ]);
+    }
+
+    #[Get("/home/rediscover", "home.rediscover")]
+    public function rediscover(): string
+    {
+        return $this->render("home/rediscover.html.twig", [
+            "tracks" => $this->music->rediscover(),
+        ]);
+    }
 }
