@@ -14,7 +14,7 @@ var player_track = {
 {% endblock %}
 
 <div id="album-cover" class="d-flex align-items-center justify-content-center d-none d-md-flex" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-  <a class="text-decoration-none" href="{{ uri("album.index", [player.album_hash]) }}"><img src="{{ player.cover }}" class="cover ms-2 me-3"></a>
+  <a class="text-decoration-none" href="{{ uri("album.index", [player.album_hash]) }}"><img src="{{ player.cover }}" class="cover ms-2 me-2"></a>
 </div>
 <div class="d-flex justify-content-center align-items-center" hx-get="{{ uri('track.like', [player.hash]) }}" hx-trigger="load, like-{{ player.hash }} from:body">
   <button class="btn liked"><i class="bi bi-heart-fill"></i></button>
