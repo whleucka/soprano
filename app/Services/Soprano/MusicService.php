@@ -55,6 +55,74 @@ class MusicService
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
+    /**
+     * Find likely duplicate tracks, grouped two ways:
+     *   - within_album: same album + same title (e.g. a "(1)" or "_<ticks>" copy)
+     *   - cross_album:  same artist + same title spanning 2+ distinct albums
+     *                   (e.g. the same song in two MusicBrainz editions)
+     *
+     * Report only — nothing is deleted. Each group is an array of raw rows so
+     * the caller can show path/length and let a human decide.
+     *
+     * @return object{within_album: array<int,array<int,array>>, cross_album: array<int,array<int,array>>}
+     */
+    public function findDuplicateTracks(): object
+    {
+        $rows = db()->fetchAll(
+            "SELECT t.id AS track_id,
+                    t.album_id,
+                    t.artist_id,
+                    t.pathname,
+                    ar.name AS artist,
+                    al.title AS album,
+                    tm.title AS title,
+                    tm.length_ms AS length_ms,
+                    tm.playtime_string AS playtime_string
+             FROM tracks t
+             JOIN artists ar ON ar.id = t.artist_id
+             JOIN albums al ON al.id = t.album_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             ORDER BY ar.name, al.title, tm.title"
+        );
+
+        $byAlbumTitle  = [];
+        $byArtistTitle = [];
+
+        foreach ($rows as $row) {
+            $title = $this->normalizeTitle((string) ($row['title'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+            $byAlbumTitle[$row['album_id'] . '|' . $title][]   = $row;
+            $byArtistTitle[$row['artist_id'] . '|' . $title][] = $row;
+        }
+
+        // Same album + title, 2+ tracks.
+        $withinAlbum = array_values(array_filter(
+            $byAlbumTitle,
+            static fn(array $group): bool => count($group) > 1,
+        ));
+
+        // Same artist + title across 2+ distinct albums.
+        $crossAlbum = [];
+        foreach ($byArtistTitle as $group) {
+            $albumIds = array_unique(array_map(static fn(array $r) => $r['album_id'], $group));
+            if (count($albumIds) > 1) {
+                $crossAlbum[] = $group;
+            }
+        }
+
+        return (object) [
+            'within_album' => $withinAlbum,
+            'cross_album'  => $crossAlbum,
+        ];
+    }
+
+    private function normalizeTitle(string $value): string
+    {
+        return strtolower(trim(preg_replace('/\s+/u', ' ', $value) ?? $value));
+    }
+
     public function discography(int $artistId, int $limit = 50): array
     {
         $rows = db()->fetchAll(

@@ -19,6 +19,11 @@ class SyncService
         'mp3', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'wav', 'wma', 'webm',
     ];
 
+    // Some download/copy tools leave a duplicate alongside the original, suffixing
+    // the stem with a .NET DateTime.Ticks value (e.g. "London_639164743125524231.flac")
+    // to avoid overwriting. Skip those so the same track isn't indexed twice.
+    private const DUPLICATE_SUFFIX = '/_\d{15,}$/';
+
     private const UNKNOWN_ARTIST = 'Unknown Artist';
     private const UNKNOWN_ALBUM  = 'Unknown Album';
     private const UNKNOWN_GENRE  = 'Unknown';
@@ -493,6 +498,10 @@ class SyncService
             }
             $ext = strtolower($file->getExtension());
             if (!in_array($ext, self::ALLOWED_EXTENSIONS, true)) {
+                continue;
+            }
+            $stem = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+            if (preg_match(self::DUPLICATE_SUFFIX, $stem)) {
                 continue;
             }
             yield $file;
