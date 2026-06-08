@@ -472,10 +472,11 @@ class MusicService
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = t.artist_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE tp.client_id = ?
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
-            [$trackCount],
+            [client()->id, $trackCount],
         );
 
         return array_map(function (array $row) {
