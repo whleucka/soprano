@@ -1,7 +1,9 @@
 <div id="{{ dom_id|default(track.hash) }}" tabindex="-1"
      class="track p-1 {% if active|default(false) %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
   {% block first %}
-    <button hx-get="{{ uri('track.like', [track.hash]) }}" hx-trigger="intersect" hx-swap="outerHTML" class="btn liked"><i class="bi bi-heart-fill"></i></button>
+    <div hx-get="{{ uri('track.like', [track.hash]) }}" hx-trigger="intersect, like-{{ track.hash }} from:body">
+      <button class="btn liked"><i class="bi bi-heart-fill"></i></button>
+    </div>
   {% endblock %}
   <div class="d-flex align-items-center flex-grow-1 truncate"
        hx-get="{{ play_uri }}" hx-swap="none">

@@ -28,6 +28,7 @@ class TrackController extends Controller
     public function likeToggle(string $hash): string
     {
         $this->music->toggleTrackLike($hash);
+        $this->hxTrigger("like-$hash");
         return $this->like($hash);
     }
 }
