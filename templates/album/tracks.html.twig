@@ -8,6 +8,7 @@
     {% endblock %}
     {% block subtitle %}{% endblock %}
     {% block menu %}
+      <li><a class="dropdown-item" href="{{ uri('track.index', [track.hash]) }}"><i class="bi bi-music-note pe-1"></i> {{ track.title }}</a></li>
       <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></li>
     {% endblock %}
   {% endembed %}

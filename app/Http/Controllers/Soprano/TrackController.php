@@ -14,6 +14,37 @@ class TrackController extends Controller
         private MusicService $music, 
     ) {}
 
+    #[Get("/track/{hash}", "track.index")]
+    public function index(string $hash): string
+    {
+        $track = $this->music->getTrack($hash);
+
+        if (!$track) {
+            return $this->pageNotFound();
+        }
+
+        $meta = $track->meta();
+        $artist = $track->artist();
+        $album = $track->album();
+
+        return $this->render("tracks/index.html.twig", [
+            "hash" => $track->hash,
+            "album_hash" => $album->hash,
+            "artist_hash" => $artist->hash,
+            "cover" => $album->cover,
+            "title" => $meta->title,
+            "artist" => $artist->name,
+            "album" => $album->title,
+            "lyrics" => $meta->lyrics,
+        ]);
+    }
+
+    #[Get("/track/{hash}/actions", "track.actions")]
+    public function actions(string $hash): string
+    {
+        return '';
+    }
+
     #[Get("/track/{hash}/like", "track.like")]
     public function like(string $hash): string
     {

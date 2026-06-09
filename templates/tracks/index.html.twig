@@ -1,0 +1,27 @@
+{% extends "layout/app.html.twig" %}
+
+{% block title %}Soprano - {{ title }} {% endblock %}
+
+{% block view %}
+<section id="artist" class="h-100 d-flex flex-column">
+  <div class="hero d-flex align-items-center p-3">
+    <div class="d-flex align-items-center truncate">
+      <img class="cover me-3" src="{{ cover }}" />
+      <div class="d-flex flex-column truncate" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+        <h1 class="title truncate">{{ title }}</h1>
+        <h3 class="artist truncate"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [artist_hash]) }}">{{ artist }}</a></h3>
+        <h3 class="album truncate"><a class="text-reset text-decoration-none" href="{{ uri("album.index", [album_hash]) }}">{{ album }}</a></h3>
+      </div>
+    </div>
+  </div>
+  <div class="actions d-flex p-2" hx-get="{{ uri("track.actions", [hash]) }}" hx-trigger="load, trackActions from:body"></div>
+  <div class="p-2 scrollable">
+    <h2><i class="bi bi-music-note-list text-light pe-1"></i> Lyrics</h2>
+    {% if lyrics %}
+      <p>{{ lyrics }}</p>
+    {% else %}
+      <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No lyrics available</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
