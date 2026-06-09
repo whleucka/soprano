@@ -13,7 +13,7 @@
       </div>
     </div>
   </div>
-  <div class="actions d-flex p-2" hx-get="{{ uri("artist.actions", [artist_hash]) }}" hx-trigger="load, artistActions from:body"></div>
+  <div class="actions align-items-center d-flex p-2" hx-get="{{ uri("artist.actions", [artist_hash]) }}" hx-trigger="load, artistActions from:body"></div>
   <div class="p-2 scrollable">
     <h2><i class="bi bi-star-fill text-warning pe-1"></i> Top Tracks</h2>
     <div id="top-tracks" hx-get="{{ uri("artist.top-tracks", [artist_hash]) }}" hx-trigger="load, topTracks from:body"></div>

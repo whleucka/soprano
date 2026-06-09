@@ -350,6 +350,16 @@ input:-webkit-autofill:active {
 #player .liked .active {
   color: rgba(179, 4, 4, 1);
 }
+#player .liked {
+  font-size: 2rem;
+  color: #333;
+}
+#player .liked:hover {
+  color: rgba(179, 4, 4, 1);
+}
+#player .liked .active {
+  color: rgba(179, 4, 4, 1);
+}
 
 #artist #play-artist {
   font-size: 2rem;
@@ -477,6 +487,18 @@ input:-webkit-autofill:active {
 }
 
 /** Track */
+#track #play-track {
+  font-size: 2rem;
+}
+#track .liked {
+  color: #333;
+}
+#track .liked:hover {
+  color: rgba(179, 4, 4, 1);
+}
+#track .liked .active {
+  color: rgba(179, 4, 4, 1);
+}
 .track .dropdown-toggle {
   color: #fff;
   text-align: right;

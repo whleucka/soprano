@@ -14,7 +14,7 @@
       </div>
     </div>
   </div>
-  <div class="actions d-flex p-2" hx-get="{{ uri("album.actions", [album_hash]) }}" hx-trigger="load, albumActions from:body"></div>
+  <div class="actions align-items-center d-flex p-2" hx-get="{{ uri("album.actions", [album_hash]) }}" hx-trigger="load, albumActions from:body"></div>
   <div class="tracks scrollable" hx-get="{{ uri('album.tracks', [album_hash]) }}" hx-trigger="load, albumTracks from:body"></div>
 </section>
 {% endblock %}

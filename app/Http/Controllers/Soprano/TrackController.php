@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\MusicService;
+use App\Services\Soprano\{CoverArtService, MusicService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -12,6 +12,7 @@ class TrackController extends Controller
 {
     public function __construct(
         private MusicService $music, 
+        private CoverArtService $coverArt, 
     ) {}
 
     #[Get("/track/{hash}", "track.index")]
@@ -36,13 +37,21 @@ class TrackController extends Controller
             "artist" => $artist->name,
             "album" => $album->title,
             "lyrics" => $meta->lyrics,
+            "dominant"    => $this->coverArt->hexToRgb($album->dominant_color),
         ]);
     }
 
     #[Get("/track/{hash}/actions", "track.actions")]
     public function actions(string $hash): string
     {
-        return '';
+        $track = $this->music->getTrack($hash);
+        if (!$track) {
+            return $this->pageNotFound();
+        }
+
+        return $this->render("tracks/actions.html.twig", [
+            "hash" => $track->hash,
+        ]);
     }
 
     #[Get("/track/{hash}/like", "track.like")]
