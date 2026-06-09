@@ -13,7 +13,7 @@ return new class implements MigrationInterface
             $table->char("hash", 32);
             $table->varchar("name");
             $table->varchar("musicbrainz_artist_id")->nullable();
-            $table->text("image")->nullable();
+            $table->varchar("image")->nullable();
             $table->timestamp("image_checked_at")->nullable();
             $table->timestamps();
             $table->unique("hash");
