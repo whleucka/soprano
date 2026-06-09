@@ -17,6 +17,15 @@ $scheduler->php($jobs . "/soprano_sync.php")
     ->onlyOne()
     ->output($logs . "soprano-sync-" . date("Y-m-d") . ".log", true);
 
+// Soprano artist images - backfill photos for artists sync added (keyless:
+// MusicBrainz -> Wikidata/Wikipedia). Only touches unchecked artists, so most
+// runs are no-ops; onlyOne() guards the long initial backlog. Throttled to
+// 1 MusicBrainz req/sec internally, so it runs less often than the sync.
+$scheduler->php($jobs . "/soprano_artist_images.php")
+    ->everyMinute(15)
+    ->onlyOne()
+    ->output($logs . "soprano-artist-images-" . date("Y-m-d") . ".log", true);
+
 // Mail worker - process queued emails
 $scheduler->php($jobs . "/mail_worker.php")
     ->everyMinute()

@@ -26,8 +26,9 @@ class ArtistController extends Controller
         $stats = $this->music->getArtistStats((int) $artist->id);
 
         return $this->render("artist/index.html.twig", [
-            "artist_hash" => $artist->hash,
-            "artist"      => $artist->name,
+            "artist_hash"  => $artist->hash,
+            "artist"       => $artist->name,
+            "artist_image" => $artist->image,
             "album_count" => $stats["album_count"],
             "track_count" => $stats["track_count"],
             "runtime"     => $stats["runtime"],
