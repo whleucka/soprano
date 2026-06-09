@@ -341,17 +341,7 @@ input:-webkit-autofill:active {
   background: linear-gradient(90deg, rgba(50,50,50,0.5) 41%, rgba(125,125,125,0.5) 100%);
 }
 #player .liked {
-  font-size: 2rem;
-  color: #333;
-}
-#player .liked:hover {
-  color: rgba(179, 4, 4, 1);
-}
-#player .liked .active {
-  color: rgba(179, 4, 4, 1);
-}
-#player .liked {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: #333;
 }
 #player .liked:hover {
