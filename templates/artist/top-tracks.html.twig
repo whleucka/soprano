@@ -14,7 +14,7 @@
         <span class="plays badge badge-dark text-end" title="{{ track.plays }} plays">{{ track.plays }}</span>
       {% endblock %}
       {% block menu %}
-        <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}">{{ track.album }}</a></li>
+        <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ track.album }}</a></li>
       {% endblock %}
     {% endembed %}
   {% endfor %}

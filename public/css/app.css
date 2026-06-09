@@ -342,8 +342,6 @@ input:-webkit-autofill:active {
 }
 #player .liked {
   font-size: 2rem;
-}
-#player .liked {
   color: #333;
 }
 #player .liked:hover {
