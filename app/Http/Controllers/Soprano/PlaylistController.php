@@ -59,7 +59,7 @@ class PlaylistController extends Controller
         $playlist = $this->playlist->getPlaylist();
         $index = $playlist["index"];
         return $this->render("playlist/queue.html.twig", [
-            "playlist" => $this->playlist->getPlaylist(),
+            "playlist" => $playlist,
             "current" => $playlist["tracks"][$index] ?? false
         ]);
     }

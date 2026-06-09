@@ -307,7 +307,7 @@ class MusicService
              JOIN artists ar ON ar.id = t.artist_id
              JOIN track_likes tl ON tl.track_id = t.id AND tl.client_id=?
              LEFT JOIN track_meta tm ON tm.track_id = t.id
-            ORDER BY tl.id ASC
+            ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
             LIMIT ?",
             [client()->id, $limit]
         );
