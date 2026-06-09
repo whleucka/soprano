@@ -679,19 +679,35 @@ class MusicService
     {
         $rows = db()->fetchAll(
             "SELECT genre,
-                    COUNT(*) AS cnt,
-                    MAX(dominant_color) AS color
+                    COUNT(*) AS cnt
              FROM albums
              WHERE genre <> '' AND genre <> 'Unknown'
              GROUP BY genre
              ORDER BY cnt DESC, genre ASC"
         );
 
-        return array_map(fn($row) => [
+        return array_map(fn($row, $i) => [
             'genre' => $row['genre'],
             'count' => (int) $row['cnt'],
-            'color' => $row['color'] ?? null,
-        ], $rows);
+            'color' => $this->browseColor($i),
+        ], $rows, array_keys($rows));
+    }
+
+    /**
+     * Vibrant, distinct tile colour for the browse grid, picked by position so
+     * adjacent tiles never repeat until the palette is exhausted. All colours
+     * are saturated mid-tones that stay legible under white text.
+     */
+    private function browseColor(int $index): string
+    {
+        $palette = [
+            '#e13300', '#1db954', '#7358ff', '#b02897', '#0d73ec',
+            '#d84000', '#006450', '#dc148c', '#8d67ab', '#148a08',
+            '#1e3264', '#ba5d07', '#e8115b', '#477d95', '#608108',
+            '#503750',
+        ];
+
+        return $palette[$index % count($palette)];
     }
 
     /**
@@ -704,19 +720,18 @@ class MusicService
     {
         $rows = db()->fetchAll(
             "SELECT (CAST(year AS UNSIGNED) DIV 10 * 10) AS decade,
-                    COUNT(*) AS cnt,
-                    MAX(dominant_color) AS color
+                    COUNT(*) AS cnt
              FROM albums
              WHERE year REGEXP '^[0-9]{4}$'
              GROUP BY decade
              ORDER BY decade DESC"
         );
 
-        return array_map(fn($row) => [
+        return array_map(fn($row, $i) => [
             'decade' => (int) $row['decade'],
             'count'  => (int) $row['cnt'],
-            'color'  => $row['color'] ?? null,
-        ], $rows);
+            'color'  => $this->browseColor($i),
+        ], $rows, array_keys($rows));
     }
 
     public function tracksByGenre(string $genre, int $limit = 2500): array

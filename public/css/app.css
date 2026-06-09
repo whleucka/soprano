@@ -626,10 +626,10 @@ input:-webkit-autofill:active {
   text-decoration: none;
   color: #fff;
   cursor: pointer;
-  /* Dark scrim over the album-art colour keeps white text legible even when
-     the dominant colour is very light. */
+  /* Subtle top sheen + slight darken at the base gives the vivid tile colour
+     some depth while keeping white text legible. */
   background:
-    linear-gradient(150deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.78) 100%),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(0, 0, 0, 0.30) 100%),
     var(--tile-color, #5b5b5b);
   transition: transform 0.12s ease, filter 0.12s ease;
 }
