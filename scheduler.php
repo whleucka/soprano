@@ -10,19 +10,17 @@ $scheduler = new Scheduler();
 $jobs = config("paths.jobs");
 $logs = config("paths.logs");
 
-// Soprano sync - ingest new tracks, remove orphans every 2 minutes.
-// onlyOne() skips the run if the previous sync is still going (lock file).
+// Soprano sync - ingest new tracks, remove orphans
 $scheduler->php($jobs . "/soprano_sync.php")
-    ->everyMinute(2)
+    ->everyMinute(5)
     ->onlyOne()
     ->output($logs . "soprano-sync-" . date("Y-m-d") . ".log", true);
 
 // Soprano artist images - backfill photos for artists sync added (keyless:
 // MusicBrainz -> Wikidata/Wikipedia). Only touches unchecked artists, so most
-// runs are no-ops; onlyOne() guards the long initial backlog. Throttled to
-// 1 MusicBrainz req/sec internally, so it runs less often than the sync.
+// runs are no-ops;
 $scheduler->php($jobs . "/soprano_artist_images.php")
-    ->everyMinute(15)
+    ->everyMinute(10)
     ->onlyOne()
     ->output($logs . "soprano-artist-images-" . date("Y-m-d") . ".log", true);
 
