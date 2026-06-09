@@ -21,6 +21,48 @@ class MusicService
         return Artist::where('hash', $hash)->first();
     }
 
+    /**
+     * Hero stats for an artist: how many albums and tracks of theirs are in
+     * the library and the total runtime of all their tracks (e.g. "3h 42m").
+     *
+     * @return array{album_count: int, track_count: int, runtime: string}
+     */
+    public function getArtistStats(int $artistId): array
+    {
+        $row = db()->fetch(
+            "SELECT
+                (SELECT COUNT(*) FROM albums WHERE artist_id = ?) AS album_count,
+                (SELECT COUNT(*) FROM tracks WHERE artist_id = ?) AS track_count,
+                (SELECT SUM(tm.length_ms)
+                 FROM tracks t
+                 LEFT JOIN track_meta tm ON tm.track_id = t.id
+                 WHERE t.artist_id = ?) AS total_length_ms",
+            [$artistId, $artistId, $artistId],
+        );
+
+        return [
+            'album_count' => (int) ($row['album_count'] ?? 0),
+            'track_count' => (int) ($row['track_count'] ?? 0),
+            'runtime'     => $this->formatDuration((int) ($row['total_length_ms'] ?? 0)),
+        ];
+    }
+
+    /**
+     * Format a millisecond duration as a compact "Xh Ym" / "Ym" string.
+     */
+    private function formatDuration(int $ms): string
+    {
+        $minutes = intdiv($ms, 60000);
+        $hours   = intdiv($minutes, 60);
+        $minutes %= 60;
+
+        if ($hours > 0) {
+            return sprintf('%dh %dm', $hours, $minutes);
+        }
+
+        return sprintf('%dm', $minutes);
+    }
+
     public function trackPlay(int $trackId): void
     {
         TrackPlay::create([

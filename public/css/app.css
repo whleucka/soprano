@@ -245,7 +245,7 @@ input:-webkit-autofill:active {
   opacity: 0.1;
 }
 
-#home .play-count-badge, #artist .year-badge {
+.play-count-badge, .year-badge {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -436,14 +436,14 @@ input:-webkit-autofill:active {
 
 /** Album Container */
 .album-cont {
-  width: 120px;
+  width: 160px;
   margin-right: 20px;
   cursor: pointer;
   color: #999;
 }
 .album-cont .cover {
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
 }
 
 .album-cont a:link,
@@ -462,6 +462,11 @@ input:-webkit-autofill:active {
 }
 
 .album-cont .year {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.album-cont .album {
   font-size: 0.8rem;
   color: #999;
 }
@@ -584,11 +589,11 @@ input:-webkit-autofill:active {
   }
 
   .album-cont {
-    width: 160px;
+    width: 180px;
   }
   .album-cont .cover {
-    width: 160px;
-    height: 160px;
+    width: 180px;
+    height: 180px;
   }
   .info {
     font-size: 1.0rem;

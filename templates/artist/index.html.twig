@@ -9,6 +9,7 @@
       <img class="cover me-3" src="/images/no-album-art.png" />
       <div class="d-flex flex-column truncate">
         <h1 class="artist truncate">{{ artist }}</h1>
+        <h3 class="stats">{{ album_count }} {{ album_count == 1 ? "album" : "albums" }} &middot; {{ track_count }} {{ track_count == 1 ? "track" : "tracks" }} &middot; {{ runtime }}</h3>
       </div>
     </div>
   </div>
