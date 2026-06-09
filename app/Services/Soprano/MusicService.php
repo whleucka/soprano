@@ -260,7 +260,7 @@ class MusicService
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
-    public function randomTracks($limit = 1000): array
+    public function randomTracks($limit = 2500): array
     {
         $rows = db()->fetchAll(
             "SELECT t.hash AS track_hash,
@@ -425,7 +425,31 @@ class MusicService
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
-    public function recentlyPlayed(int $trackCount = 50): array
+    function timeAgo(string $datetime): string {
+        $now  = new \DateTime();
+        $past = new \DateTime($datetime);
+        $diff = $now->diff($past);
+
+        $intervals = [
+            ['year',   $diff->y],
+            ['month',  $diff->m],
+            ['week',   (int)($diff->days / 7)],
+            ['day',    $diff->d % 7],
+            ['hour',   $diff->h],
+            ['minute', $diff->i],
+            ['second', $diff->s],
+        ];
+
+        foreach ($intervals as [$unit, $value]) {
+            if ($value >= 1) {
+                return $value . ' ' . $unit . ($value > 1 ? 's' : '') . ' ago';
+            }
+        }
+
+        return 'just now';
+    }
+
+    public function recentlyPlayed(int $trackCount = 1000): array
     {
         $since = (new \DateTime('- 1 WEEK'))->format('Y-m-d H:i:s');
 
@@ -456,7 +480,12 @@ class MusicService
             [client()->id, $since, $trackCount],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return array_map(function($row) {
+            $entry = $this->mapTrackRow($row);
+            $tp = TrackPlay::find($row['last_play_id']);
+            $entry['ago'] = $this->timeAgo($tp->created_at);
+            return $entry;
+        }, $rows);
     }
 
     public function topPlayed(int $trackCount = 50): array
