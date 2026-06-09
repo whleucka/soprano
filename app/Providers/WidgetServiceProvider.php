@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Admin\Widgets\PlaysChartWidget;
+use App\Admin\Widgets\RecentlyAddedWidget;
+use App\Admin\Widgets\TopArtistsWidget;
+use App\Admin\Widgets\TopTracksWidget;
 use Echo\Framework\Admin\WidgetRegistry;
 use Echo\Framework\Admin\Widgets\ActivityHeatmapWidget;
 use Echo\Framework\Admin\Widgets\ActivityMapWidget;
@@ -40,6 +44,12 @@ class WidgetServiceProvider extends ServiceProvider
         WidgetRegistry::register('audit-summary', AuditSummaryWidget::class);
         WidgetRegistry::register('http-status', HttpStatusWidget::class);
         WidgetRegistry::register('users', UsersWidget::class);
+
+        // Soprano music widgets
+        WidgetRegistry::register('soprano-top-tracks', TopTracksWidget::class);
+        WidgetRegistry::register('soprano-top-artists', TopArtistsWidget::class);
+        WidgetRegistry::register('soprano-recently-added', RecentlyAddedWidget::class);
+        WidgetRegistry::register('soprano-plays-chart', PlaysChartWidget::class);
     }
 
     /**

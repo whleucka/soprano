@@ -3,6 +3,7 @@
 namespace Echo\Framework\Admin\Widgets;
 
 use App\Services\Admin\DashboardService;
+use App\Services\Admin\MusicStatsService;
 use Echo\Framework\Admin\Widget;
 
 class StatsWidget extends Widget
@@ -15,8 +16,10 @@ class StatsWidget extends Widget
     protected int $refreshInterval = 60;
     protected int $priority = 10;
 
-    public function __construct(private DashboardService $dashboardService)
-    {
+    public function __construct(
+        private DashboardService $dashboardService,
+        private MusicStatsService $musicStatsService,
+    ) {
     }
 
     public function getData(): array
@@ -34,8 +37,58 @@ class StatsWidget extends Widget
         $auditData = $this->dashboardService->getAuditSummary();
         $auditCount = $auditData['today'];
 
+        $library = $this->musicStatsService->getLibraryStats();
+
         return [
             'stats' => [
+                [
+                    'label' => 'Tracks',
+                    'value' => (int)$library['tracks'],
+                    'icon' => 'music-note-beamed',
+                    'color' => 'primary',
+                ],
+                [
+                    'label' => 'Artists',
+                    'value' => (int)$library['artists'],
+                    'icon' => 'person-circle',
+                    'color' => 'info',
+                ],
+                [
+                    'label' => 'Albums',
+                    'value' => (int)$library['albums'],
+                    'icon' => 'disc',
+                    'color' => 'success',
+                ],
+                [
+                    'label' => 'Radio Stations',
+                    'value' => (int)$library['radio_stations'],
+                    'icon' => 'broadcast',
+                    'color' => 'warning',
+                ],
+                [
+                    'label' => 'Plays',
+                    'value' => (int)$library['plays'],
+                    'icon' => 'play-circle',
+                    'color' => 'secondary',
+                ],
+                [
+                    'label' => 'Likes',
+                    'value' => (int)$library['likes'],
+                    'icon' => 'heart',
+                    'color' => 'danger',
+                ],
+                [
+                    'label' => 'Clients',
+                    'value' => (int)$library['clients'],
+                    'icon' => 'phone',
+                    'color' => 'info',
+                ],
+                [
+                    'label' => 'New Clients (30d)',
+                    'value' => (int)$library['new_clients'],
+                    'icon' => 'phone-vibrate',
+                    'color' => 'success',
+                ],
                 [
                     'label' => 'Total Users',
                     'value' => (int)$usersCount,
