@@ -10,11 +10,11 @@
     {% endembed %}
   {% endfor %}
 {% else %}
-  <div class="p-2">
-    {% if search.term %}
+  {% if search.term %}
+    <div class="p-2">
       <p class="lead"><i class="bi bi-info text-warning pe-1"></i> No results found for '{{ search.term }}'</p>
-    {% else %}
-      <p class="lead"><i class="bi bi-star-fill text-warning pe-1"></i> Search for tracks, albums, and artists!</p>
-    {% endif %}
-  </div>
+    </div>
+  {% else %}
+    <div hx-get="{{ uri('search.browse') }}" hx-trigger="load"></div>
+  {% endif %}
 {% endif %}

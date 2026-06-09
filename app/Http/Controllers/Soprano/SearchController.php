@@ -95,6 +95,43 @@ class SearchController extends Controller
         return $this->index();
     }
 
+    #[Get("/search/genre", "search.genre")]
+    public function genre(): string
+    {
+        $genre = request()->get->get("genre");
+        if ($genre) {
+            $tracks = $this->music->tracksByGenre($genre);
+            if ($tracks) {
+                $this->search->setSearchResults($tracks);
+                $this->hxTrigger("searchResults, searchActions");
+            }
+        }
+        return $this->index();
+    }
+
+    #[Get("/search/decade", "search.decade")]
+    public function decade(): string
+    {
+        $decade = (int) request()->get->get("decade");
+        if ($decade) {
+            $tracks = $this->music->tracksByDecade($decade);
+            if ($tracks) {
+                $this->search->setSearchResults($tracks);
+                $this->hxTrigger("searchResults, searchActions");
+            }
+        }
+        return $this->index();
+    }
+
+    #[Get("/search/browse", "search.browse")]
+    public function browse(): string
+    {
+        return $this->render("search/browse.html.twig", [
+            "genres"  => $this->music->genres(),
+            "decades" => $this->music->decades(),
+        ]);
+    }
+
     #[Get("/search/results", "search.results")]
     public function results()
     {

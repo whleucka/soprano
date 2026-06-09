@@ -668,6 +668,114 @@ class MusicService
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
+    /**
+     * Distinct genres for the browse grid, with an album count and a
+     * representative dominant colour for the tile. Skips untagged albums
+     * ('' / 'Unknown').
+     *
+     * @return array<int,array{genre: string, count: int, color: ?string}>
+     */
+    public function genres(): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT genre,
+                    COUNT(*) AS cnt,
+                    MAX(dominant_color) AS color
+             FROM albums
+             WHERE genre <> '' AND genre <> 'Unknown'
+             GROUP BY genre
+             ORDER BY cnt DESC, genre ASC"
+        );
+
+        return array_map(fn($row) => [
+            'genre' => $row['genre'],
+            'count' => (int) $row['cnt'],
+            'color' => $row['color'] ?? null,
+        ], $rows);
+    }
+
+    /**
+     * Distinct decades derived from album year, with an album count and a
+     * representative colour. Only albums with a 4-digit year are counted.
+     *
+     * @return array<int,array{decade: int, count: int, color: ?string}>
+     */
+    public function decades(): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT (CAST(year AS UNSIGNED) DIV 10 * 10) AS decade,
+                    COUNT(*) AS cnt,
+                    MAX(dominant_color) AS color
+             FROM albums
+             WHERE year REGEXP '^[0-9]{4}$'
+             GROUP BY decade
+             ORDER BY decade DESC"
+        );
+
+        return array_map(fn($row) => [
+            'decade' => (int) $row['decade'],
+            'count'  => (int) $row['cnt'],
+            'color'  => $row['color'] ?? null,
+        ], $rows);
+    }
+
+    public function tracksByGenre(string $genre, int $limit = 2500): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.dominant_color AS dominant_color,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    tm.track_number AS track_number,
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+             FROM tracks t
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE al.genre = ?
+             ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
+             LIMIT ?",
+            [client()->id, $genre, $limit]
+        );
+
+        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+    }
+
+    public function tracksByDecade(int $decade, int $limit = 2500): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.dominant_color AS dominant_color,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    tm.track_number AS track_number,
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+             FROM tracks t
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE al.year REGEXP '^[0-9]{4}$'
+               AND CAST(al.year AS UNSIGNED) BETWEEN ? AND ?
+             ORDER BY al.year ASC, ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
+             LIMIT ?",
+            [client()->id, $decade, $decade + 9, $limit]
+        );
+
+        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+    }
+
     private function mapTrackRow(array $row): array
     {
         return [
