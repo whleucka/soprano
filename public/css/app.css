@@ -205,6 +205,8 @@ input:-webkit-autofill:active {
 }
 .cover {
   border-radius: 6px;
+  object-fit: cover;
+  object-position: center;
 }
 #playlist {
   width: 100%;
