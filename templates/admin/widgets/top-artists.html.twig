@@ -28,7 +28,7 @@
           </span>
           {% endif %}
           <span class="flex-grow-1 text-truncate">{{ artist.artist ?: 'Unknown' }}</span>
-          <span class="badge bg-info bg-opacity-75">{{ artist.plays|number_format }}</span>
+          <span class="badge bg-secondary bg-opacity-75">{{ artist.plays|number_format }}</span>
         </li>
         {% endfor %}
       </ul>
