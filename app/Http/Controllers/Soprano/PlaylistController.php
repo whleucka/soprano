@@ -86,7 +86,7 @@ class PlaylistController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks);
-        $this->hxTrigger("nowPlaying, playlistActions, playlistQueue");
+        $this->hxTrigger("playlistActions, playlistQueue");
     }
 
     #[Get("/playlist/liked", "playlist.liked")]
