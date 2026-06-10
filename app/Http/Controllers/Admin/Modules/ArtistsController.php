@@ -23,9 +23,9 @@ class ArtistsController extends ModuleController
         $builder->column('name', 'Name', 'artists.name')->searchable();
         $builder->column('tracks', 'Tracks', '(SELECT COUNT(*) FROM tracks WHERE tracks.artist_id = artists.id)');
         $builder->column('albums', 'Albums', '(SELECT COUNT(*) FROM albums WHERE albums.artist_id = artists.id)');
-        $builder->column('created_at', 'Added', 'artists.created_at');
         $builder->column('open', 'Open', 'artists.hash')
                 ->formatUsing(fn($col, $val) => $this->frontendLink($val, 'artist.index'));
+        $builder->column('created_at', 'Added', 'artists.created_at');
 
         $builder->rowAction('show');
         $builder->rowAction('delete');

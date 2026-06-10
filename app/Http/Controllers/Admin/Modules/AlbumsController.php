@@ -26,9 +26,9 @@ class AlbumsController extends ModuleController
         $builder->column('genre', 'Genre', 'albums.genre');
         $builder->column('year', 'Year', 'albums.year');
         $builder->column('tracks', 'Tracks', '(SELECT COUNT(*) FROM tracks WHERE tracks.album_id = albums.id)');
-        $builder->column('created_at', 'Added', 'albums.created_at');
         $builder->column('open', 'Open', 'albums.hash')
                 ->formatUsing(fn($col, $val) => $this->frontendLink($val, 'album.index'));
+        $builder->column('created_at', 'Added', 'albums.created_at');
 
         $builder->filter('genre', 'albums.genre')
                 ->label('Genre')

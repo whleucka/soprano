@@ -27,9 +27,9 @@ class TracksController extends ModuleController
         $builder->column('duration', 'Duration', 'track_meta.playtime_string');
         $builder->column('plays', 'Plays', '(SELECT COUNT(*) FROM track_plays WHERE track_plays.track_id = tracks.id)');
         $builder->column('likes', 'Likes', '(SELECT COUNT(*) FROM track_likes WHERE track_likes.track_id = tracks.id)');
-        $builder->column('created_at', 'Added', 'tracks.created_at');
         $builder->column('open', 'Open', 'tracks.hash')
                 ->formatUsing(fn($col, $val) => $this->frontendLink($val, 'track.index'));
+        $builder->column('created_at', 'Added', 'tracks.created_at');
 
         $builder->filter('artist', 'tracks.artist_id')
                 ->label('Artist')
