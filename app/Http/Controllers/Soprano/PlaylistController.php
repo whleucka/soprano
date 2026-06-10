@@ -94,6 +94,6 @@ class PlaylistController extends Controller
     {
         $tracks = $this->music->likedTracks();
         $this->playlist->setPlaylist($tracks ?? []);
-        $this->hxTrigger("nowPlaying, playlistActions, playlistQueue");
+        $this->hxTrigger("playlistActions, playlistQueue");
     }
 }
