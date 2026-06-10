@@ -24,6 +24,13 @@ $scheduler->php($jobs . "/soprano_artist_images.php")
     ->onlyOne()
     ->output($logs . "soprano-artist-images-" . date("Y-m-d") . ".log", true);
 
+// Soprano lyrics - backfill plain lyrics for tracks sync added (keyless:
+// LRCLIB exact /api/get). Only touches unchecked rows, so most runs are no-ops.
+$scheduler->php($jobs . "/soprano_lyrics.php")
+    ->everyMinute(15)
+    ->onlyOne()
+    ->output($logs . "soprano-lyrics-" . date("Y-m-d") . ".log", true);
+
 // Mail worker - process queued emails
 $scheduler->php($jobs . "/mail_worker.php")
     ->everyMinute()

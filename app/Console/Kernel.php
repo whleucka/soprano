@@ -82,5 +82,6 @@ class Kernel extends ConsoleKernel
         AppCommands\DuplicatesCommand::class,
         AppCommands\TrashCommand::class,
         AppCommands\ArtistImageCommand::class,
+        AppCommands\LyricsCommand::class,
     ];
 }
