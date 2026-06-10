@@ -200,7 +200,7 @@ input:-webkit-autofill:active {
 
 #view .content h2 {
   font-weight: 800;
-  color: #ddd;
+  color: #ccc;
   font-size: 1.1rem;
 }
 .cover {
@@ -394,8 +394,8 @@ input:-webkit-autofill:active {
   background: linear-gradient(180deg,rgba(255, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
 }
 .hero .cover {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
 }
 
 .hero h1 {
@@ -404,7 +404,7 @@ input:-webkit-autofill:active {
 }
 
 .hero h3 {
-  font-size: 1.0rem;
+  font-size: 0.9rem;
   color: #999;
 }
 
@@ -438,14 +438,14 @@ input:-webkit-autofill:active {
 
 /** Album Container */
 .album-cont {
-  width: 160px;
+  width: 100px;
   margin-right: 20px;
   cursor: pointer;
   color: #999;
 }
 .album-cont .cover {
-  width: 160px;
-  height: 160px;
+  width: 100px;
+  height: 100px;
 }
 
 .album-cont a:link,
@@ -455,26 +455,11 @@ input:-webkit-autofill:active {
 
 .album-cont .title {
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
-.album-cont .artist {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.album-cont .year {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.album-cont .album {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.album-cont .client {
-  font-size: 0.8rem;
+.album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
+  font-size: 0.7rem;
   color: #999;
 }
 
@@ -609,9 +594,12 @@ input:-webkit-autofill:active {
     width: 180px;
     height: 180px;
   }
-  .info {
-    font-size: 1.0rem;
-    width: 160px;
+  .album-cont .title {
+    font-size: 1.2rem;
+  }
+
+  .album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
+    font-size: 0.9rem;
   }
 }
 
