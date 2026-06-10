@@ -201,7 +201,7 @@ input:-webkit-autofill:active {
 #view .content h2 {
   font-weight: 800;
   color: #ddd;
-  font-size: 1.1rem;
+  font-size: 1.0rem;
 }
 .cover {
   border-radius: 6px;
@@ -218,22 +218,22 @@ input:-webkit-autofill:active {
 }
 
 #playlist #now-playing .cover {
-  width: 90px;
-  height: 90px;
+  width: 70px;
+  height: 70px;
 }
 
 #playlist #now-playing .title {
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 
 #playlist #now-playing .artist {
   color: #999;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 #playlist #now-playing .album {
   color: #999;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 #app .content {
@@ -253,7 +253,7 @@ input:-webkit-autofill:active {
   right: 4px;
   background: rgba(0, 0, 0, 0.75);
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
@@ -394,17 +394,17 @@ input:-webkit-autofill:active {
   background: linear-gradient(180deg,rgba(255, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
 }
 .hero .cover {
-  width: 90px;
-  height: 90px;
+  width: 70px;
+  height: 70px;
 }
 
 .hero h1 {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 900;
 }
 
 .hero h3 {
-  font-size: 1rem;
+  font-size: 1.0rem;
   color: #999;
 }
 
@@ -527,7 +527,7 @@ input:-webkit-autofill:active {
 .track .track-number {
   font-weight: 800;
   color: #999;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 .track .cover {
   width: 40px;
@@ -535,13 +535,13 @@ input:-webkit-autofill:active {
   border-radius: 4px;
 }
 .track .plays {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #fff;
 }
 .track .rank {
   font-weight: 800;
   color: #999;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 .track .liked {
   font-size: 1.3rem;
