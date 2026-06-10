@@ -32,7 +32,7 @@ class TrackController extends Controller
             "hash" => $track->hash,
             "album_hash" => $album->hash,
             "artist_hash" => $artist->hash,
-            "cover" => $album->cover,
+            "cover" => $album->cover ?? '/images/no-album-art.png',
             "title" => $meta->title,
             "artist" => $artist->name,
             "album" => $album->title,
