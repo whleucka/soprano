@@ -32,7 +32,7 @@
               <td class="text-muted">{{ loop.index }}</td>
               <td class="text-truncate" style="max-width: 160px;">{{ track.title ?: 'Unknown' }}</td>
               <td class="text-truncate text-muted" style="max-width: 140px;">{{ track.artist ?: 'Unknown' }}</td>
-              <td class="text-end"><span class="badge bg-secondary bg-opacity-75">{{ track.plays|number_format }}</span></td>
+              <td class="text-end"><span class="badge bg-secondary">{{ track.plays|number_format }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
