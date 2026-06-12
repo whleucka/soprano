@@ -1,6 +1,9 @@
 composer.phar
 /vendor/
 
+# Local-only compose override (personal Traefik routing, music mount)
+/docker-compose.local.yml
+
 .env
 
 # PHPUnit
