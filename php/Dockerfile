@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libssl-dev \
     mariadb-client \
+    ffmpeg \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
        pdo \

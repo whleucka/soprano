@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, SearchService};
+use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, SearchService, TranscodeService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -16,6 +16,7 @@ class PlayerController extends Controller
         private SearchService $search,
         private PlaylistService $playlist,
         private MusicService $music,
+        private TranscodeService $transcode,
     ) {}
 
     #[Get("/player", "player.index")]
@@ -146,7 +147,11 @@ class PlayerController extends Controller
         $track = $this->music->getTrack($hash);
 
         if ($track && is_file($track->pathname) && is_readable($track->pathname)) {
-            return new StreamResponse($track->pathname);
+            // Lossless/large sources are served from the cached Opus transcode
+            // (encoded on demand if not warmed yet); everything else streams
+            // straight from disk.
+            $path = $this->transcode->resolve($track) ?? $track->pathname;
+            return new StreamResponse($path);
         }
 
         return $this->pageNotFound();

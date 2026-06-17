@@ -7,6 +7,7 @@ use Echo\Framework\Http\Response;
 class StreamResponse extends Response
 {
     private const INTERNAL_LOCATION = '/_protected/music/';
+    private const INTERNAL_TRANSCODE = '/_protected/transcode/';
 
     private const MIME_MAP = [
         'mp3'  => 'audio/mpeg',
@@ -39,17 +40,27 @@ class StreamResponse extends Response
             ob_end_clean();
         }
 
-        $musicRoot = rtrim((string)config('soprano.music_path'), '/');
-        if ($musicRoot === '' || !str_starts_with($this->filePath, $musicRoot . '/')) {
-            http_response_code(404);
+        // The file may live under the music library (original) or the transcode
+        // cache (Opus). Each maps to its own internal nginx location.
+        $roots = [
+            [rtrim((string) config('soprano.music_path'), '/'), self::INTERNAL_LOCATION],
+            [rtrim((string) config('soprano.transcode_path'), '/'), self::INTERNAL_TRANSCODE],
+        ];
+
+        foreach ($roots as [$root, $location]) {
+            if ($root === '' || !str_starts_with($this->filePath, $root . '/')) {
+                continue;
+            }
+
+            $relative = substr($this->filePath, strlen($root) + 1);
+            $encoded  = implode('/', array_map('rawurlencode', explode('/', $relative)));
+
+            header('Content-Type: ' . $this->contentType);
+            header('Cache-Control: public, max-age=31536000');
+            header('X-Accel-Redirect: ' . $location . $encoded);
             return;
         }
 
-        $relative = substr($this->filePath, strlen($musicRoot) + 1);
-        $encoded  = implode('/', array_map('rawurlencode', explode('/', $relative)));
-
-        header('Content-Type: ' . $this->contentType);
-        header('Cache-Control: public, max-age=31536000');
-        header('X-Accel-Redirect: ' . self::INTERNAL_LOCATION . $encoded);
+        http_response_code(404);
     }
 }

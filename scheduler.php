@@ -31,6 +31,14 @@ $scheduler->php($jobs . "/soprano_lyrics.php")
     ->onlyOne()
     ->output($logs . "soprano-lyrics-" . date("Y-m-d") . ".log", true);
 
+// Soprano transcode - warm the Opus cache for lossless tracks sync added and
+// prune cache files for removed tracks. Only encodes tracks without a fresh
+// cache file, so most runs are no-ops.
+$scheduler->php($jobs . "/soprano_transcode.php")
+    ->everyMinute(10)
+    ->onlyOne()
+    ->output($logs . "soprano-transcode-" . date("Y-m-d") . ".log", true);
+
 // Mail worker - process queued emails
 $scheduler->php($jobs . "/mail_worker.php")
     ->everyMinute()
