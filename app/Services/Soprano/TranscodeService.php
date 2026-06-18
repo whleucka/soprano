@@ -160,8 +160,13 @@ class TranscodeService
 
             $tmp = $dest . '.tmp';
             $cmd = sprintf(
+                // High-rate / surround sources (e.g. 5.1 @ 96kHz FLAC) make
+                // libopus fail with -22 and write nothing. Normalize into Opus's
+                // native domain first: 48kHz (Opus runs at 48k internally) and a
+                // stereo downmix (browsers output stereo anyway), which sidesteps
+                // the surround channel-mapping path entirely.
                 '%s -nostdin -y -hide_banner -loglevel error -i %s '
-                . '-vn -map_metadata 0 -c:a libopus -b:a %s -vbr on -f opus %s 2>&1',
+                . '-vn -map_metadata 0 -ac 2 -ar 48000 -c:a libopus -b:a %s -vbr on -f opus %s 2>&1',
                 escapeshellcmd($this->ffmpeg),
                 escapeshellarg($src),
                 escapeshellarg($this->bitrate),
