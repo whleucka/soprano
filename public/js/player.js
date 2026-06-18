@@ -119,5 +119,13 @@ function setupMediaSession() {
     next();
   }
 
+  audio.onerror = function () {
+    // Surface undecodable sources (e.g. a codec the browser can't play) instead
+    // of failing silently — onloadedmetadata never fires for these, so autoplay
+    // would otherwise just never happen.
+    const err = audio.error;
+    console.error('Audio playback error', err && err.code, audio.currentSrc);
+  }
+
   requestAnimationFrame(updateProgress);
 })();

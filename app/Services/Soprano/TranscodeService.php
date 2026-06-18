@@ -24,25 +24,73 @@ class TranscodeService
     private string $cachePath;
     private string $bitrate;
     private string $ffmpeg;
-    /** @var array<string,bool> lowercased source extensions that get transcoded */
+    private string $ffprobe;
+    /** @var array<string,bool> lowercased source extensions that always transcode */
     private array $sourceFormats;
+    /** @var array<string,bool> container extensions that get probed by codec */
+    private array $probeFormats;
+    /** @var array<string,bool> audio codecs that warrant transcoding when probed */
+    private array $losslessCodecs;
 
     public function __construct()
     {
         $this->cachePath     = rtrim((string) config('soprano.transcode_path'), '/');
         $this->bitrate       = (string) config('soprano.transcode_bitrate');
         $this->ffmpeg        = (string) config('soprano.ffmpeg_bin');
+        $this->ffprobe       = (string) config('soprano.ffprobe_bin');
         $this->sourceFormats = array_fill_keys(
             array_map('strtolower', (array) config('soprano.transcode_source_formats')),
             true,
         );
+        $this->probeFormats = array_fill_keys(
+            array_map('strtolower', (array) config('soprano.transcode_probe_formats')),
+            true,
+        );
+        $this->losslessCodecs = array_fill_keys(
+            array_map('strtolower', (array) config('soprano.transcode_lossless_codecs')),
+            true,
+        );
     }
 
-    /** True when the track's source format should be transcoded to Opus. */
+    /**
+     * True when the track's source should be transcoded to Opus. Pure-lossless
+     * extensions (flac, wav, …) match outright; MP4-family containers (.m4a/.mp4)
+     * are ambiguous — they hold AAC (leave alone) or ALAC/lossless (must encode),
+     * so their actual audio codec is probed with ffprobe.
+     */
     public function needsTranscode(Track $track): bool
     {
         $ext = strtolower(pathinfo((string) $track->pathname, PATHINFO_EXTENSION));
-        return isset($this->sourceFormats[$ext]);
+
+        if (isset($this->sourceFormats[$ext])) {
+            return true;
+        }
+
+        if (isset($this->probeFormats[$ext])) {
+            return isset($this->losslessCodecs[$this->probeCodec((string) $track->pathname)]);
+        }
+
+        return false;
+    }
+
+    /**
+     * Return the lowercased audio codec name of a file (e.g. "alac", "aac"), or
+     * "" if it can't be determined. Used to disambiguate MP4-family containers.
+     */
+    private function probeCodec(string $src): string
+    {
+        if (!is_file($src) || !is_readable($src)) {
+            return '';
+        }
+
+        $cmd = sprintf(
+            '%s -v error -select_streams a:0 -show_entries stream=codec_name '
+            . '-of default=nokey=1:noprint_wrappers=1 %s 2>/dev/null',
+            escapeshellcmd($this->ffprobe),
+            escapeshellarg($src),
+        );
+
+        return strtolower(trim((string) shell_exec($cmd)));
     }
 
     /** Absolute path of the cached Opus file for a track (may not exist yet). */
@@ -58,15 +106,17 @@ class TranscodeService
      */
     public function resolve(Track $track): ?string
     {
-        if (!$this->needsTranscode($track)) {
-            return null;
-        }
-
         $src   = (string) $track->pathname;
         $cache = $this->cacheFileFor($track);
 
+        // Fast path: a warmed transcode is served without re-probing the codec,
+        // so the common stream request never pays for an ffprobe call.
         if ($this->isFresh($cache, $src)) {
             return $cache;
+        }
+
+        if (!$this->needsTranscode($track)) {
+            return null;
         }
 
         return $this->transcode($src, $cache) ? $cache : null;
