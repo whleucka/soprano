@@ -56,7 +56,12 @@ class StreamResponse extends Response
             $encoded  = implode('/', array_map('rawurlencode', explode('/', $relative)));
 
             header('Content-Type: ' . $this->contentType);
-            header('Cache-Control: public, max-age=31536000');
+            // Revalidate rather than cache long-term: a stream URL is keyed by
+            // track hash, but the bytes behind it can change (raw source vs a
+            // newly-warmed Opus transcode). nginx serves the file natively and
+            // answers conditional requests with a cheap 304, so this stays fast
+            // without ever pinning a stale (or previously un-decodable) response.
+            header('Cache-Control: no-cache');
             header('X-Accel-Redirect: ' . $location . $encoded);
             return;
         }
