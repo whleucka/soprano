@@ -2,10 +2,13 @@ var progressBar = document.querySelector("#playback .progress .progress-bar");
 var progressContainer = document.querySelector('.progress');
 var audio = document.getElementById("audio");
 var playBtn = document.getElementById("play");
+var isRadio = audio && audio.dataset.type === 'radio';
 
 // Progress bar stuff
 function updateProgress() {
-  if (!audio.paused) {
+  // Radio streams are live (no fixed duration) and render a LIVE badge instead
+  // of a progress bar, so progressBar can be absent — bail out cleanly.
+  if (progressBar && !audio.paused && isFinite(audio.duration) && audio.duration > 0) {
     const percent = (audio.currentTime / audio.duration) * 100;
     progressBar.style.width = percent + '%';
     progressBar.setAttribute('aria-valuenow', percent);
@@ -86,36 +89,100 @@ function setupMediaSession() {
   } catch (_) { /* ignore unsupported actions */ }
 }
 
+// --- Radio (HLS) playback --------------------------------------------------
+// The player partial reloads on every track/station change, re-running this
+// script. We keep the Hls instance on window so we can tear it down before
+// (re)creating one, and destroy it whenever we switch back to a music track.
+function teardownRadio() {
+  if (window.__hls) {
+    try { window.__hls.destroy(); } catch (_) { /* ignore */ }
+    window.__hls = null;
+  }
+}
+
+function setupRadio() {
+  const src = audio.dataset.src;
+  if (!src) return;
+  teardownRadio();
+
+  if (window.Hls && Hls.isSupported()) {
+    const hls = new Hls();
+    window.__hls = hls;
+    hls.loadSource(src);
+    hls.attachMedia(audio);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      audio.play().catch((e) => console.error('[radio] play() blocked', e));
+    });
+    hls.on(Hls.Events.ERROR, (_, data) => {
+      if (!data.fatal) return;
+      // Stations drop playback now and then — recover in place when we can,
+      // otherwise tear down and rebuild the stream after a short backoff.
+      switch (data.type) {
+        case Hls.ErrorTypes.NETWORK_ERROR:
+          console.warn('Radio network error, reloading stream', data.details);
+          hls.startLoad();
+          break;
+        case Hls.ErrorTypes.MEDIA_ERROR:
+          console.warn('Radio media error, recovering', data.details);
+          hls.recoverMediaError();
+          break;
+        default:
+          console.error('Radio fatal error, reconnecting', data.details);
+          teardownRadio();
+          setTimeout(() => { if (isRadio) setupRadio(); }, 3000);
+          break;
+      }
+    });
+  } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+    // Native HLS (Safari / iOS): point the element straight at the playlist.
+    audio.src = src;
+    audio.play();
+  } else {
+    console.error('HLS is not supported in this browser');
+  }
+}
+
 (function() {
-  progressContainer.addEventListener('click', (e) => {
-      const rect = progressContainer.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const percent = clickX / rect.width;
-      audio.currentTime = percent * audio.duration;
-      updatePositionState();
-      });
+  if (progressContainer) {
+    progressContainer.addEventListener('click', (e) => {
+        const rect = progressContainer.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percent = clickX / rect.width;
+        audio.currentTime = percent * audio.duration;
+        updatePositionState();
+        });
+  }
 
   audio.onloadedmetadata = function() {
     setupMediaSession();
     updatePositionState();
-    play();
+    // New media just loaded — always start it. Using the play() *toggle* here
+    // races with radio's MANIFEST_PARSED autoplay: if playback already started,
+    // the toggle would pause it ("play() interrupted by pause()").
+    audio.play().catch((e) => console.error('[player] autoplay blocked', e));
   }
 
   audio.onpause = function () {
-    progressBar.classList.add("disabled");
+    if (progressBar) progressBar.classList.add("disabled");
     playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
   }
 
   audio.onplaying = function () {
-    progressBar.classList.remove("disabled");
+    if (progressBar) progressBar.classList.remove("disabled");
     playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
     updatePositionState();
   }
 
   audio.onended = function () {
-    progressBar.style.width = 0;
+    // A live radio stream shouldn't "end" — if it does, the station dropped, so
+    // reconnect rather than advancing the (empty) playlist.
+    if (isRadio) {
+      setTimeout(() => { if (isRadio) setupRadio(); }, 3000);
+      return;
+    }
+    if (progressBar) progressBar.style.width = 0;
     next();
   }
 
@@ -125,6 +192,13 @@ function setupMediaSession() {
     // would otherwise just never happen.
     const err = audio.error;
     console.error('Audio playback error', err && err.code, audio.currentSrc);
+  }
+
+  if (isRadio) {
+    setupRadio();
+  } else {
+    // Switched back to music — make sure no radio stream keeps running.
+    teardownRadio();
   }
 
   requestAnimationFrame(updateProgress);

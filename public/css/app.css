@@ -542,6 +542,19 @@ input:-webkit-autofill:active {
   opacity: 1;
   color: rgba(179, 4, 4, 1);
 }
+.like-overlay .liked {
+  font-size: 1.3rem;
+  color: #fff;
+  opacity: 0.85;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.like-overlay .liked:hover {
+  color: rgba(179, 4, 4, 1);
+}
+.like-overlay .liked .active {
+  opacity: 1;
+  color: rgba(179, 4, 4, 1);
+}
 
 /** SM */
 @media (min-width: 576px) {

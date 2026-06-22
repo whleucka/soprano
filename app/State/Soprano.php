@@ -19,6 +19,7 @@ class Soprano
             'shuffle' => false
         ],
         'player' => [
+            'type'        => 'track',
             'hash'        => '#',
             'album_hash'  => '#',
             'artist_hash' => '#',

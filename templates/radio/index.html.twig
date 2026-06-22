@@ -3,7 +3,7 @@
 {% block title %}Soprano - Radio {% endblock %}
 
 {% block view %}
-<section id="radio" class="h-100">
+<section id="radio" class="h-100 d-flex flex-column">
   <div class="hero d-flex align-items-center p-3">
     <div class="d-flex align-items-center">
       <div class="d-flex flex-column">
@@ -11,7 +11,8 @@
       </div>
     </div>
   </div>
-  <div class="actions" class="d-flex">
-  </div>
+  <div class="stations scrollable p-3 d-flex flex-wrap gap-3"
+       hx-get="{{ uri('radio.stations') }}"
+       hx-trigger="load, radioStations from:body"></div>
 </section>
 {% endblock %}

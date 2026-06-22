@@ -12,6 +12,7 @@ class PlayerService
     public function setPlayer(array $state): void
     {
         state()->player = [
+            'type'        => $state['type']        ?? 'track',
             'hash'        => $state['hash']        ?? '#',
             'album_hash'  => $state['album_hash']  ?? '#',
             'artist_hash' => $state['artist_hash'] ?? '#',

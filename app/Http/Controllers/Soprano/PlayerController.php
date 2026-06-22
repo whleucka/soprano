@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, SearchService, TranscodeService};
+use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, RadioService, SearchService, TranscodeService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -16,6 +16,7 @@ class PlayerController extends Controller
         private SearchService $search,
         private PlaylistService $playlist,
         private MusicService $music,
+        private RadioService $radio,
         private TranscodeService $transcode,
     ) {}
 
@@ -112,6 +113,29 @@ class PlayerController extends Controller
         $this->playlist->setPlaylist($tracks);
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[0]['hash']);
+    }
+
+    #[Get("/player/play/radio/{hash}", "player.play-radio")]
+    public function playRadio(string $hash): void
+    {
+        $station = $this->radio->getStation($hash);
+        if (!$station) {
+            return;
+        }
+
+        // Radio is a single live stream — clear the playlist so prev/next
+        // disable, and play the external HLS/stream URL directly (no transcode).
+        $this->playlist->clearPlaylist();
+        $this->player->setPlayer([
+            'type'   => 'radio',
+            'hash'   => $station->hash,
+            'title'  => $station->name,
+            'artist' => trim(implode(', ', array_filter([$station->city, $station->province]))) ?: ($station->country ?? ''),
+            'album'  => $station->name,
+            'cover'  => $station->cover,
+            'src'    => $station->src,
+        ]);
+        $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
     }
 
     #[Get("/player/play/{hash}", "player.play")]
