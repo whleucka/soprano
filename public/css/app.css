@@ -463,6 +463,11 @@ input:-webkit-autofill:active {
   color: #999;
 }
 
+/** Radio */
+.radio-cont {
+  width: 75px;
+}
+
 /** Track */
 #track #play-track {
   font-size: 2rem;
