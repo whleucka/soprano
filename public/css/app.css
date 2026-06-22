@@ -619,6 +619,9 @@ input:-webkit-autofill:active {
   .album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
     font-size: 0.9rem;
   }
+  .radio-cont {
+    width: 172px;
+  }
 }
 
 /** Browse (search landing) */
