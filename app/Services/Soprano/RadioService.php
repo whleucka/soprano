@@ -28,7 +28,7 @@ class RadioService
                     rs.src AS src,
                     IFNULL((SELECT 1 FROM radio_station_likes WHERE client_id=? AND radio_station_id=rs.id), 0) AS liked
              FROM radio_stations rs
-             ORDER BY rs.name",
+             ORDER BY rs.country, rs.province, rs.city, rs.name",
             [client()->id],
         );
 
