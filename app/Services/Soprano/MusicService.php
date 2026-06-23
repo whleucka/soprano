@@ -787,7 +787,7 @@ class MusicService
                OR al.title LIKE ?)
              ORDER BY al.year ASC, ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
              LIMIT ?",
-            [client()->id, $decade, $decade + 9, $album_title, $limit]
+            [client()->id, $decade, $decade + 9, "%$album_title%", $limit]
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
