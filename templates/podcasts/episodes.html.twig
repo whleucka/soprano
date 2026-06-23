@@ -1,0 +1,25 @@
+{% for e in podcast.episodes %}
+  <div class="episode d-flex align-items-center gap-2 py-2">
+    <img class="episode-cover" src="{{ e.image }}" loading="lazy" width="56" height="56" alt="" />
+    <button class="btn play-episode border-0 shadow-none" title="Play"
+            hx-get="{{ uri('player.play-podcast-episode', [podcast.hash, e.id]) }}" hx-swap="none">
+      <i class="bi bi-play-circle-fill"></i>
+    </button>
+    <div class="d-flex flex-column truncate flex-grow-1">
+      <span title="{{ e.title }}" class="title truncate fw-bold">{{ e.title }}</span>
+      <span class="artist small">
+        {% if e.pub_date %}{{ e.pub_date }}{% endif %}
+        {% if e.duration_min %} &middot; {{ e.duration_min }} min{% endif %}
+      </span>
+    </div>
+  </div>
+{% endfor %}
+{% if podcast.next_episode_pub_date %}
+  <div class="d-flex justify-content-center my-3">
+    <button class="btn btn-outline-light"
+            hx-get="{{ uri('podcasts.episodes', [podcast.hash]) }}?next={{ podcast.next_episode_pub_date }}"
+            hx-target="this" hx-swap="outerHTML">
+      <i class="bi bi-arrow-down-circle pe-1"></i> Load more episodes
+    </button>
+  </div>
+{% endif %}

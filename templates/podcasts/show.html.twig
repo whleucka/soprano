@@ -1,0 +1,29 @@
+{% extends "layout/app.html.twig" %}
+
+{% block title %}Soprano - {{ podcast.title }} {% endblock %}
+
+{% block view %}
+<section id="podcasts" class="h-100 d-flex flex-column">
+  <div class="hero d-flex align-items-center p-3">
+    <img class="cover me-3" src="{{ podcast.image }}" alt="" />
+    <div class="d-flex flex-column truncate">
+      <h1 class="title truncate">{{ podcast.title }}</h1>
+      {% if podcast.publisher %}<h3 class="artist truncate"><i class="bi bi-mic pe-1"></i> {{ podcast.publisher }}</h3>{% endif %}
+      <div class="like-wrap d-flex align-items-center"
+           hx-get="{{ uri('podcasts.like', [podcast.hash]) }}"
+           hx-trigger="like-{{ podcast.hash }} from:body">
+        {% include 'components/like-btn.html.twig' with { liked: podcast.liked, like_uri: uri('podcasts.like-toggle', [podcast.hash]) } %}
+      </div>
+    </div>
+  </div>
+  <div class="p-3 scrollable">
+    {% if podcast.description %}
+      <p class="lead podcast-description">{{ podcast.description|striptags }}</p>
+    {% endif %}
+    <h2 class="mb-2"><i class="bi bi-collection-play text-info pe-1"></i> Episodes</h2>
+    <div id="podcast-episodes-list">
+      {% include 'podcasts/episodes.html.twig' with { podcast: podcast } %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, RadioService, SearchService, TranscodeService};
+use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, PodcastService, RadioService, SearchService, TranscodeService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -17,6 +17,7 @@ class PlayerController extends Controller
         private PlaylistService $playlist,
         private MusicService $music,
         private RadioService $radio,
+        private PodcastService $podcasts,
         private TranscodeService $transcode,
     ) {}
 
@@ -134,6 +135,30 @@ class PlayerController extends Controller
             'album'  => $station->name,
             'cover'  => $station->cover,
             'src'    => $station->src,
+        ]);
+        $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
+    }
+
+    #[Get("/player/play/podcast/{hash}/episode/{episodeId}", "player.play-podcast-episode")]
+    public function playPodcastEpisode(string $hash, string $episodeId): void
+    {
+        $episode = $this->podcasts->getEpisode($episodeId);
+        if (!$episode || empty($episode['audio'])) {
+            return;
+        }
+
+        // A podcast episode is a single finite MP3 — clear the playlist (prev/
+        // next disable) and hand the external audio URL straight to the player.
+        // Unlike radio it's seekable, so type 'podcast' keeps the progress bar.
+        $this->playlist->clearPlaylist();
+        $this->player->setPlayer([
+            'type'   => 'podcast',
+            'hash'   => $hash,
+            'title'  => $episode['title'],
+            'artist' => $episode['podcast_title'],
+            'album'  => $episode['podcast_title'],
+            'cover'  => $episode['image'],
+            'src'    => $episode['audio'],
         ]);
         $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
     }

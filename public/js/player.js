@@ -1,5 +1,6 @@
 var progressBar = document.querySelector("#playback .progress .progress-bar");
 var progressContainer = document.querySelector('.progress');
+var radioBadge = document.querySelector('.radio-badge');
 var audio = document.getElementById("audio");
 var playBtn = document.getElementById("play");
 var isRadio = audio && audio.dataset.type === 'radio';
@@ -103,6 +104,7 @@ function teardownRadio() {
 function setupRadio() {
   const src = audio.dataset.src;
   if (!src) return;
+  radioBadge.classList.remove("active");
   teardownRadio();
 
   if (window.Hls && Hls.isSupported()) {
@@ -111,7 +113,8 @@ function setupRadio() {
     hls.loadSource(src);
     hls.attachMedia(audio);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      audio.play().catch((e) => console.error('[radio] play() blocked', e));
+      audio.play().then(() => {
+      }).catch((e) => console.error('[radio] play() blocked', e));
     });
     hls.on(Hls.Events.ERROR, (_, data) => {
       if (!data.fatal) return;
@@ -136,7 +139,8 @@ function setupRadio() {
   } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
     // Native HLS (Safari / iOS): point the element straight at the playlist.
     audio.src = src;
-    audio.play();
+    audio.play().then(() => {
+    });
   } else {
     console.error('HLS is not supported in this browser');
   }
@@ -163,12 +167,14 @@ function setupRadio() {
   }
 
   audio.onpause = function () {
+    radioBadge.classList.remove("active");
     if (progressBar) progressBar.classList.add("disabled");
     playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
   }
 
   audio.onplaying = function () {
+    radioBadge.classList.add("active");
     if (progressBar) progressBar.classList.remove("disabled");
     playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';

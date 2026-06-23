@@ -3,16 +3,31 @@
 {% block title %}Soprano - Podcasts {% endblock %}
 
 {% block view %}
-<section id="podcasts" class="h-100">
-  <div class="hero d-flex align-items-center p-3">
-    <div class="d-flex align-items-center">
-      <div class="d-flex flex-column">
-        <h1 class="title"><i class="bi bi-mic pe-1"></i> Podcasts</h1>
-      </div>
+<section id="podcasts" class="h-100 d-flex flex-column">
+  <div class="hero d-flex flex-column justify-content-center p-3">
+    <h1 class="title"><i class="bi bi-mic pe-1"></i> Podcasts</h1>
+    <div class="input-group mt-2 podcast-search">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input type="search" name="q" class="form-control" placeholder="Search podcasts…" autocomplete="off"
+             hx-get="{{ uri('podcasts.search') }}"
+             hx-trigger="keyup changed delay:500ms, search"
+             hx-target="#podcast-results"
+             hx-swap="innerHTML" />
     </div>
   </div>
-  <div class="actions" class="d-flex">
+  <div class="scrollable p-3">
+    <div id="podcast-results"></div>
+
+    <h2 class="mb-2"><i class="bi bi-collection text-info pe-1"></i> My Podcasts</h2>
+    <div class="d-flex flex-wrap align-content-start gap-3">
+      {% if liked %}
+        {% for p in liked %}
+          {% include 'components/podcast-card.html.twig' with { p: p } %}
+        {% endfor %}
+      {% else %}
+        <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> You haven't liked any podcasts yet — search above to find some</p>
+      {% endif %}
+    </div>
   </div>
-  <p class="lead p-2">This is a work in progress. Check back soon!</p>
 </section>
 {% endblock %}

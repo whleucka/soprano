@@ -33,6 +33,14 @@
     <div id="favourite-radio" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.favourite-radio") }}" hx-trigger="load, radioStations from:body"></div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
+      <h2 class="mb-0"><i class="bi bi-mic-fill text-info pe-1"></i> My Podcasts</h2>
+      <span class="badge bg-dark ms-1">
+          <a hx-boost="true" href="{{ uri('podcasts.index') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
+      </span>
+    </div>
+    <div id="my-podcasts" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.my-podcasts") }}" hx-trigger="load, podcastLikes from:body"></div>
+
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-star-fill text-warning pe-1"></i> Top Played</h2>
       <span class="badge bg-dark ms-1">
           <a hx-boost="true" href="{{ uri('search.top-played') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Soprano;
 
 use App\Services\Soprano\MusicService;
 use App\Services\Soprano\RadioService;
+use App\Services\Soprano\PodcastService;
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -14,6 +15,7 @@ class HomeController extends Controller
     public function __construct(
         private MusicService $music,
         private RadioService $radio,
+        private PodcastService $podcasts,
     ) {}
 
     #[Get("/", "home.root")]
@@ -73,6 +75,14 @@ class HomeController extends Controller
     {
         return $this->render("home/favourite-radio.html.twig", [
             "stations" => $this->radio->getLikedStations(),
+        ]);
+    }
+
+    #[Get("/home/my-podcasts", "home.my-podcasts")]
+    public function myPodcasts(): string
+    {
+        return $this->render("home/my-podcasts.html.twig", [
+            "podcasts" => $this->podcasts->getLikedPodcasts(),
         ]);
     }
 

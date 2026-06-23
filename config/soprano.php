@@ -32,4 +32,15 @@ return [
     // ffmpeg / ffprobe binaries (must be present in the php container image).
     "ffmpeg_bin" => "ffmpeg",
     "ffprobe_bin" => "ffprobe",
+
+    // Podcasts: backed by the ListenNotes API (keyed + quota-limited). The API
+    // layer is isolated in ListenNotesService and every response is cached to
+    // conserve the free-tier quota. An empty key makes the client hit the
+    // ListenNotes mock server (handy for local poking without burning quota).
+    "listennotes_key" => env("LISTEN_NOTES_API_KEY", ""),
+    // Cache TTLs (seconds): search results churn, detail pages are stable, the
+    // genre list almost never changes.
+    "listennotes_search_ttl" => 600,      // 10 minutes
+    "listennotes_detail_ttl" => 3600,     // 1 hour
+    "listennotes_genres_ttl" => 604800,   // 1 week
 ];

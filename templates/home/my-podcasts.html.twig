@@ -1,0 +1,7 @@
+{% if podcasts %}
+  {% for p in podcasts %}
+    {% include 'components/podcast-card.html.twig' with { p: p } %}
+  {% endfor %}
+{% else %}
+  <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No favourite podcasts yet</p>
+{% endif %}

@@ -467,6 +467,76 @@ input:-webkit-autofill:active {
 .radio-cont {
   width: 75px;
 }
+.radio-badge {
+  color: #fff;
+  background-color: #ff0000;
+  opacity: 0.25;
+}
+.radio-badge.active {
+  opacity: 1;
+  background-color: forestgreen;
+  color: #fff;
+}
+
+/** Podcasts */
+/* Scoped to .like-wrap so the standalone detail-page heart gets coloured
+   without clobbering the white .like-overlay hearts on the podcast cards. */
+#podcasts .like-wrap .liked {
+  font-size: 1.5rem;
+  color: #333;
+}
+#podcasts .like-wrap .liked:hover,
+#podcasts .like-wrap .liked .active {
+  color: rgba(179, 4, 4, 1);
+}
+#podcasts .podcast-search {
+  max-width: 480px;
+}
+#podcasts .podcast-search .input-group-text {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: none;
+  color: #888;
+}
+#podcasts .podcast-search .form-control {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: none;
+  color: #fff;
+}
+#podcasts .podcast-search .form-control::placeholder {
+  color: #777;
+}
+/* Drop Bootstrap's blue focus ring/border on the search field. */
+#podcasts .podcast-search .form-control:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  outline: none;
+  color: #fff;
+}
+#podcasts .podcast-search:focus-within .input-group-text {
+  background: rgba(255, 255, 255, 0.1);
+}
+#podcasts .podcast-description {
+  max-width: 70ch;
+  color: #aaa;
+}
+#podcasts .episode {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+#podcasts .episode-cover {
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+#podcasts .play-episode {
+  font-size: 1.6rem;
+  color: #ccc;
+}
+#podcasts .play-episode:hover {
+  color: #fff;
+}
 
 /** Track */
 #track #play-track {
