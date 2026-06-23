@@ -49,6 +49,43 @@ class PodcastService
     }
 
     /**
+     * Curated "best podcasts" discovery listing, optionally scoped to a genre.
+     * Page-based pagination (`next_page` is null on the last page).
+     *
+     * @return array{items: array, next_page: ?int, genre_name: ?string}
+     */
+    public function best(?string $genreId = null, int $page = 1): array
+    {
+        $data = $this->api->getBestPodcasts($page, $genreId);
+        if (!$data || empty($data['podcasts'])) {
+            return ['items' => [], 'next_page' => null, 'genre_name' => null];
+        }
+
+        $items = $this->markLiked(array_map(fn($r) => $this->mapPodcast($r), $data['podcasts']));
+        $next  = (!empty($data['has_next']) && !empty($data['next_page_number']))
+            ? (int) $data['next_page_number']
+            : null;
+
+        return [
+            'items'      => $items,
+            'next_page'  => $next,
+            // `name` is the genre name when scoped, or "Podcasts" overall.
+            'genre_name' => $genreId !== null ? ($data['name'] ?? null) : null,
+        ];
+    }
+
+    /**
+     * Top-level genres for the discovery filter control.
+     *
+     * @return array<int, array{id: int, name: string}>
+     */
+    public function genres(): array
+    {
+        $data = $this->api->getGenres(true);
+        return $data['genres'] ?? [];
+    }
+
+    /**
      * Podcast detail + a page of episodes (newest first).
      */
     public function getPodcast(string $hash, ?int $nextEpisodePubDate = null): ?array
@@ -75,16 +112,32 @@ class PodcastService
      */
     public function getEpisode(string $episodeId): ?array
     {
-        $data = $this->api->getEpisode($episodeId);
+        return $this->episodeFromResponse($this->api->getEpisode($episodeId));
+    }
+
+    /**
+     * A random episode for the "Surprise me" button (ListenNotes /just_listen).
+     */
+    public function randomEpisode(): ?array
+    {
+        return $this->episodeFromResponse($this->api->justListen());
+    }
+
+    /**
+     * Map a ListenNotes episode response (which carries a nested `podcast`
+     * node) into a playable episode view-model. Shared by getEpisode/random.
+     */
+    private function episodeFromResponse(?array $data): ?array
+    {
         if (!$data || empty($data['id'])) {
             return null;
         }
 
-        $podcastNode = $data['podcast'] ?? [];
+        $node = $data['podcast'] ?? [];
         $podcast = [
-            'hash'      => $podcastNode['id'] ?? '',
-            'title'     => $podcastNode['title_original'] ?? $podcastNode['title'] ?? '',
-            'thumbnail' => $podcastNode['thumbnail'] ?? $podcastNode['image'] ?? '/images/no-album-art.png',
+            'hash'      => $node['id'] ?? '',
+            'title'     => $node['title_original'] ?? $node['title'] ?? '',
+            'thumbnail' => $node['thumbnail'] ?? $node['image'] ?? '/images/no-album-art.png',
         ];
 
         return $this->mapEpisode($data, $podcast);

@@ -163,6 +163,27 @@ class PlayerController extends Controller
         $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
     }
 
+    #[Get("/player/play/podcast-surprise", "player.play-podcast-surprise")]
+    public function playPodcastSurprise(): void
+    {
+        $episode = $this->podcasts->randomEpisode();
+        if (!$episode || empty($episode['audio'])) {
+            return;
+        }
+
+        $this->playlist->clearPlaylist();
+        $this->player->setPlayer([
+            'type'   => 'podcast',
+            'hash'   => $episode['podcast_hash'],
+            'title'  => $episode['title'],
+            'artist' => $episode['podcast_title'],
+            'album'  => $episode['podcast_title'],
+            'cover'  => $episode['image'],
+            'src'    => $episode['audio'],
+        ]);
+        $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
+    }
+
     #[Get("/player/play/{hash}", "player.play")]
     public function play(string $hash): void
     {

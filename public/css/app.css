@@ -518,6 +518,33 @@ input:-webkit-autofill:active {
 #podcasts .podcast-search:focus-within .input-group-text {
   background: rgba(255, 255, 255, 0.1);
 }
+#podcasts .podcast-actions .genre-select {
+  max-width: 220px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+#podcasts .podcast-actions .genre-select:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  outline: none;
+  color: #fff;
+}
+#podcasts .podcast-actions .genre-select option {
+  color: #000;
+}
+/* Soften the stark btn-outline-light border to match the search/genre controls. */
+#podcasts .podcast-actions .btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ddd;
+}
+#podcasts .podcast-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
 #podcasts .podcast-description {
   max-width: 70ch;
   color: #aaa;

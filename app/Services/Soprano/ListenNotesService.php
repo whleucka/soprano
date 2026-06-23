@@ -83,6 +83,15 @@ class ListenNotesService
     }
 
     /**
+     * A randomly selected episode (the "just listen" button). Deliberately not
+     * cached — each call should surface a different episode.
+     */
+    public function justListen(): ?array
+    {
+        return $this->call(fn() => $this->client->justListen([]));
+    }
+
+    /**
      * Curated "best podcasts" listing, optionally scoped to a genre.
      */
     public function getBestPodcasts(int $page = 1, ?string $genreId = null): ?array
@@ -99,12 +108,15 @@ class ListenNotesService
     }
 
     /**
-     * Full genre list (very stable — cached for a week).
+     * Genre list (very stable — cached for a week). Top-level genres only by
+     * default, which is the right granularity for a filter control (~21 vs 150+).
      */
-    public function getGenres(): ?array
+    public function getGenres(bool $topLevelOnly = true): ?array
     {
-        return cache()->remember('ln:genres', (int) config('soprano.listennotes_genres_ttl'), function () {
-            return $this->call(fn() => $this->client->fetchPodcastGenres([]));
+        $key = 'ln:genres:' . ($topLevelOnly ? 'top' : 'all');
+
+        return cache()->remember($key, (int) config('soprano.listennotes_genres_ttl'), function () use ($topLevelOnly) {
+            return $this->call(fn() => $this->client->fetchPodcastGenres($topLevelOnly ? ['top_level_only' => 1] : []));
         });
     }
 

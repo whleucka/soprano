@@ -104,7 +104,7 @@ function teardownRadio() {
 function setupRadio() {
   const src = audio.dataset.src;
   if (!src) return;
-  radioBadge.classList.remove("active");
+  if (radioBadge) radioBadge.classList.remove("active");
   teardownRadio();
 
   if (window.Hls && Hls.isSupported()) {
@@ -167,14 +167,14 @@ function setupRadio() {
   }
 
   audio.onpause = function () {
-    radioBadge.classList.remove("active");
+    if (radioBadge) radioBadge.classList.remove("active");
     if (progressBar) progressBar.classList.add("disabled");
     playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
   }
 
   audio.onplaying = function () {
-    radioBadge.classList.add("active");
+    if (radioBadge) radioBadge.classList.add("active");
     if (progressBar) progressBar.classList.remove("disabled");
     playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';

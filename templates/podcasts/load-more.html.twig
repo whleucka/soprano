@@ -1,6 +1,6 @@
 <div class="load-more-row w-100 d-flex justify-content-center my-3">
   <button class="btn btn-outline-light"
-          hx-get="{{ uri('podcasts.search') }}?q={{ query|url_encode }}&offset={{ offset }}"
+          hx-get="{{ more_uri }}"
           hx-target="closest .load-more-row"
           hx-swap="outerHTML">
     <i class="bi bi-arrow-down-circle pe-1"></i> Load more

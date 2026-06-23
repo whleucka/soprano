@@ -14,6 +14,23 @@
              hx-target="#podcast-results"
              hx-swap="innerHTML" />
     </div>
+    <div class="podcast-actions d-flex flex-wrap align-items-center gap-2 mt-2">
+      <button class="btn btn-sm btn-outline-light"
+              hx-get="{{ uri('podcasts.best') }}" hx-target="#podcast-results" hx-swap="innerHTML">
+        <i class="bi bi-star-fill pe-1"></i> Best Podcasts
+      </button>
+      <button class="btn btn-sm btn-outline-light"
+              hx-get="{{ uri('player.play-podcast-surprise') }}" hx-swap="none">
+        <i class="bi bi-shuffle pe-1"></i> Surprise me
+      </button>
+      <select class="form-select form-select-sm genre-select" name="genre"
+              hx-get="{{ uri('podcasts.best') }}" hx-target="#podcast-results" hx-swap="innerHTML" hx-trigger="change">
+        <option value="">Browse by genre…</option>
+        {% for g in genres %}
+          <option value="{{ g.id }}">{{ g.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
   </div>
   <div class="scrollable p-3">
     <div id="podcast-results"></div>

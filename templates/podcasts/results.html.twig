@@ -1,24 +1,24 @@
 {% if append %}
   {# Load-more request: emit just the next batch of cards plus a fresh button,
-     which replaces the old button (hx-swap=outerHTML) inside the grid. #}
-  {% for p in results.items %}
+     which replaces the old load-more row (hx-swap=outerHTML) inside the grid. #}
+  {% for p in r.items %}
     {% include 'components/podcast-card.html.twig' with { p: p } %}
   {% endfor %}
-  {% if results.next_offset is not null %}
-    {% include 'podcasts/load-more.html.twig' with { query: results.query, offset: results.next_offset } %}
+  {% if r.more_uri %}
+    {% include 'podcasts/load-more.html.twig' with { more_uri: r.more_uri } %}
   {% endif %}
 {% else %}
-  {% if results.items %}
-    <h2 class="mb-2"><i class="bi bi-search text-secondary pe-1"></i> Results for &ldquo;{{ results.query }}&rdquo;</h2>
+  {% if r.items %}
+    <h2 class="mb-2"><i class="bi {{ r.icon }} text-secondary pe-1"></i> {{ r.title }}</h2>
     <div class="d-flex flex-wrap align-content-start gap-3 mb-4">
-      {% for p in results.items %}
+      {% for p in r.items %}
         {% include 'components/podcast-card.html.twig' with { p: p } %}
       {% endfor %}
-      {% if results.next_offset is not null %}
-        {% include 'podcasts/load-more.html.twig' with { query: results.query, offset: results.next_offset } %}
+      {% if r.more_uri %}
+        {% include 'podcasts/load-more.html.twig' with { more_uri: r.more_uri } %}
       {% endif %}
     </div>
-  {% elseif results.query %}
-    <p class="lead mb-4"><i class="bi bi-info pe-1 text-warning"></i> No podcasts found for &ldquo;{{ results.query }}&rdquo;</p>
+  {% elseif r.empty_message %}
+    <p class="lead mb-4"><i class="bi bi-info pe-1 text-warning"></i> {{ r.empty_message }}</p>
   {% endif %}
 {% endif %}

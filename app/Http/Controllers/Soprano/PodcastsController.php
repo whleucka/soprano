@@ -18,7 +18,8 @@ class PodcastsController extends Controller
     public function index(): string
     {
         return $this->render("podcasts/index.html.twig", [
-            "liked" => $this->podcasts->getLikedPodcasts(),
+            "liked"  => $this->podcasts->getLikedPodcasts(),
+            "genres" => $this->podcasts->genres(),
         ]);
     }
 
@@ -27,11 +28,50 @@ class PodcastsController extends Controller
     {
         $q      = (string) request()->get->get("q");
         $offset = (int) request()->get->get("offset");
+        $res    = $this->podcasts->search($q, $offset);
+
+        $more = $res['next_offset'] !== null
+            ? uri('podcasts.search') . '?q=' . urlencode($q) . '&offset=' . $res['next_offset']
+            : null;
 
         return $this->render("podcasts/results.html.twig", [
-            "results" => $this->podcasts->search($q, $offset),
+            "r" => [
+                "items"         => $res['items'],
+                "icon"          => "bi-search",
+                "title"         => 'Results for “' . $q . '”',
+                "more_uri"      => $more,
+                "empty_message" => $q !== '' ? 'No podcasts found for “' . $q . '”' : null,
+            ],
             // offset > 0 means a "load more" click → emit an appendable fragment.
-            "append"  => $offset > 0,
+            "append" => $offset > 0,
+        ]);
+    }
+
+    #[Get("/podcasts/best", "podcasts.best")]
+    public function best(): string
+    {
+        $genre   = request()->get->get("genre");
+        $genreId = ($genre !== null && $genre !== '') ? (string) $genre : null;
+        $page    = max(1, (int) request()->get->get("page"));
+        $res     = $this->podcasts->best($genreId, $page);
+
+        $more = $res['next_page'] !== null
+            ? uri('podcasts.best') . '?' . http_build_query(array_filter([
+                'genre' => $genreId,
+                'page'  => $res['next_page'],
+            ]))
+            : null;
+
+        return $this->render("podcasts/results.html.twig", [
+            "r" => [
+                "items"         => $res['items'],
+                "icon"          => "bi-star-fill",
+                "title"         => $res['genre_name'] ? 'Best ' . $res['genre_name'] . ' Podcasts' : 'Best Podcasts',
+                "more_uri"      => $more,
+                "empty_message" => 'No podcasts available right now',
+            ],
+            // page > 1 means a "load more" click → emit an appendable fragment.
+            "append" => $page > 1,
         ]);
     }
 
