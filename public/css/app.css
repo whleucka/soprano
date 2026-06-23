@@ -369,7 +369,7 @@ input:-webkit-autofill:active {
 * Hero
 */
 .hero {
-  min-height: 170px;
+  min-height: 150px;
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
   overflow: hidden;
 }
@@ -438,8 +438,8 @@ input:-webkit-autofill:active {
 
 /** Album Container */
 .album-cont {
-  width: 100px;
-  margin-right: 20px;
+  width: 77px;
+  margin-right: 30px;
   cursor: pointer;
   color: #999;
 }
