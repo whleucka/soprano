@@ -156,7 +156,7 @@ class PlayerController extends Controller
             'hash'   => $hash,
             'title'  => $episode['title'],
             'artist' => $episode['podcast_title'],
-            'album'  => $episode['podcast_title'],
+            'album'  => 'Soprano Podcasts',
             'cover'  => $episode['image'],
             'src'    => $episode['audio'],
         ]);
