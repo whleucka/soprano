@@ -1,3 +1,70 @@
+/* Bricolage Grotesque — display font for hero titles, the Soprano wordmark,
+   and the now-playing title. Body text stays Ubuntu (see style.css). */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/bricolage-700-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/bricolage-700-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/bricolage-800-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/bricolage-800-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* Surfaces */
+  --bg: #000;
+  --surface: #121212;
+  --surface-2: #1e1e1e;
+  --surface-hover: #222;
+  --surface-input: #121212;
+
+  /* Brand accent */
+  --accent: #b30404;
+  --accent-2: #ff00aa;
+  --accent-grad: linear-gradient(90deg, #b30404 41%, #ff00aa 100%);
+
+  /* Text */
+  --text: #fff;
+  --text-soft: #ccc;
+  --text-muted: #999;
+  --text-dim: #555;
+  --heart-off: #333;
+
+  /* Shape */
+  --radius: 12px;
+  --radius-sm: 6px;
+  --radius-pill: 10px;
+
+  /* Motion */
+  --ease: 0.15s ease;
+
+  /* Type */
+  --font-display: "Bricolage Grotesque", "Ubuntu", sans-serif;
+}
+
 html {
   opacity: 1;
   color-scheme: dark;
@@ -18,13 +85,13 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e1e1e; 
+  background: var(--surface-2); 
 }
 
 ::-webkit-scrollbar-thumb {
   background: #444; 
   border-radius: 10px; /* Makes it look like a pill */
-  border: 2px solid #1e1e1e; /* Creates "padding" around the thumb */
+  border: 2px solid var(--surface-2); /* Creates "padding" around the thumb */
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -40,7 +107,7 @@ body {
 /** Utils */
 .lead {
   font-size: 1.1rem;
-  color: #999;
+  color: var(--text-muted);
   text-decoration: italic;
 }
 .truncate {
@@ -131,7 +198,7 @@ body {
 
 #top .content input,
 #top .content button {
-  background: #121212;
+  background: var(--surface);
   color: #fff;
 }
 
@@ -144,7 +211,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-text-fill-color: #fff !important;
-  -webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
   caret-color: #fff;
   transition: background-color 5000s ease-in-out 0s;
 }
@@ -162,7 +229,7 @@ input:-webkit-autofill:active {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid #999;
+  border: 1px solid var(--text-muted);
 }
 
 #sidebar {
@@ -171,7 +238,7 @@ input:-webkit-autofill:active {
 }
 
 #sidebar .nav-link {
-  color: #999;
+  color: var(--text-muted);
   font-size: 1.2rem;
 }
 
@@ -180,13 +247,15 @@ input:-webkit-autofill:active {
 }
 
 #sidebar h1 {
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.8rem;
+  letter-spacing: -0.01em;
 }
 
 #sidebar h2 {
   font-weight: 800;
-  color: #999;
+  color: var(--text-muted);
   font-size: 1.2rem;
 }
 
@@ -199,9 +268,11 @@ input:-webkit-autofill:active {
 }
 
 #view .content h2 {
+  font-family: var(--font-display);
   font-weight: 800;
-  color: #ccc;
+  color: var(--text-soft);
   font-size: 1.1rem;
+  letter-spacing: -0.01em;
 }
 .cover {
   border-radius: 6px;
@@ -223,28 +294,76 @@ input:-webkit-autofill:active {
 }
 
 #playlist #now-playing .title {
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-weight: 800;
   font-size: 1.4rem;
+  letter-spacing: -0.01em;
 }
 
 #playlist #now-playing .artist {
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 #playlist #now-playing .album {
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 
 #app .content {
   margin: 6px;
-  background: #121212;
+  background: var(--surface);
   border-radius: 12px;
   height: 100%;
 }
 
 .placeholder {
   opacity: 0.1;
+}
+
+/* Skeleton loaders — shimmer placeholders shown while HTMX rails load.
+   .skeleton paints a base block with a sweeping highlight; the cards reuse
+   .album-cont/.cover sizing so they match the real content's footprint. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-hover);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+.skeleton-card {
+  cursor: default;
+  pointer-events: none;
+}
+.skeleton-line {
+  display: block;
+  height: 0.7rem;
+  margin-top: 0.5rem;
+  border-radius: 4px;
+}
+.skeleton-line.short {
+  width: 55%;
+  margin-top: 0.35rem;
+}
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
 }
 
 .play-count-badge, .year-badge {
@@ -309,12 +428,12 @@ input:-webkit-autofill:active {
 
 #player #info .artist {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 #player .btn {
   font-size: 2.1rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 #player #play {
@@ -330,13 +449,13 @@ input:-webkit-autofill:active {
 }
 
 #player #playback .progress {
-  background: #222;
+  background: var(--surface-hover);
   height: 12px;
 }
 
 #player #playback .progress .progress-bar {
-  background: #b30404;
-  background: linear-gradient(90deg, rgba(179, 4, 4, 1) 41%, rgba(255, 0, 170, 1) 100%);
+  background: var(--accent);
+  background: var(--accent-grad);
 }
 
 #player #playback .progress .progress-bar.disabled {
@@ -344,20 +463,20 @@ input:-webkit-autofill:active {
 }
 #player .liked {
   font-size: 1.5rem;
-  color: #333;
+  color: var(--heart-off);
 }
 #player .liked:hover {
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 #player .liked .active {
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 
 #artist #play-artist {
   font-size: 2rem;
 }
 #artist .album {
-  color: #999;
+  color: var(--text-muted);
 }
 
 #search {
@@ -368,49 +487,41 @@ input:-webkit-autofill:active {
 /**
 * Hero
 */
+/* Each section sets its own --hero-color for wayfinding; the gradient shape
+   lives here once. A soft top sheen over the colour fade adds a little depth. */
 .hero {
   min-height: 150px;
-  background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(180deg, var(--hero-color, rgba(100, 100, 100, 0.3)) 0%, rgba(0, 0, 0, 0) 100%);
   overflow: hidden;
 }
 
-#home .hero {
-  background: linear-gradient(180deg,rgba(60, 140, 22, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#search .hero {
-  background: linear-gradient(180deg,rgba(224, 66, 245) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#music .hero {
-  background: linear-gradient(180deg,rgba(23, 96, 255, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#radio .hero {
-  background: linear-gradient(180deg,rgba(255, 157, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
-
-#podcasts .hero {
-  background: linear-gradient(180deg,rgba(255, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
+#home .hero     { --hero-color: rgba(60, 140, 22, 0.8); }
+#search .hero   { --hero-color: rgba(224, 66, 245, 0.8); }
+#music .hero    { --hero-color: rgba(23, 96, 255, 0.8); }
+#radio .hero    { --hero-color: rgba(255, 157, 0, 0.8); }
+#podcasts .hero { --hero-color: rgba(255, 0, 0, 0.75); }
 .hero .cover {
   width: 80px;
   height: 80px;
 }
 
 .hero h1 {
+  font-family: var(--font-display);
   font-size: 1.4rem;
-  font-weight: 900;
+  font-weight: 800;
+  letter-spacing: -0.015em;
 }
 
 .hero h3 {
   font-size: 0.9rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .hero h5 {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 
@@ -432,8 +543,38 @@ input:-webkit-autofill:active {
 }
 
 .actions .btn {
-  color: #999;
+  color: var(--text-muted);
   font-size: 1.0rem;
+}
+
+/** Micro-interactions
+ * Smooth out the colour/transform changes that previously snapped, and give
+ * the heart-like a tactile press "pop". Pure CSS — works with the HTMX swaps. */
+#player .btn,
+#album .btn,
+#artist .btn,
+.actions .btn,
+#podcasts .play-episode {
+  transition: color var(--ease), transform var(--ease);
+}
+
+.liked,
+.liked .bi {
+  transition: color var(--ease), transform var(--ease);
+}
+.liked:active {
+  transform: scale(0.85);
+}
+
+/* Card covers lift slightly on hover so the home rails feel alive. */
+.album-cont .cover,
+.radio-cont .cover {
+  transition: transform var(--ease), filter var(--ease);
+}
+.album-cont:hover .cover,
+.radio-cont:hover .cover {
+  transform: scale(1.03);
+  filter: brightness(1.08);
 }
 
 /** Album Container */
@@ -441,7 +582,7 @@ input:-webkit-autofill:active {
   width: 100px;
   margin-right: 20px;
   cursor: pointer;
-  color: #999;
+  color: var(--text-muted);
 }
 .album-cont .cover {
   width: 100px;
@@ -450,7 +591,7 @@ input:-webkit-autofill:active {
 
 .album-cont a:link,
 .album-cont a:visited {
-  color: #999;
+  color: var(--text-muted);
 }
 
 .album-cont .title {
@@ -460,7 +601,7 @@ input:-webkit-autofill:active {
 
 .album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
   font-size: 0.7rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 /* 3-up responsive grid for podcast/radio card lists. Cards fill their cell
@@ -521,11 +662,11 @@ input:-webkit-autofill:active {
    without clobbering the white .like-overlay hearts on the podcast cards. */
 #podcasts .like-wrap .liked {
   font-size: 1.5rem;
-  color: #333;
+  color: var(--heart-off);
 }
 #podcasts .like-wrap .liked:hover,
 #podcasts .like-wrap .liked .active {
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 #podcasts .podcast-search {
   max-width: 480px;
@@ -598,7 +739,7 @@ input:-webkit-autofill:active {
 }
 #podcasts .play-episode {
   font-size: 1.6rem;
-  color: #ccc;
+  color: var(--text-soft);
 }
 #podcasts .play-episode:hover {
   color: #fff;
@@ -609,13 +750,17 @@ input:-webkit-autofill:active {
   font-size: 2rem;
 }
 #track .liked {
-  color: #333;
+  color: var(--heart-off);
 }
 #track .liked:hover {
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 #track .liked .active {
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
+}
+.track {
+  position: relative;
+  transition: background var(--ease);
 }
 .track .dropdown-toggle {
   color: #fff;
@@ -632,10 +777,15 @@ input:-webkit-autofill:active {
 } 
 .track.active {
   font-weight: 800;
-  background: #222;
+  background: var(--surface-hover);
+  /* inset bar avoids the layout shift a real border would cause */
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.track.active .title {
+  color: var(--accent-2);
 }
 .track:hover {
-  background: #222;
+  background: var(--surface-hover);
   cursor: pointer;
 }
 .track .title {
@@ -643,16 +793,16 @@ input:-webkit-autofill:active {
 }
 .track .artist {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-muted);
 }
 .track .playtime-string {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--text-muted);
   padding-right: 3px;
 }
 .track .track-number {
   font-weight: 800;
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 .track .cover {
@@ -666,22 +816,22 @@ input:-webkit-autofill:active {
 }
 .track .rank {
   font-weight: 800;
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 .track .liked {
   font-size: 1.3rem;
-  color: #333;
+  color: var(--heart-off);
 }
 .text-heart {
-  color: rgba(179, 4, 4, 1)
+  color: var(--accent)
 }
 .track .liked:hover {
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 .track .liked .active {
   opacity: 1;
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 .like-overlay .liked {
   font-size: 1.3rem;
@@ -690,11 +840,11 @@ input:-webkit-autofill:active {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 .like-overlay .liked:hover {
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 .like-overlay .liked .active {
   opacity: 1;
-  color: rgba(179, 4, 4, 1);
+  color: var(--accent);
 }
 
 /** SM */

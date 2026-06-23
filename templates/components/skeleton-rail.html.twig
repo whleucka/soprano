@@ -1,0 +1,9 @@
+{# Placeholder cards shown while a horizontal rail's real content loads via
+   HTMX. The HTMX swap replaces these on first paint. `count` controls how many. #}
+{% for i in 1..(count|default(8)) %}
+  <div class="album-cont skeleton-card" aria-hidden="true">
+    <div class="cover skeleton"></div>
+    <span class="skeleton skeleton-line"></span>
+    <span class="skeleton skeleton-line short"></span>
+  </div>
+{% endfor %}
