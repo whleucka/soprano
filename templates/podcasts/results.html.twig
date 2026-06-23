@@ -10,7 +10,7 @@
 {% else %}
   {% if r.items %}
     <h2 class="mb-2"><i class="bi {{ r.icon }} text-secondary pe-1"></i> {{ r.title }}</h2>
-    <div class="d-flex flex-wrap align-content-start gap-3 mb-4">
+    <div class="card-grid mb-4">
       {% for p in r.items %}
         {% include 'components/podcast-card.html.twig' with { p: p } %}
       {% endfor %}
