@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Soprano;
 
 use App\Services\Soprano\MusicService;
+use App\Services\Soprano\RadioService;
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -10,7 +11,10 @@ use Echo\Framework\Routing\Route\Get;
 #[Group(middleware: ["client"])]
 class HomeController extends Controller
 {
-    public function __construct(private MusicService $music) {}
+    public function __construct(
+        private MusicService $music,
+        private RadioService $radio,
+    ) {}
 
     #[Get("/", "home.root")]
     public function index(): void
@@ -61,6 +65,14 @@ class HomeController extends Controller
     {
         return $this->render("home/top-played-month.html.twig", [
             "tracks" => $this->music->topPlayedThisMonth(),
+        ]);
+    }
+
+    #[Get("/home/favourite-radio", "home.favourite-radio")]
+    public function favouriteRadio(): string
+    {
+        return $this->render("home/favourite-radio.html.twig", [
+            "stations" => $this->radio->getLikedStations(),
         ]);
     }
 

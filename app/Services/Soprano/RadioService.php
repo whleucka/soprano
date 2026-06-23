@@ -35,6 +35,32 @@ class RadioService
         return array_map(fn($row) => $this->mapStationRow($row), $rows);
     }
 
+    /**
+     * Stations liked by the current client, most recently liked first.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getLikedStations(): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT rs.hash AS hash,
+                    rs.name AS name,
+                    rs.cover AS cover,
+                    rs.country AS country,
+                    rs.province AS province,
+                    rs.city AS city,
+                    rs.src AS src,
+                    1 AS liked
+             FROM radio_stations rs
+             JOIN radio_station_likes rsl ON rsl.radio_station_id = rs.id
+             WHERE rsl.client_id = ?
+             ORDER BY rsl.created_at DESC",
+            [client()->id],
+        );
+
+        return array_map(fn($row) => $this->mapStationRow($row), $rows);
+    }
+
     public function isStationLiked(string $hash): bool
     {
         $station = $this->getStation($hash);
