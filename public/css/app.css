@@ -44,6 +44,7 @@
   /* Brand accent */
   --accent: #b30404;
   --accent-2: #ff00aa;
+  --accent-3: #00ffab;
   --accent-grad: linear-gradient(90deg, #b30404 41%, #ff00aa 100%);
 
   /* Text */
@@ -782,7 +783,7 @@ input:-webkit-autofill:active {
   box-shadow: inset 3px 0 0 var(--accent);
 }
 .track.active .title {
-  color: var(--accent-2);
+  color: var(--accent-3);
 }
 .track:hover {
   background: var(--surface-hover);

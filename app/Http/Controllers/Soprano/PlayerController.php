@@ -132,11 +132,11 @@ class PlayerController extends Controller
             'hash'   => $station->hash,
             'title'  => $station->name,
             'artist' => trim(implode(', ', array_filter([$station->city, $station->province]))) ?: ($station->country ?? ''),
-            'album'  => $station->name,
+            'album'  => "Soprano Radio",
             'cover'  => $station->cover,
             'src'    => $station->src,
         ]);
-        $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
+        $this->hxTrigger("loadPlayer");
     }
 
     #[Get("/player/play/podcast/{hash}/episode/{episodeId}", "player.play-podcast-episode")]
@@ -160,7 +160,7 @@ class PlayerController extends Controller
             'cover'  => $episode['image'],
             'src'    => $episode['audio'],
         ]);
-        $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
+        $this->hxTrigger("loadPlayer");
     }
 
     #[Get("/player/play/podcast-surprise", "player.play-podcast-surprise")]
@@ -177,11 +177,11 @@ class PlayerController extends Controller
             'hash'   => $episode['podcast_hash'],
             'title'  => $episode['title'],
             'artist' => $episode['podcast_title'],
-            'album'  => $episode['podcast_title'],
+            'album'  => "Soprano Podcasts",
             'cover'  => $episode['image'],
             'src'    => $episode['audio'],
         ]);
-        $this->hxTrigger("loadPlayer, playlistQueue, playlistActions");
+        $this->hxTrigger("loadPlayer");
     }
 
     #[Get("/player/play/{hash}", "player.play")]
