@@ -764,6 +764,7 @@ class MusicService
 
     public function tracksByDecade(int $decade, int $limit = 2500): array
     {
+        $album_title = $decade . "s";
         $rows = db()->fetchAll(
             "SELECT t.hash AS track_hash,
                     al.hash AS album_hash,
@@ -781,11 +782,12 @@ class MusicService
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = t.artist_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
-             WHERE al.year REGEXP '^[0-9]{4}$'
+             WHERE (al.year REGEXP '^[0-9]{4}$'
                AND CAST(al.year AS UNSIGNED) BETWEEN ? AND ?
+               OR al.title LIKE ?)
              ORDER BY al.year ASC, ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
              LIMIT ?",
-            [client()->id, $decade, $decade + 9, $limit]
+            [client()->id, $decade, $decade + 9, $album_title, $limit]
         );
 
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
