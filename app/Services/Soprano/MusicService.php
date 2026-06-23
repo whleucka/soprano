@@ -764,7 +764,7 @@ class MusicService
 
     public function tracksByDecade(int $decade, int $limit = 2500): array
     {
-        $album_title = $decade . "s";
+        $album_title = $decade < 2000 ? substr($decade, 2, 2) . "s"  : $decade . "s";
         $rows = db()->fetchAll(
             "SELECT t.hash AS track_hash,
                     al.hash AS album_hash,
