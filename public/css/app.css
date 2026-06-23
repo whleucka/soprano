@@ -464,9 +464,6 @@ input:-webkit-autofill:active {
 }
 
 /** Radio */
-.radio-cont {
-  width: 75px;
-}
 .radio-badge {
   color: #fff;
   background-color: #ff0000;
@@ -715,9 +712,6 @@ input:-webkit-autofill:active {
 
   .album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
     font-size: 0.9rem;
-  }
-  .radio-cont {
-    width: 172px;
   }
 }
 

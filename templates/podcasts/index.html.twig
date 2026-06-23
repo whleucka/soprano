@@ -17,11 +17,11 @@
     <div class="podcast-actions d-flex flex-wrap align-items-center gap-2 mt-2">
       <button class="btn btn-sm btn-outline-light"
               hx-get="{{ uri('podcasts.best') }}" hx-target="#podcast-results" hx-swap="innerHTML">
-        <i class="bi bi-star-fill pe-1"></i> Best Podcasts
+        <i class="bi bi-star-fill pe-1"></i> Best 
       </button>
       <button class="btn btn-sm btn-outline-light"
               hx-get="{{ uri('player.play-podcast-surprise') }}" hx-swap="none">
-        <i class="bi bi-shuffle pe-1"></i> Surprise me
+        <i class="bi bi-shuffle pe-1"></i> Random
       </button>
       <select class="form-select form-select-sm genre-select" name="genre"
               hx-get="{{ uri('podcasts.best') }}" hx-target="#podcast-results" hx-swap="innerHTML" hx-trigger="change">
