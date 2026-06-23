@@ -369,7 +369,7 @@ input:-webkit-autofill:active {
 * Hero
 */
 .hero {
-  min-height: 120px;
+  min-height: 170px;
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
   overflow: hidden;
 }
@@ -536,6 +536,7 @@ input:-webkit-autofill:active {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ddd;
+  font-size: 0.8rem;
 }
 #podcasts .podcast-actions .btn:hover {
   background: rgba(255, 255, 255, 0.12);
