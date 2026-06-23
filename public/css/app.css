@@ -477,7 +477,11 @@ input:-webkit-autofill:active {
   min-width: 0;
   margin-right: 0;
 }
-.card-grid .cover {
+/* Higher specificity than .album-cont/.radio-cont .cover so the cover fills
+   its grid cell — otherwise the fixed 100px cover leaves the corner-anchored
+   like heart floating off to the right of the cell. */
+.card-grid .album-cont .cover,
+.card-grid .radio-cont .cover {
   width: 100%;
   height: auto;
   aspect-ratio: 1 / 1;
@@ -758,6 +762,25 @@ input:-webkit-autofill:active {
   .radio-cont .cover {
     width: 180px;
     height: 180px;
+  }
+
+  /* On desktop the 3-up grid spreads into sparse columns — fall back to the
+     packed flex layout with fixed-size cards. Mobile keeps the 3-per-row grid. */
+  .card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 1rem;
+  }
+  .card-grid .album-cont,
+  .card-grid .radio-cont {
+    width: 180px;
+  }
+  .card-grid .album-cont .cover,
+  .card-grid .radio-cont .cover {
+    width: 180px;
+    height: 180px;
+    aspect-ratio: auto;
   }
 }
 
