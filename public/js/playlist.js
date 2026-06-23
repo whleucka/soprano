@@ -1,10 +1,12 @@
 // Toggles the rhs playlist view
 function togglePlaylist() {
+  var hash = document.getElementById("audio").dataset.hash;
   var playlist = document.getElementById("playlist");
   var view = document.getElementById("view");
   playlist.classList.toggle("d-none");
   view.classList.toggle("d-none");
   view.classList.toggle("d-md-block");
+  updateActiveTrack(hash)
 }
 
 function hidePlaylist() {

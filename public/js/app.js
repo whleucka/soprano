@@ -20,7 +20,7 @@ document.addEventListener('htmx:afterRequest', () => {
 
 function updateActiveTrack(hash) {
   document.querySelectorAll(".track").forEach((track) => {
-    if (track.id == 'playlist-'+hash) {
+    if (track.id == hash) {
       track.focus();
       track.classList.add("active");
     } else {

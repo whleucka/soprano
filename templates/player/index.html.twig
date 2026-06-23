@@ -67,7 +67,7 @@ var player_track = {
   {% endif %}
 </div>
 {% if player.type == 'radio' %}
-<audio id="audio" data-type="radio" data-src="{{ player.src }}"></audio>
+<audio data-hash="{{ player.hash }}" id="audio" data-type="radio" data-src="{{ player.src }}"></audio>
 {% else %}
-<audio id="audio" src="{{ player.src }}"></audio>
+<audio data-hash="{{ player.hash }}" id="audio" src="{{ player.src }}"></audio>
 {% endif %}
