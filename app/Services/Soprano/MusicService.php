@@ -130,6 +130,34 @@ class MusicService
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
+    public function playlistTracks(int $playlistId): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash,
+                    al.hash AS album_hash,
+                    al.title AS album,
+                    al.cover AS cover,
+                    al.dominant_color AS dominant_color,
+                    al.year AS year,
+                    ar.hash AS artist_hash,
+                    ar.name AS artist,
+                    tm.title AS title,
+                    tm.track_number AS track_number,
+                    tm.playtime_string AS playtime_string,
+                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+             FROM playlist_tracks pt
+             JOIN tracks t ON t.id = pt.track_id
+             JOIN albums al ON al.id = t.album_id
+             JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE pt.playlist_id = ?
+             ORDER BY pt.id ASC",
+            [client()->id, $playlistId],
+        );
+
+        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+    }
+
     /**
      * Find likely duplicate tracks, grouped two ways:
      *   - within_album: same album + same title (e.g. a "(1)" or "_<ticks>" copy)

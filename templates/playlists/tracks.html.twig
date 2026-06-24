@@ -1,0 +1,22 @@
+{% if tracks %}
+  {% for track in tracks %}
+    {% embed 'components/track-row.html.twig' with {
+      track: track,
+      player: player,
+      play_uri: uri('player.play-collection-track', [hash, loop.index0])
+    } %}
+      {% block leading %}
+        <span class="track-number text-end me-3">{{ loop.index }}</span>
+      {% endblock %}
+      {% block menu %}
+        <li><a class="dropdown-item" href="{{ uri('track.index', [track.hash]) }}"><i class="bi bi-music-note pe-1"></i> {{ track.title }}</a></li>
+        <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></li>
+        <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ track.album }}</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" hx-get="{{ uri('playlists.remove-track', [hash, track.hash]) }}" hx-swap="none"><i class="bi bi-trash3 pe-1"></i> Remove from playlist</a></li>
+      {% endblock %}
+    {% endembed %}
+  {% endfor %}
+{% else %}
+  <p class="lead p-3"><i class="bi bi-info pe-1 text-warning"></i> This playlist is empty. Add tracks from the <i class="bi bi-three-dots-vertical"></i> menu on any track.</p>
+{% endif %}

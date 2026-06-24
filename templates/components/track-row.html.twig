@@ -31,6 +31,9 @@
         <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></li>
         <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ track.album }}</a></li>
       {% endblock %}
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modal"
+             hx-get="{{ uri('playlists.modal') }}?src=track&ref={{ track.hash }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-music-note-list pe-1"></i> Add to playlist</a></li>
     </ul>
   </div>
 </div>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MusicService, PlaylistService, PlayerService, PodcastService, RadioService, SearchService, TranscodeService};
+use App\Services\Soprano\{MusicService, PlaylistService, PlaylistsService, PlayerService, PodcastService, RadioService, SearchService, TranscodeService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -16,6 +16,7 @@ class PlayerController extends Controller
         private SearchService $search,
         private PlaylistService $playlist,
         private MusicService $music,
+        private PlaylistsService $playlists,
         private RadioService $radio,
         private PodcastService $podcasts,
         private TranscodeService $transcode,
@@ -98,6 +99,38 @@ class PlayerController extends Controller
             $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
             return $this->play($search['tracks'][0]['hash']);
         }
+    }
+
+    #[Get("/player/play/collection/{hash}", "player.play-collection")]
+    public function playCollection(string $hash)
+    {
+        $playlist = $this->playlists->getPlaylistByHash($hash);
+        if (!$playlist) {
+            return;
+        }
+        $tracks = $this->music->playlistTracks((int) $playlist->id);
+        if (empty($tracks)) {
+            return;
+        }
+        $this->playlist->setPlaylist($tracks);
+        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        return $this->play($tracks[0]['hash']);
+    }
+
+    #[Get("/player/play/collection/{hash}/track/{index}", "player.play-collection-track")]
+    public function playCollectionTrack(string $hash, int $index)
+    {
+        $playlist = $this->playlists->getPlaylistByHash($hash);
+        if (!$playlist) {
+            return;
+        }
+        $tracks = $this->music->playlistTracks((int) $playlist->id);
+        if (empty($tracks[$index])) {
+            return;
+        }
+        $this->playlist->setPlaylist($tracks, $index);
+        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        return $this->play($tracks[$index]['hash']);
     }
 
     #[Get("/player/play/album/{hash}", "player.play-album")]

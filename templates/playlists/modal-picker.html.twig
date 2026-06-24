@@ -1,0 +1,39 @@
+<div id="modal-picker">
+{% set qs = '?src=' ~ src ~ (ref ? '&ref=' ~ ref : '') %}
+<div class="modal-header">
+  <h5 class="modal-title"><i class="bi bi-music-note-list pe-1"></i> {% if count > 0 %}Add to playlist{% else %}New playlist{% endif %}</h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+  {% if count > 0 %}
+    <p class="text-muted small mb-2">{{ count }} track{% if count != 1 %}s{% endif %} selected</p>
+  {% endif %}
+  {% if playlists %}
+    <div class="list-group mb-3">
+      {% for p in playlists %}
+        {% if count > 0 %}
+          <button type="button" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between"
+                  hx-get="{{ uri('playlists.toggle', [p.hash]) }}{{ qs }}"
+                  hx-target="#modal .modal-content" hx-swap="innerHTML">
+            <span class="truncate">{{ p.name }}</span>
+            <i class="bi {% if p.contains %}bi-check-circle-fill text-success{% else %}bi-plus-circle{% endif %}"></i>
+          </button>
+        {% else %}
+          <a class="list-group-item list-group-item-action" href="{{ uri('playlists.show', [p.hash]) }}"
+             data-bs-dismiss="modal" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">{{ p.name }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form hx-post="{{ uri('playlists.create') }}" hx-target="#modal .modal-content" hx-swap="innerHTML">
+    {{ csrf()|raw }}
+    {% if src %}<input type="hidden" name="src" value="{{ src }}" />{% endif %}
+    {% if ref %}<input type="hidden" name="ref" value="{{ ref }}" />{% endif %}
+    <div class="input-group">
+      <input type="text" name="name" class="form-control" placeholder="New playlist name" autocomplete="off" required />
+      <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg"></i></button>
+    </div>
+  </form>
+</div>
+</div>

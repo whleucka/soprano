@@ -476,6 +476,9 @@ input:-webkit-autofill:active {
 #artist #play-artist {
   font-size: 2rem;
 }
+#playlist-view #play-playlist {
+  font-size: 2rem;
+}
 #artist .album {
   color: var(--text-muted);
 }
@@ -852,6 +855,53 @@ input:-webkit-autofill:active {
 @media (min-width: 576px) {
 }
 
+/* Modal — align Bootstrap's dark theme surfaces with the app tokens */
+#modal .modal-content {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--surface-2);
+  border-radius: var(--radius);
+}
+#modal .modal-header,
+#modal .modal-footer {
+  border-color: var(--surface-2);
+}
+#modal .list-group-item {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--surface-2);
+}
+#modal .list-group-item-action:hover,
+#modal .list-group-item-action:focus {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+#modal .form-control {
+  background: var(--surface-input);
+  color: var(--text);
+  border-color: var(--surface-2);
+}
+#modal .form-control:focus {
+  background: var(--surface-input);
+  color: var(--text);
+  border-color: var(--surface-hover);
+  box-shadow: none;
+  outline: none;
+}
+#modal .btn-primary {
+  background: var(--surface-2);
+  border-color: var(--surface-2);
+  color: var(--text);
+}
+#modal .btn-primary:hover,
+#modal .btn-primary:focus,
+#modal .btn-primary:active {
+  background: var(--surface-hover);
+  border-color: var(--surface-hover);
+  color: var(--text);
+  box-shadow: none;
+}
+
 /** MD */
 @media (min-width: 768px) {
   .lead {
@@ -861,6 +911,9 @@ input:-webkit-autofill:active {
     font-size: 3rem;
   }
   #artist #play-artist {
+    font-size: 3rem;
+  }
+  #playlist-view #play-playlist {
     font-size: 3rem;
   }
   .cover {

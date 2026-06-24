@@ -1,4 +1,6 @@
 {% if search.tracks %}
 <button class="btn btn-sm btn-dark me-2" hx-get="{{ uri("player.play-search") }}" hx-swap="none"><i class="bi bi-play-fill text-success"></i></button>
+<button class="btn btn-sm btn-dark me-2" title="Add to playlist" data-bs-toggle="modal" data-bs-target="#modal"
+        hx-get="{{ uri('playlists.modal') }}?src=search" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-music-note-list"></i></button>
 <button class="btn btn-sm btn-dark" hx-get="{{ uri("search.clear") }}" hx-swap="none"><i class="bi bi-trash text-danger"></i></button>
 {% endif %}

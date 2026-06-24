@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block head_css %}
-  <link rel="stylesheet" href="/css/app.css?v=20260623o">
+  <link rel="stylesheet" href="/css/app.css?v=20260624d">
   <link rel="stylesheet" href="/css/bootstrap-icons/bootstrap-icons.min.css">
 {% endblock %}
 
@@ -31,4 +31,12 @@
     </div>
     <section id="player" class="d-flex" hx-get="{{ uri("player.index") }}" hx-trigger="load, loadPlayer from:body"></section>
   </main>
+{% endblock %}
+
+{% block footer %}
+  <div id="modal" class="modal fade" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+    <div class="modal-dialog">
+      <div class="modal-content"></div>
+    </div>
+  </div>
 {% endblock %}
