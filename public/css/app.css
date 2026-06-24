@@ -238,6 +238,13 @@ input:-webkit-autofill:active {
   min-width: 210px;
 }
 
+/* Bootstrap's .nav defaults to flex-wrap: wrap, which makes this vertical nav
+   size its width to the widest child — so long playlist names never get an
+   ellipsis. Pin to nowrap so .truncate links clip to the sidebar width. */
+#sidebar .nav {
+  flex-wrap: nowrap;
+}
+
 #sidebar .nav-link {
   color: var(--text-muted);
   font-size: 1.2rem;
@@ -614,6 +621,7 @@ input:-webkit-autofill:active {
 .card-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
   gap: 1rem;
 }
 .card-grid .album-cont,
@@ -746,6 +754,19 @@ input:-webkit-autofill:active {
   color: var(--text-soft);
 }
 #podcasts .play-episode:hover {
+  color: #fff;
+}
+
+/** Playlists */
+#playlists .playlists-actions .btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ddd;
+  font-size: 0.8rem;
+}
+#podcaplaylists .playlists-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 

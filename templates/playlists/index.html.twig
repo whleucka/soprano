@@ -4,29 +4,18 @@
 
 {% block view %}
 <section id="playlists" class="h-100 d-flex flex-column">
-  <div class="hero d-flex align-items-center p-3">
+  <div class="hero d-flex flex-column justify-content-center p-3">
     <div class="d-flex align-items-center">
       <div class="d-flex flex-column">
         <h1 class="title"><i class="bi bi-music-note-list pe-1"></i> Playlists</h1>
       </div>
     </div>
+    <div class="playlists-actions actions d-flex flex-nowrap align-items-center gap-2 mt-2">
+      <button class="btn btn-sm btn-outline-light" hx-get="{{ uri('playlists.modal') }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker">
+        <i class="bi bi-plus-circle pe-1"></i> New 
+      </button>
+    </div>
   </div>
-  <div class="scrollable p-3 card-grid">
-    {% if playlists %}
-      {% for p in playlists %}
-        <div class="d-flex flex-column album-cont" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" style="cursor: pointer;">
-          <div class="cover-wrap position-relative">
-            <a href="{{ uri('playlists.show', [p.hash]) }}">
-              <img title="{{ p.name }}" class="cover" src="{{ p.cover }}" loading="lazy" />
-            </a>
-          </div>
-          <span title="{{ p.name }}" class="title truncate fw-bold mt-1">{{ p.name }}</span>
-          <span class="artist small truncate">{{ p.track_count }} track{% if p.track_count != 1 %}s{% endif %}</span>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No playlists yet. Create one from the sidebar, or from the <i class="bi bi-three-dots-vertical"></i> menu on any track.</p>
-    {% endif %}
-  </div>
+  <div class="scrollable p-3 card-grid" hx-get="{{ uri('playlists.load') }}" hx-trigger="load, loadPlaylists from:body"></div>
 </section>
 {% endblock %}

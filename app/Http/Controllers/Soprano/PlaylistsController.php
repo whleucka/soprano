@@ -25,7 +25,13 @@ class PlaylistsController extends Controller
     #[Get("/playlists", "playlists.index")]
     public function index(): string
     {
-        return $this->render("playlists/index.html.twig", [
+        return $this->render("playlists/index.html.twig");
+    }
+
+    #[Get("/playlists/load", "playlists.load")]
+    public function load(): string
+    {
+        return $this->render("playlists/load.html.twig", [
             "playlists" => $this->playlists->getPlaylists(),
         ]);
     }
@@ -91,7 +97,7 @@ class PlaylistsController extends Controller
         $src = request()->get->get("src");
         $ref = request()->get->get("ref");
         $this->playlists->toggleSelection($hash, $this->resolveSelection($src, $ref));
-        $this->hxTrigger("playlistTracks-$hash, loadSidebar");
+        $this->hxTrigger("playlistTracks-$hash, loadPlaylists, loadSidebar, loadTop");
         return $this->renderModal($src, $ref);
     }
 
@@ -99,7 +105,7 @@ class PlaylistsController extends Controller
     public function removeTrack(string $hash, string $trackHash): void
     {
         $this->playlists->removeTrack($hash, $trackHash);
-        $this->hxTrigger("playlistTracks-$hash, loadSidebar");
+        $this->hxTrigger("playlistTracks-$hash, loadPlaylists, loadSidebar, loadTop");
     }
 
     #[Post("/playlists", "playlists.create")]
@@ -114,7 +120,7 @@ class PlaylistsController extends Controller
             if ($playlist) {
                 $this->playlists->addSelection($playlist->hash, $this->resolveSelection($src, $ref));
             }
-            $this->hxTrigger("loadSidebar");
+            $this->hxTrigger("loadSidebar, loadPlaylists, loadTop");
         }
 
         return $this->renderModal($src, $ref);
@@ -124,7 +130,7 @@ class PlaylistsController extends Controller
     public function delete(string $hash): void
     {
         $this->playlists->deletePlaylist($hash);
-        $this->hxTrigger("loadSidebar");
+        $this->hxTrigger("loadSidebar, loadPlaylists, loadTop");
         // HX-Location does a client-side htmx navigation (swap #view), unlike
         // HX-Redirect which forces a full page reload.
         $this->setHeader("HX-Location", json_encode([

@@ -1,0 +1,15 @@
+{% if playlists %}
+  {% for p in playlists %}
+    <div class="d-flex flex-column album-cont" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" style="cursor: pointer;">
+      <div class="cover-wrap position-relative">
+        <a href="{{ uri('playlists.show', [p.hash]) }}">
+          <img title="{{ p.name }}" class="cover" src="{{ p.cover }}" loading="lazy" />
+        </a>
+      </div>
+      <span title="{{ p.name }}" class="title truncate fw-bold mt-1">{{ p.name }}</span>
+      <span class="artist small truncate">{{ p.track_count }} track{% if p.track_count != 1 %}s{% endif %}</span>
+    </div>
+  {% endfor %}
+{% else %}
+  <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No playlists yet.</p>
+{% endif %}

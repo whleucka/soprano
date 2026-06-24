@@ -1,22 +1,24 @@
-<div class="p-3 d-flex flex-column h-100">
+<div class="p-3 d-flex flex-column h-100 truncate">
   <h1><i class="bi bi-music-note-beamed pe-1"></i> Soprano</h1>
 
-  <nav class="nav flex-column mt-4" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
-    <a class="nav-link shadow-none border-0" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a>
-    <a class="nav-link shadow-none border-0" href="{{ uri("search.index") }}"><i class="bi bi-search pe-1"></i> Search</a>
-    <a class="nav-link shadow-none border-0" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a>
-    <a class="nav-link shadow-none border-0" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a>
-  </nav>
+    <nav class="nav flex-column mt-4" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
+      <a class="nav-link shadow-none border-0" href="{{ uri("home.index") }}"><i class="bi bi-house pe-1"></i> Home</a>
+      <a class="nav-link shadow-none border-0" href="{{ uri("search.index") }}"><i class="bi bi-search pe-1"></i> Search</a>
+      <a class="nav-link shadow-none border-0" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a>
+      <a class="nav-link shadow-none border-0" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a>
+    </nav>
 
-  <h2 class="mt-4">Playlists</h2>
-  <nav class="nav flex-column">
-    <a class="nav-link shadow-none border-0" style="cursor: pointer;"
-       data-bs-toggle="modal" data-bs-target="#modal"
-       hx-get="{{ uri('playlists.modal') }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-plus-circle pe-1"></i> New playlist</a>
-  </nav>
-  <nav class="nav flex-column scrollable" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
-    {% for p in playlists %}
-      <a class="nav-link shadow-none border-0 truncate" title="{{ p.name }}" href="{{ uri('playlists.show', [p.hash]) }}"><i class="bi bi-music-note-list pe-1"></i> {{ p.name }}</a>
-    {% endfor %}
-  </nav>
+    <nav class="nav flex-column">
+      <a class="nav-link shadow-none border-0" style="cursor: pointer;"
+         data-bs-toggle="modal" data-bs-target="#modal"
+         hx-get="{{ uri('playlists.modal') }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-plus-circle pe-1"></i> New playlist</a>
+    </nav>
+
+  <div class="scrollable">
+    <nav class="nav flex-column" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+      {% for p in playlists %}
+        <a class="nav-link shadow-none border-0 truncate" title="{{ p.name }}" href="{{ uri('playlists.show', [p.hash]) }}"><i class="bi bi-music-note-list pe-1"></i> {{ p.name }}</a>
+      {% endfor %}
+    </nav>
+  </div>
 </div>

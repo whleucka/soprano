@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{SearchService, MusicService, PlayerService};
+use App\Services\Soprano\{SearchService, MusicService, PlayerService, PlaylistsService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -13,7 +13,8 @@ class SearchController extends Controller
     public function __construct(
         private SearchService $search, 
         private MusicService $music, 
-        private PlayerService $player
+        private PlayerService $player,
+        private PlaylistsService $playlists,
     ) {}
 
     #[Get("/search", "search.index")]
