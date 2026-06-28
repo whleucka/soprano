@@ -1,4 +1,4 @@
-<a id="play-artist" class="btn shadow-none border-0" hx-boost="true" hx-push-url="false" href="{{ uri("player.play-artist", [artist_hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
-<button class="btn shadow-none border-0" title="Add to playlist" data-bs-toggle="modal" data-bs-target="#modal"
+<a id="play-artist" class="btn btn-sm btn-outline-light" title="Play" hx-boost="true" hx-push-url="false" href="{{ uri("player.play-artist", [artist_hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
+<button class="btn btn-sm btn-outline-light" title="Add to playlist" data-bs-toggle="modal" data-bs-target="#modal"
         hx-get="{{ uri('playlists.modal') }}?src=artist&ref={{ artist_hash }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-music-note-list"></i></button>
-<button onclick="copyClipboard(event)" class="share btn shadow-none border-0"><i class="bi bi-share-fill"></i></button>
+<button onclick="copyClipboard(event)" class="share btn btn-sm btn-outline-light" title="Share"><i class="bi bi-share-fill"></i></button>

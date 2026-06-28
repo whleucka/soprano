@@ -4,19 +4,19 @@
 
 {% block view %}
 <section id="artist" class="h-100 d-flex flex-column">
-  <div class="hero d-flex align-items-center p-3">
+  <div class="hero d-flex flex-column justify-content-center p-3">
     <div class="d-flex align-items-center truncate">
       <img class="cover me-3" src="{{ artist_image|default('/images/no-album-art.png') }}" />
       <div class="d-flex flex-column truncate">
         <h1 class="artist truncate">{{ artist }}</h1>
         <h5 class="stats">{{ album_count }} {{ album_count == 1 ? "album" : "albums" }} &middot; {{ track_count }} {{ track_count == 1 ? "track" : "tracks" }} &middot; {{ runtime }}</h5>
+        <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2" hx-get="{{ uri("artist.actions", [artist_hash]) }}" hx-trigger="load, artistActions from:body"></div>
       </div>
     </div>
   </div>
-  <div class="actions align-items-center d-flex p-2" hx-get="{{ uri("artist.actions", [artist_hash]) }}" hx-trigger="load, artistActions from:body"></div>
   <div class="p-2 scrollable">
     <h2><i class="bi bi-star-fill text-warning pe-1"></i> Top Tracks</h2>
-    <div id="top-tracks" hx-get="{{ uri("artist.top-tracks", [artist_hash]) }}" hx-trigger="load, topTracks from:body"></div>
+    <div id="top-tracks" hx-get="{{ uri("artist.top-tracks", [artist_hash]) }}" hx-trigger="load, topTracks from:body">{% include 'components/skeleton-rows.html.twig' with { count: 5, cover: true } %}</div>
 
     <h2 class="mt-4"><i class="bi bi-disc text-secondary pe-1"></i> Discography</h2>
     <div id="discography" class="d-flex justify-content-start scrollable py-1" hx-get="{{ uri("artist.discography", [artist_hash]) }}" hx-trigger="load"></div>

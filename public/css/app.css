@@ -193,6 +193,19 @@ body {
   min-height: 60px !important;
 }
 
+/* The top search bar is fixed-height with a roomy p-3 input; on mobile that
+   steals too much vertical space between the hero and the player, so trim it. */
+@media (max-width: 767.98px) {
+  #top .content {
+    height: 46px !important;
+    min-height: 46px !important;
+  }
+  #top .content input {
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+  }
+}
+
 #top .dropdown-menu form:hover {
   background: #52575C;
 }
@@ -363,6 +376,54 @@ input:-webkit-autofill:active {
   width: 55%;
   margin-top: 0.35rem;
 }
+/* Track-list placeholders — reuse .track spacing so real rows swap in with
+   no layout shift. The heart and number are faint static stand-ins; only the
+   cover and text lines shimmer, matching where the real eye-catching content
+   (album art + titles) lands. */
+.skeleton-row {
+  cursor: default;
+  pointer-events: none;
+}
+.skeleton-row .skeleton-heart {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  margin: 0 0.5rem;
+  border-radius: 50%;
+  background: var(--surface-hover);
+  opacity: 0.5;
+}
+.skeleton-row .skeleton-number {
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 3px;
+  background: var(--surface-hover);
+  opacity: 0.5;
+}
+.skeleton-row .skeleton-cover {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+}
+.skeleton-row .skeleton-line {
+  width: 60%;
+  margin-top: 0;
+}
+.skeleton-row .skeleton-line.short {
+  width: 35%;
+  margin-top: 0.3rem;
+}
+/* Stagger line widths so the stack reads like real, varied track titles. */
+.skeleton-row:nth-child(even) .skeleton-line { width: 72%; }
+.skeleton-row:nth-child(3n) .skeleton-line { width: 48%; }
+.skeleton-row:nth-child(even) .skeleton-line.short { width: 28%; }
+.skeleton-row .skeleton-line.time {
+  flex: 0 0 auto;
+  width: 2rem;
+  margin-left: 0.5rem;
+}
 @keyframes skeleton-shimmer {
   100% {
     transform: translateX(100%);
@@ -397,10 +458,6 @@ input:-webkit-autofill:active {
 
 #album #play {
   font-size: 4rem;
-}
-
-#album #play-album {
-  font-size: 2rem;
 }
 
 #album .btn:hover {
@@ -480,12 +537,6 @@ input:-webkit-autofill:active {
   color: var(--accent);
 }
 
-#artist #play-artist {
-  font-size: 2rem;
-}
-#playlist-view #play-playlist {
-  font-size: 2rem;
-}
 #artist .album {
   color: var(--text-muted);
 }
@@ -501,11 +552,10 @@ input:-webkit-autofill:active {
 /* Each section sets its own --hero-color for wayfinding; the gradient shape
    lives here once. A soft top sheen over the colour fade adds a little depth. */
 .hero {
-  min-height: 150px;
+  padding: 40px 15px !important;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 40%),
     linear-gradient(180deg, var(--hero-color, rgba(100, 100, 100, 0.3)) 0%, rgba(0, 0, 0, 0) 100%);
-  overflow: hidden;
 }
 
 #home .hero     { --hero-color: rgba(60, 140, 22, 0.8); }
@@ -514,13 +564,13 @@ input:-webkit-autofill:active {
 #radio .hero    { --hero-color: rgba(255, 157, 0, 0.8); }
 #podcasts .hero { --hero-color: rgba(255, 0, 0, 0.75); }
 .hero .cover {
-  width: 80px;
-  height: 80px;
+  width: 140px;
+  height: 140px;
 }
 
 .hero h1 {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.015em;
 }
@@ -541,6 +591,7 @@ input:-webkit-autofill:active {
   overflow-x: auto;
   flex-wrap: nowrap;
   flex-shrink: 0;
+  min-height: 28px;
 }
 
 .actions > * {
@@ -556,6 +607,21 @@ input:-webkit-autofill:active {
 .actions .btn {
   color: var(--text-muted);
   font-size: 1.0rem;
+}
+
+/* Action buttons that live inside the hero — translucent pill style shared
+   across every module, matching the podcasts/playlists look. Icon-only. */
+.hero .actions .btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ddd;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.hero .actions .btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }
 
 /** Micro-interactions
@@ -673,7 +739,6 @@ input:-webkit-autofill:active {
 /* Scoped to .like-wrap so the standalone detail-page heart gets coloured
    without clobbering the white .like-overlay hearts on the podcast cards. */
 #podcasts .like-wrap .liked {
-  font-size: 1.5rem;
   color: var(--heart-off);
 }
 #podcasts .like-wrap .liked:hover,
@@ -725,24 +790,13 @@ input:-webkit-autofill:active {
 #podcasts .podcast-actions .genre-select option {
   color: #000;
 }
-/* Soften the stark btn-outline-light border to match the search/genre controls. */
-#podcasts .podcast-actions .btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ddd;
-  font-size: 0.8rem;
-}
-#podcasts .podcast-actions .btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
 #podcasts .podcast-description {
   max-width: 70ch;
   color: #aaa;
 }
 #podcasts .episode {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
 }
 #podcasts .episode-cover {
   border-radius: 4px;
@@ -757,23 +811,7 @@ input:-webkit-autofill:active {
   color: #fff;
 }
 
-/** Playlists */
-#playlists .playlists-actions .btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ddd;
-  font-size: 0.8rem;
-}
-#podcaplaylists .playlists-actions .btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
 /** Track */
-#track #play-track {
-  font-size: 2rem;
-}
 #track .liked {
   color: var(--heart-off);
 }
@@ -928,21 +966,11 @@ input:-webkit-autofill:active {
   .lead {
     font-size: 1.3rem;
   }
-  #album #play-album {
-    font-size: 3rem;
-  }
-  #artist #play-artist {
-    font-size: 3rem;
-  }
-  #playlist-view #play-playlist {
-    font-size: 3rem;
-  }
   .cover {
     border-radius: 6px;
   }
 
   #view .hero {
-    min-height: 200px;
   }
 
   #view .hero .cover {

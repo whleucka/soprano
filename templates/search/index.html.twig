@@ -4,14 +4,15 @@
 
 {% block view %}
 <section id="search" class="h-100 d-flex flex-column">
-  <div class="hero d-flex align-items-center p-3">
-    <div class="d-flex align-items-center">
-      <div class="d-flex flex-column">
-        <h1 class="title"><i class="bi bi-search pe-1"></i> Search</h1>
-      </div>
-    </div>
+  <div class="hero d-flex flex-column justify-content-center p-3">
+    <h1 class="title"><i class="bi bi-search pe-1"></i> Search</h1>
+    <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2" hx-get="{{ uri("search.actions") }}" hx-trigger="load, searchActions from:body"></div>
   </div>
-  <div class="actions d-flex p-2" hx-get="{{ uri("search.actions") }}" hx-trigger="load, searchActions from:body"></div>
-  <div class="tracks scrollable" hx-get="{{ uri('search.results') }}" hx-trigger="load, searchResults from:body"></div>
+  <div class="tracks scrollable" hx-get="{{ uri('search.results') }}" hx-trigger="load, searchResults from:body">
+    {# Only the track-result path is slow enough to need a placeholder, and only
+       it renders rows. With no active term the load resolves to the browse grid,
+       so we leave that empty rather than flash mismatched track-row skeletons. #}
+    {% if search.term is defined and search.term %}{% include 'components/skeleton-rows.html.twig' with { cover: true } %}{% endif %}
+  </div>
 </section>
 {% endblock %}

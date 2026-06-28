@@ -9,13 +9,13 @@
     <div class="d-flex flex-column truncate">
       <h1 class="title truncate">{{ podcast.title }}</h1>
       {% if podcast.publisher %}<h3 class="artist truncate"><i class="bi bi-mic pe-1"></i> {{ podcast.publisher }}</h3>{% endif %}
-    </div>
-  </div>
-  <div class="actions align-items-center d-flex p-2">
-    <div class="like-wrap d-flex align-items-center"
-         hx-get="{{ uri('podcasts.like', [podcast.hash]) }}"
-         hx-trigger="like-{{ podcast.hash }} from:body">
-      {% include 'components/like-btn.html.twig' with { liked: podcast.liked, like_uri: uri('podcasts.like-toggle', [podcast.hash]) } %}
+      <div class="actions align-items-center d-flex p-2">
+        <div class="like-wrap d-flex align-items-center"
+             hx-get="{{ uri('podcasts.like', [podcast.hash]) }}"
+             hx-trigger="like-{{ podcast.hash }} from:body">
+          {% include 'components/like-btn.html.twig' with { liked: podcast.liked, like_uri: uri('podcasts.like-toggle', [podcast.hash]) } %}
+        </div>
+      </div>
     </div>
   </div>
   <div class="p-3 scrollable">

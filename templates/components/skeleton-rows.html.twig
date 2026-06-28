@@ -1,0 +1,27 @@
+{# Placeholder rows shown while a track list loads via HTMX. The HTMX swap
+   replaces these on first paint. Mirrors the track-row footprint so swapping
+   in real rows causes no layout shift.
+
+   Params:
+     count    — how many rows (default 10)
+     cover    — leading is a 40px album-art square (queue, top-tracks)
+                rather than a slim track-number (album, playlist)
+     subtitle — show the second (artist) line (default true; album tracks
+                render title-only, so pass false there) #}
+{% for i in 1..(count|default(10)) %}
+  <div class="track skeleton-row p-1 d-flex align-items-center" aria-hidden="true">
+    <span class="skeleton-heart"></span>
+    {% if cover|default(false) %}
+      <span class="skeleton skeleton-cover me-2"></span>
+    {% else %}
+      <span class="skeleton-number me-3"></span>
+    {% endif %}
+    <div class="d-flex flex-column flex-grow-1 truncate">
+      <span class="skeleton skeleton-line"></span>
+      {% if subtitle|default(true) %}
+        <span class="skeleton skeleton-line short"></span>
+      {% endif %}
+    </div>
+    <span class="skeleton skeleton-line time"></span>
+  </div>
+{% endfor %}

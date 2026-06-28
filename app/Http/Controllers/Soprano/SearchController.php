@@ -27,7 +27,9 @@ class SearchController extends Controller
             $this->hxTrigger("loadTop, searchResults, searchActions");
         }
 
-        return $this->render("search/index.html.twig");
+        return $this->render("search/index.html.twig", [
+            "search" => $this->search->getSearch(),
+        ]);
     }
 
     #[Get("/search/recently-played", "search.recently-played")]

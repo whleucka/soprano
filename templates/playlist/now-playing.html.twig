@@ -1,10 +1,13 @@
-<div class="d-flex align-items-center px-2">
-  <img class="cover" src="{{ current.cover }}" />
-  <div class="d-flex flex-column truncate p-2 mt-2 ms-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
-    <h1 class="title m-0 mb-2 truncate"><a class="text-reset text-decoration-none" href="{{ uri("track.index", [current.hash]) }}">{{ current.title }}</a></h1>
-    <h3 class="artist truncate"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [current.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ current.artist }}</a></h3>
-    <h3 class="album truncate"><a class="text-reset text-decoration-none" href="{{ uri("album.index", [current.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ current.album }}</a></h3>
+<div class="d-flex flex-column px-2">
+  <div class="d-flex align-items-center">
+    <img class="cover" src="{{ current.cover }}" />
+    <div class="d-flex flex-column truncate p-2 mt-2 ms-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
+      <h1 class="title m-0 mb-2 truncate"><a class="text-reset text-decoration-none" href="{{ uri("track.index", [current.hash]) }}">{{ current.title }}</a></h1>
+      <h3 class="artist truncate"><a class="text-reset text-decoration-none" href="{{ uri("artist.index", [current.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ current.artist }}</a></h3>
+      <h3 class="album truncate"><a class="text-reset text-decoration-none" href="{{ uri("album.index", [current.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ current.album }}</a></h3>
+    </div>
   </div>
+  <div class="actions align-items-center d-flex" hx-get="{{ uri('playlist.actions') }}" hx-trigger="load, playlistActions from:body"></div>
 </div>
 <script>
 (function() {

@@ -18,8 +18,8 @@ class PodcastsController extends Controller
     public function index(): string
     {
         return $this->render("podcasts/index.html.twig", [
-            "liked"  => $this->podcasts->getLikedPodcasts(),
             "genres" => $this->podcasts->genres(),
+            "liked"  => $this->podcasts->getLikedPodcasts(),
         ]);
     }
 

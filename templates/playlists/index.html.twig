@@ -11,8 +11,8 @@
       </div>
     </div>
     <div class="playlists-actions actions d-flex flex-nowrap align-items-center gap-2 mt-2">
-      <button class="btn btn-sm btn-outline-light" hx-get="{{ uri('playlists.modal') }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker">
-        <i class="bi bi-plus-circle pe-1"></i> New 
+      <button class="btn btn-sm btn-outline-light" title="New playlist" data-bs-toggle="modal" data-bs-target="#modal" hx-get="{{ uri('playlists.modal') }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker">
+        <i class="bi bi-plus"></i>
       </button>
     </div>
   </div>
