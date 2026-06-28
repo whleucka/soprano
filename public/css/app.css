@@ -310,8 +310,8 @@ input:-webkit-autofill:active {
 }
 
 #playlist #now-playing .cover {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
 }
 
 #playlist #now-playing .title {
@@ -563,9 +563,10 @@ input:-webkit-autofill:active {
 #music .hero    { --hero-color: rgba(23, 96, 255, 0.8); }
 #radio .hero    { --hero-color: rgba(255, 157, 0, 0.8); }
 #podcasts .hero { --hero-color: rgba(255, 0, 0, 0.75); }
+
 .hero .cover {
-  width: 140px;
-  height: 140px;
+  width: 80px;
+  height: 80px;
 }
 
 .hero h1 {
@@ -974,8 +975,8 @@ input:-webkit-autofill:active {
   }
 
   #view .hero .cover {
-    width: 160px;
-    height: 160px;
+    width: 140px;
+    height: 140px;
   }
 
   #view .content h2 {

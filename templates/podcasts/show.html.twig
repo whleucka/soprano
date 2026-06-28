@@ -4,12 +4,16 @@
 
 {% block view %}
 <section id="podcasts" class="h-100 d-flex flex-column">
-  <div class="hero d-flex align-items-center p-3">
-    <img class="cover me-3" src="{{ podcast.image }}" alt="" />
+  <div class="hero d-flex flex-column justify-content-center p-3">
     <div class="d-flex flex-column truncate">
-      <h1 class="title truncate">{{ podcast.title }}</h1>
-      {% if podcast.publisher %}<h3 class="artist truncate"><i class="bi bi-mic pe-1"></i> {{ podcast.publisher }}</h3>{% endif %}
-      <div class="actions align-items-center d-flex p-2">
+      <div class="d-flex align-items-start truncate">
+        <img class="cover me-3" src="{{ podcast.image }}" alt="" />
+        <div class="d-flex flex-column truncate">
+          <h1 class="title truncate">{{ podcast.title }}</h1>
+          {% if podcast.publisher %}<h3 class="artist truncate"><i class="bi bi-mic pe-1"></i> {{ podcast.publisher }}</h3>{% endif %}
+        </div>
+      </div>
+      <div class="actions align-items-center d-flex mt-3">
         <div class="like-wrap d-flex align-items-center"
              hx-get="{{ uri('podcasts.like', [podcast.hash]) }}"
              hx-trigger="like-{{ podcast.hash }} from:body">

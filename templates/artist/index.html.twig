@@ -5,13 +5,15 @@
 {% block view %}
 <section id="artist" class="h-100 d-flex flex-column">
   <div class="hero d-flex flex-column justify-content-center p-3">
-    <div class="d-flex align-items-center truncate">
-      <img class="cover me-3" src="{{ artist_image|default('/images/no-album-art.png') }}" />
-      <div class="d-flex flex-column truncate">
-        <h1 class="artist truncate">{{ artist }}</h1>
-        <h5 class="stats">{{ album_count }} {{ album_count == 1 ? "album" : "albums" }} &middot; {{ track_count }} {{ track_count == 1 ? "track" : "tracks" }} &middot; {{ runtime }}</h5>
-        <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2" hx-get="{{ uri("artist.actions", [artist_hash]) }}" hx-trigger="load, artistActions from:body"></div>
+    <div class="d-flex flex-column truncate">
+      <div class="d-flex align-items-start truncate">
+        <img class="cover me-3" src="{{ artist_image|default('/images/no-album-art.png') }}" />
+        <div class="d-flex flex-column truncate">
+          <h1 class="artist truncate">{{ artist }}</h1>
+          <h5 class="stats">{{ album_count }} {{ album_count == 1 ? "album" : "albums" }} &middot; {{ track_count }} {{ track_count == 1 ? "track" : "tracks" }} &middot; {{ runtime }}</h5>
+        </div>
       </div>
+      <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-3" hx-get="{{ uri("artist.actions", [artist_hash]) }}" hx-trigger="load, artistActions from:body"></div>
     </div>
   </div>
   <div class="p-2 scrollable">
