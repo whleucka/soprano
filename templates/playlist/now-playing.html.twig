@@ -7,7 +7,6 @@
       <h3 class="album truncate"><a class="text-reset text-decoration-none" href="{{ uri("album.index", [current.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ current.album }}</a></h3>
     </div>
   </div>
-  <div class="actions align-items-center d-flex" hx-get="{{ uri('playlist.actions') }}" hx-trigger="load, playlistActions from:body"></div>
 </div>
 <script>
 (function() {
