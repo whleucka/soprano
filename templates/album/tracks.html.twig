@@ -3,9 +3,6 @@
     track: track,
     play_uri: uri('player.play-album-track', [album_hash, loop.index0])
   } %}
-    {% block leading %}
-      <span class="track-number text-end me-3">{% if track.track_number %}{{ track.track_number }}{% else %}#{% endif %}</span>
-    {% endblock %}
     {% block subtitle %}{% endblock %}
     {% block menu %}
       <li><a class="dropdown-item" href="{{ uri('track.index', [track.hash]) }}"><i class="bi bi-music-note pe-1"></i> {{ track.title }}</a></li>
