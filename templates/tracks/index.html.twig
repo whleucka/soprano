@@ -10,8 +10,7 @@
       <img class="cover me-3" src="{{ cover }}" />
       <div class="d-flex flex-column truncate">
           <h1 class="title truncate">{{ title }}</h1>
-          <h3 class="album truncate"><a class="text-reset text-decoration-none" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" href="{{ uri("album.index", [album_hash]) }}">{{ album }}</a></h3>
-          <h3 class="artist truncate"><a class="text-reset text-decoration-none" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" href="{{ uri("artist.index", [artist_hash]) }}">{{ artist }}</a></h3>
+          <h5 class="album truncate"><a class="text-reset text-decoration-none" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" href="{{ uri("album.index", [album_hash]) }}">{{ album }}</a> &middot; <a class="text-reset text-decoration-none" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" href="{{ uri("artist.index", [artist_hash]) }}">{{ artist }}</a></h5>
         </div>
       </div>
       <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2" hx-get="{{ uri("track.actions", [hash]) }}" hx-trigger="load, trackActions from:body"></div>

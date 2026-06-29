@@ -552,7 +552,6 @@ input:-webkit-autofill:active {
 /* Each section sets its own --hero-color for wayfinding; the gradient shape
    lives here once. A soft top sheen over the colour fade adds a little depth. */
 .hero {
-  padding: 40px 15px !important;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 40%),
     linear-gradient(180deg, var(--hero-color, rgba(100, 100, 100, 0.3)) 0%, rgba(0, 0, 0, 0) 100%);
@@ -623,6 +622,12 @@ input:-webkit-autofill:active {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.15);
   color: #fff;
+}
+/* The like button arrives via the shared like-btn component (plain `btn liked`,
+   no `btn-sm`), so match it to its btn-sm siblings for a uniform actions row. */
+.hero .actions .btn.liked {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--bs-border-radius-sm);
 }
 
 /** Micro-interactions
@@ -814,7 +819,7 @@ input:-webkit-autofill:active {
 
 /** Track */
 #track .liked {
-  color: var(--heart-off);
+  color: #ddd; /* match the sibling action icons; accent only when liked/hover */
 }
 #track .liked:hover {
   color: var(--accent);
