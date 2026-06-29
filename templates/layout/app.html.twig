@@ -5,23 +5,23 @@
 {% endblock %}
 
 {% block head_css %}
-  <link rel="stylesheet" href="/css/app.css?v=20260629a">
+  <link rel="stylesheet" href="/css/app.css?v=20260629b">
   <link rel="stylesheet" href="/css/bootstrap-icons/bootstrap-icons.min.css">
 {% endblock %}
 
 {% block content %}
-  <main id="app" class="d-flex flex-column p-1" hx-indicator=".hx-indicator">
-    <div id="primary-container" class="d-flex flex-grow-1">
+  <main id="app" class="d-flex flex-column p-1 w-100 h-100 overflow-hidden text-white bg-black" hx-indicator=".hx-indicator">
+    <div id="primary-container" class="d-flex flex-grow-1 overflow-hidden">
       <section id="sidebar" class="d-none d-md-block">
         <div class="content" hx-get="{{ uri("soprano.sidebar") }}" hx-trigger="load, loadSidebar from:body"></div>
-      </section> 
-      <div id="main" class="d-flex flex-column flex-grow-1">
+      </section>
+      <div id="main" class="d-flex flex-column flex-grow-1 overflow-hidden">
         <section id="top">
           <div class="content d-flex align-items-center" hx-get="{{ uri("search.top") }}" hx-trigger="load, loadTop from:body"></div>
         </section>
-        <div id="main-content" class="d-flex flex-grow-1">
-          <section id="view" class="flex-grow-1" hx-history-elt>
-            <div class="content">{% block view %}{% endblock %}</div>
+        <div id="main-content" class="d-flex flex-grow-1 overflow-hidden">
+          <section id="view" class="flex-grow-1 overflow-hidden" hx-history-elt>
+            <div class="content overflow-hidden">{% block view %}{% endblock %}</div>
           </section>
           <section id="playlist" class="d-none h-100">
             <div class="content d-flex flex-column" hx-get="{{ uri("playlist.index") }}" hx-trigger="load, loadPlaylist from:body"></div>

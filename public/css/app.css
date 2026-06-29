@@ -168,26 +168,6 @@ body {
 }
 
 /** Sections */
-#app {
-  color: #fff;
-  background: #000;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-#main {
-  overflow: hidden;
-}
-
-#primary-container {
-  overflow: hidden;
-}
-
-#main-content {
-  overflow: hidden;
-}
-
 #top .content {
   height: 60px !important;
   min-height: 60px !important;
@@ -278,14 +258,6 @@ input:-webkit-autofill:active {
   font-weight: 800;
   color: var(--text-muted);
   font-size: 1.2rem;
-}
-
-#view {
-  overflow: hidden;
-}
-
-#view .content {
-  overflow: hidden;
 }
 
 #view .content h2 {
@@ -456,19 +428,6 @@ input:-webkit-autofill:active {
   font-size: 0.75rem;
 }
 
-#album #play {
-  font-size: 4rem;
-}
-
-#album .btn:hover {
-  color: lightgray;
-}
-
-#album {
-  display: flex;
-  flex-direction: column;
-}
-
 #player {
   height: 75px;
   min-height: 75px;
@@ -528,22 +487,6 @@ input:-webkit-autofill:active {
 }
 #player .liked {
   font-size: 1.5rem;
-  color: var(--heart-off);
-}
-#player .liked:hover {
-  color: var(--accent);
-}
-#player .liked .active {
-  color: var(--accent);
-}
-
-#artist .album {
-  color: var(--text-muted);
-}
-
-#search {
-  display: flex;
-  flex-direction: column;
 }
 
 /**
@@ -641,9 +584,18 @@ input:-webkit-autofill:active {
   transition: color var(--ease), transform var(--ease);
 }
 
+/* Canonical like-heart behaviour — off-colour at rest, accent on hover/when
+   liked, everywhere. Per-context rules below only override size or base colour. */
 .liked,
 .liked .bi {
   transition: color var(--ease), transform var(--ease);
+}
+.liked {
+  color: var(--heart-off);
+}
+.liked:hover,
+.liked .active {
+  color: var(--accent);
 }
 .liked:active {
   transform: scale(0.85);
@@ -742,15 +694,6 @@ input:-webkit-autofill:active {
 }
 
 /** Podcasts */
-/* Scoped to .like-wrap so the standalone detail-page heart gets coloured
-   without clobbering the white .like-overlay hearts on the podcast cards. */
-#podcasts .like-wrap .liked {
-  color: var(--heart-off);
-}
-#podcasts .like-wrap .liked:hover,
-#podcasts .like-wrap .liked .active {
-  color: var(--accent);
-}
 #podcasts .podcast-search {
   max-width: 480px;
 }
@@ -818,13 +761,13 @@ input:-webkit-autofill:active {
 }
 
 /** Track */
+/* Lighter base than --heart-off so the detail-page heart matches the sibling
+   hero action icons; the ID scope out-ranks the global .liked:hover, so the
+   accent-on-hover override is kept explicitly here. */
 #track .liked {
-  color: #ddd; /* match the sibling action icons; accent only when liked/hover */
+  color: #ddd;
 }
 #track .liked:hover {
-  color: var(--accent);
-}
-#track .liked .active {
   color: var(--accent);
 }
 .track {
@@ -890,18 +833,12 @@ input:-webkit-autofill:active {
 }
 .track .liked {
   font-size: 1.3rem;
-  color: var(--heart-off);
 }
 .text-heart {
   color: var(--accent)
 }
-.track .liked:hover {
-  color: var(--accent);
-}
-.track .liked .active {
-  opacity: 1;
-  color: var(--accent);
-}
+/* White hearts floating over cover art — overrides the base off-colour; the
+   later equal-specificity hover/active rules keep the accent transition. */
 .like-overlay .liked {
   font-size: 1.3rem;
   color: #fff;
@@ -914,10 +851,6 @@ input:-webkit-autofill:active {
 .like-overlay .liked .active {
   opacity: 1;
   color: var(--accent);
-}
-
-/** SM */
-@media (min-width: 576px) {
 }
 
 /* Modal — align Bootstrap's dark theme surfaces with the app tokens */
@@ -974,9 +907,6 @@ input:-webkit-autofill:active {
   }
   .cover {
     border-radius: 6px;
-  }
-
-  #view .hero {
   }
 
   #view .hero .cover {
@@ -1095,10 +1025,6 @@ input:-webkit-autofill:active {
   font-size: 0.75rem;
   opacity: 0.85;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/** LG */
-@media (min-width: 992px) {
 }
 
 @media (min-width: 1200px) {

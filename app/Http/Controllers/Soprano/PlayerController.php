@@ -169,7 +169,9 @@ class PlayerController extends Controller
             'cover'  => $station->cover,
             'src'    => $station->src,
         ]);
-        $this->hxTrigger("loadPlayer");
+        // Clearing the playlist makes the rendered queue stale — refresh it so
+        // clicking a leftover row doesn't hit the now-empty playlist (no-op).
+        $this->hxTrigger("loadPlayer, nowPlaying, playlistQueue, playlistActions");
     }
 
     #[Get("/player/play/podcast/{hash}/episode/{episodeId}", "player.play-podcast-episode")]
@@ -193,7 +195,9 @@ class PlayerController extends Controller
             'cover'  => $episode['image'],
             'src'    => $episode['audio'],
         ]);
-        $this->hxTrigger("loadPlayer");
+        // Clearing the playlist makes the rendered queue stale — refresh it so
+        // clicking a leftover row doesn't hit the now-empty playlist (no-op).
+        $this->hxTrigger("loadPlayer, nowPlaying, playlistQueue, playlistActions");
     }
 
     #[Get("/player/play/podcast-surprise", "player.play-podcast-surprise")]
@@ -214,7 +218,9 @@ class PlayerController extends Controller
             'cover'  => $episode['image'],
             'src'    => $episode['audio'],
         ]);
-        $this->hxTrigger("loadPlayer");
+        // Clearing the playlist makes the rendered queue stale — refresh it so
+        // clicking a leftover row doesn't hit the now-empty playlist (no-op).
+        $this->hxTrigger("loadPlayer, nowPlaying, playlistQueue, playlistActions");
     }
 
     #[Get("/player/play/{hash}", "player.play")]
