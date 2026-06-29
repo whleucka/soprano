@@ -553,22 +553,26 @@ input:-webkit-autofill:active {
 }
 
 /* Action buttons that live inside the hero — translucent pill style shared
-   across every module, matching the podcasts/playlists look. Icon-only. */
-.hero .actions .btn {
+   across every module, matching the podcasts/playlists look. Icon-only.
+   The playlist queue's action row reuses the same look for consistency. */
+.hero .actions .btn,
+#playlist .actions .btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ddd;
   font-size: 1.2rem;
   line-height: 1;
 }
-.hero .actions .btn:hover {
+.hero .actions .btn:hover,
+#playlist .actions .btn:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 /* The like button arrives via the shared like-btn component (plain `btn liked`,
    no `btn-sm`), so match it to its btn-sm siblings for a uniform actions row. */
-.hero .actions .btn.liked {
+.hero .actions .btn.liked,
+#playlist .actions .btn.liked {
   padding: 0.25rem 0.5rem;
   border-radius: var(--bs-border-radius-sm);
 }
