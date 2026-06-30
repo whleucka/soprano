@@ -553,7 +553,9 @@ class SyncService
             if ($img === false) {
                 return null;
             }
-            if (!@imagepng($img, $fullPath)) {
+            $ok = @imagepng($img, $fullPath);
+            unset($img);
+            if (!$ok) {
                 return null;
             }
         }

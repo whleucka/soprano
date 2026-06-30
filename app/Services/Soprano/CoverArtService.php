@@ -23,6 +23,7 @@ class CoverArtService
         $size = 32;
         $small = imagecreatetruecolor($size, $size);
         imagecopyresampled($small, $src, 0, 0, 0, 0, $size, $size, imagesx($src), imagesy($src));
+        unset($src);
 
         $buckets = [];
         for ($y = 0; $y < $size; $y++) {
@@ -50,6 +51,8 @@ class CoverArtService
                 $buckets[$key]['b'] += $b;
             }
         }
+
+        unset($small);
 
         if (empty($buckets)) {
             return null;

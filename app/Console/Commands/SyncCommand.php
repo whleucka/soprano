@@ -30,6 +30,10 @@ class SyncCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        // Full-resolution folder covers can decode to large GD bitmaps; give the
+        // CLI headroom beyond the default web php memory_limit.
+        ini_set('memory_limit', '512M');
+
         if ($input->getOption('covers')) {
             return $this->syncCovers($input, $output);
         }
