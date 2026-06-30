@@ -446,17 +446,33 @@ class SyncService
      */
     private function extractAndStoreCover(array $info): array
     {
-        $empty = ['url' => null, 'dominant' => null];
-
-        $data = $info['comments']['picture'][0]['data']
+        $embedded = $info['comments']['picture'][0]['data']
             ?? $info['id3v2']['APIC'][0]['data']
             ?? $info['id3v2']['PIC'][0]['data']
             ?? null;
 
-        if (!is_string($data) || $data === '') {
-            return $empty;
+        // Try embedded art first; fall back to a folder cover if it's missing or
+        // the embedded data is broken (corrupt/unsupported and fails to decode).
+        foreach ([$embedded, $this->findFolderCover($info['filepath'] ?? null)] as $data) {
+            if (!is_string($data) || $data === '') {
+                continue;
+            }
+            $stored = $this->storeCoverData($data);
+            if ($stored !== null) {
+                return $stored;
+            }
         }
 
+        return ['url' => null, 'dominant' => null];
+    }
+
+    /**
+     * Decode raw image bytes, store as a deduped PNG, and return its url + dominant color.
+     *
+     * @return array{url: string, dominant: ?string}|null  null if the data can't be decoded.
+     */
+    private function storeCoverData(string $data): ?array
+    {
         $hash     = md5($data);
         $filename = "{$hash}.png";
         $fullPath = rtrim($this->coversPath, '/') . '/' . $filename;
@@ -464,10 +480,10 @@ class SyncService
         if (!is_file($fullPath)) {
             $img = @imagecreatefromstring($data);
             if ($img === false) {
-                return $empty;
+                return null;
             }
             if (!@imagepng($img, $fullPath)) {
-                return $empty;
+                return null;
             }
         }
 
@@ -475,6 +491,40 @@ class SyncService
             'url'      => $this->publicCovers . $filename,
             'dominant' => $this->coverArt->computeDominantHex($fullPath),
         ];
+    }
+
+    /**
+     * Read raw bytes of a folder-level cover image (cover/folder/front.*), if present.
+     */
+    private function findFolderCover(?string $dir): ?string
+    {
+        if (!is_string($dir) || $dir === '' || !is_dir($dir)) {
+            return null;
+        }
+
+        $names      = ['cover', 'folder', 'front', 'album', 'albumart'];
+        $extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+        $entries = @scandir($dir) ?: [];
+        $lookup  = [];
+        foreach ($entries as $entry) {
+            $lookup[strtolower($entry)] = $entry;
+        }
+
+        foreach ($names as $name) {
+            foreach ($extensions as $ext) {
+                $key = "{$name}.{$ext}";
+                if (!isset($lookup[$key])) {
+                    continue;
+                }
+                $data = @file_get_contents($dir . '/' . $lookup[$key]);
+                if (is_string($data) && $data !== '') {
+                    return $data;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function ensureCoversDir(): void
