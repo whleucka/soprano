@@ -116,6 +116,77 @@ class SyncService
     }
 
     /**
+     * Re-resolve album cover art without a full library scan.
+     *
+     * By default this only touches albums missing a cover (filling holes left by
+     * tracks with no embedded art). With $force it re-extracts every album's cover,
+     * which is useful after changing the extraction logic (e.g. folder-cover fallback).
+     */
+    public function syncCovers(bool $force = false): object
+    {
+        $scanned = 0;
+        $updated = 0;
+        $skipped = 0;
+        $failed  = 0;
+        $success = true;
+        $error   = null;
+
+        try {
+            $this->ensureCoversDir();
+
+            $query = Album::query();
+            if (!$force) {
+                $query->whereNull('cover');
+            }
+
+            foreach ($query->get() as $album) {
+                $scanned++;
+
+                $track = Track::where('album_id', (string) $album->id)->first();
+                if (!$track instanceof Track) {
+                    $skipped++;
+                    continue;
+                }
+
+                try {
+                    $info = $this->analyze((string) $track->pathname);
+                    ['url' => $coverUrl, 'dominant' => $dominant] = $this->extractAndStoreCover($info);
+
+                    if ($coverUrl === null) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    $album->update([
+                        'cover'          => $coverUrl,
+                        'dominant_color' => $dominant,
+                    ]);
+                    $updated++;
+                } catch (\Throwable $e) {
+                    $failed++;
+                    error_log(sprintf(
+                        '[soprano sync] cover refresh failed for album %s: %s',
+                        $album->id,
+                        $e->getMessage(),
+                    ));
+                }
+            }
+        } catch (\Throwable $e) {
+            $success = false;
+            $error   = $e->getMessage();
+        }
+
+        return (object) [
+            'success' => $success,
+            'scanned' => $scanned,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'failed'  => $failed,
+            'error'   => $error,
+        ];
+    }
+
+    /**
      * Delete tracks whose files no longer exist on disk (hashes in the DB
      * that the scan did not see). track_meta and track_plays cascade.
      *
