@@ -3,7 +3,7 @@
 {% block title %}Soprano - {{ name }} {% endblock %}
 
 {% block view %}
-<section id="playlist-view" class="h-100">
+<section id="playlist-view" class="h-100 d-flex flex-column">
   <div class="hero d-flex flex-column justify-content-center p-3"{% if dominant %} style="background: linear-gradient(180deg, rgba({{ dominant[0] }}, {{ dominant[1] }}, {{ dominant[2] }}, 0.5) 0%, rgba(0, 0, 0, 0) 100%);"{% endif %}>
     <div class="d-flex flex-column truncate">
       <div class="d-flex align-items-start truncate">
