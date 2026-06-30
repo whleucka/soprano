@@ -44,7 +44,8 @@
   /* Brand accent */
   --accent: #b30404;
   --accent-2: #ff00aa;
-  --accent-3: #00ffab;
+  --accent-3: azure;
+  --accent-4: peachpuff;
   --accent-grad: linear-gradient(90deg, #b30404 41%, #ff00aa 100%);
 
   /* Text */
@@ -777,6 +778,11 @@ input:-webkit-autofill:active {
 .track {
   position: relative;
   transition: background var(--ease);
+}
+/* An open dropdown must float above sibling rows; the .active row is later in
+   the DOM and opaque, so without this it paints over a menu opening above it. */
+.track:has(.dropdown-menu.show) {
+  z-index: 5;
 }
 .track .dropdown-toggle {
   color: #fff;
