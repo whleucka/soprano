@@ -44,8 +44,8 @@
   /* Brand accent */
   --accent: #b30404;
   --accent-2: #ff00aa;
-  --accent-3: azure;
-  --accent-4: peachpuff;
+  --accent-3: peachpuff;
+  --accent-4: turquoise;
   --accent-grad: linear-gradient(90deg, #b30404 41%, #ff00aa 100%);
 
   /* Text */
