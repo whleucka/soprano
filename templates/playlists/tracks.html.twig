@@ -5,9 +5,6 @@
       player: player,
       play_uri: uri('player.play-collection-track', [hash, loop.index0])
     } %}
-      {% block leading %}
-        <span class="track-number text-end me-3">{{ loop.index }}</span>
-      {% endblock %}
       {% block menu %}
         <li><a class="dropdown-item" href="{{ uri('track.index', [track.hash]) }}"><i class="bi bi-music-note pe-1"></i> {{ track.title }}</a></li>
         <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></li>
