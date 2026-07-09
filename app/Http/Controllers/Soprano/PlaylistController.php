@@ -92,7 +92,7 @@ class PlaylistController extends Controller
     #[Get("/playlist/liked", "playlist.liked")]
     public function liked()
     {
-        $current_playlist = $this->playlist->getPlaylist();
+        $current_playlist = $this->playlist->getPlaylist()['tracks'] ?? [];
         $tracks = $this->music->likedTracks();
         $this->playlist->setPlaylist($tracks ?? []);
         $this->hxTrigger("playlistActions, playlistQueue");
