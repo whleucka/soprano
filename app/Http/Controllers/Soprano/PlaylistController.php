@@ -126,7 +126,7 @@ class PlaylistController extends Controller
     {
         $current_playlist = $this->playlist->getPlaylist()['tracks'] ?? [];
         $tracks = $this->music->likedTracks();
-        $this->playlist->setPlaylist($tracks);
+        $this->playlist->setPlaylist($tracks, source: "liked");
         $this->hxTrigger("playlistActions, playlistQueue");
         if (!$current_playlist) {
             // In this case, we want to load the player so that we 

@@ -18,7 +18,8 @@ class Soprano
             'index' => 0,
             'shuffle' => false,
             'order' => null,
-            'repeat' => 'off'
+            'repeat' => 'off',
+            'source' => null
         ],
         'player' => [
             'type'        => 'track',

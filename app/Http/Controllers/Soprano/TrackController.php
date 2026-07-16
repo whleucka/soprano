@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{CoverArtService, MusicService};
+use App\Services\Soprano\{CoverArtService, MusicService, PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -11,8 +11,9 @@ use Echo\Framework\Routing\Route\Get;
 class TrackController extends Controller
 {
     public function __construct(
-        private MusicService $music, 
-        private CoverArtService $coverArt, 
+        private MusicService $music,
+        private CoverArtService $coverArt,
+        private PlaylistService $playlist,
     ) {}
 
     #[Get("/track/{hash}", "track.index")]
@@ -67,8 +68,34 @@ class TrackController extends Controller
     #[Get("/track/{hash}/like-toggle", "track.like-toggle")]
     public function likeToggle(string $hash): string
     {
-        $this->music->toggleTrackLike($hash);
+        $liked = $this->music->toggleTrackLike($hash);
+        $this->syncLikedQueue($hash, $liked);
         $this->hxTrigger("like-$hash, recentlyLiked");
         return $this->like($hash);
+    }
+
+    /**
+     * While the queue is the liked playlist, mirror like/unlike into it:
+     * a fresh like lands at the end of the queue, an unlike drops out.
+     */
+    private function syncLikedQueue(string $hash, bool $liked): void
+    {
+        if (!$this->playlist->isLikedQueue()) {
+            return;
+        }
+
+        if ($liked) {
+            $track = $this->music->trackRow($hash);
+            if (!$track || $this->playlist->hasTrack($hash)) {
+                return;
+            }
+            $this->playlist->queueTrack($track);
+            // Queueing into an emptied-out liked queue resets the source.
+            $this->playlist->setSource("liked");
+        } elseif (!$this->playlist->removeTrack($hash)) {
+            return;
+        }
+
+        $this->hxTrigger("playlistQueue, playlistActions");
     }
 }

@@ -11,12 +11,13 @@ class PlaylistService
         return state()->playlist;
     }
 
-    public function setPlaylist(array $tracks, int $index = 0)
+    public function setPlaylist(array $tracks, int $index = 0, ?string $source = null)
     {
         state()->playlist = [
             "tracks" => $tracks,
             "index" => $index,
             "order" => null,
+            "source" => $source,
         ];
     }
 
@@ -26,7 +27,74 @@ class PlaylistService
             "tracks" => [],
             "index" => 0,
             "order" => null,
+            "source" => null,
         ];
+    }
+
+    /**
+     * Whether the queue was loaded from the liked playlist — likes/unlikes
+     * mirror into the queue while this is the source.
+     */
+    public function isLikedQueue(): bool
+    {
+        return (state()->playlist["source"] ?? null) === "liked";
+    }
+
+    public function setSource(?string $source): void
+    {
+        state()->playlist = ["source" => $source];
+    }
+
+    public function hasTrack(string $hash): bool
+    {
+        foreach (state()->playlist["tracks"] ?? [] as $track) {
+            if (($track["hash"] ?? null) === $hash) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Drop a track from the queue, keeping the current index and any
+     * shuffle order pointing at the same tracks. Removing the currently
+     * playing track leaves the index on whatever slid into its slot.
+     */
+    public function removeTrack(string $hash): bool
+    {
+        $playlist = state()->playlist;
+        $tracks = $playlist["tracks"] ?? [];
+
+        $remove_at = null;
+        foreach ($tracks as $i => $track) {
+            if (($track["hash"] ?? null) === $hash) {
+                $remove_at = $i;
+                break;
+            }
+        }
+        if ($remove_at === null) {
+            return false;
+        }
+
+        array_splice($tracks, $remove_at, 1);
+
+        $index = (int) ($playlist["index"] ?? 0);
+        if ($remove_at < $index) {
+            $index--;
+        }
+        $index = max(0, min($index, count($tracks) - 1));
+
+        $order = $playlist["order"] ?? null;
+        if (is_array($order)) {
+            $order = array_values(array_filter($order, fn ($i) => $i !== $remove_at));
+            foreach ($order as &$i) {
+                if ($i > $remove_at) $i--;
+            }
+            unset($i);
+        }
+
+        state()->playlist = ["tracks" => $tracks, "index" => $index, "order" => $order];
+        return true;
     }
 
     public function setPlaylistIndex(int $index = 0)

@@ -273,4 +273,106 @@ class PlaylistServiceTest extends TestCase
         $this->assertFalse($this->playlist->changePlaylistTrack(true));
         $this->assertFalse($this->playlist->changePlaylistTrack(true, auto: true));
     }
+
+    public function testLikedSourceTracksLikedQueue(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), source: "liked");
+        $this->assertTrue($this->playlist->isLikedQueue());
+
+        // Loading any other queue drops the liked source.
+        $this->playlist->setPlaylist($this->tracks(2));
+        $this->assertFalse($this->playlist->isLikedQueue());
+    }
+
+    public function testClearPlaylistDropsSource(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), source: "liked");
+        $this->playlist->clearPlaylist();
+
+        $this->assertFalse($this->playlist->isLikedQueue());
+    }
+
+    public function testHasTrackFindsByHash(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3));
+
+        $this->assertTrue($this->playlist->hasTrack("t1"));
+        $this->assertFalse($this->playlist->hasTrack("nope"));
+    }
+
+    public function testRemoveTrackBeforeCurrentKeepsCurrentTrack(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(4), 2);
+
+        $this->assertTrue($this->playlist->removeTrack("t0"));
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame(["t1", "t2", "t3"], array_column($state["tracks"], "hash"));
+        // Index follows the current track to its new slot.
+        $this->assertSame("t2", $state["tracks"][$state["index"]]["hash"]);
+    }
+
+    public function testRemoveTrackAfterCurrentLeavesIndexAlone(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(4), 1);
+
+        $this->assertTrue($this->playlist->removeTrack("t3"));
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame(1, $state["index"]);
+        $this->assertSame("t1", $state["tracks"][$state["index"]]["hash"]);
+    }
+
+    public function testRemoveMissingTrackReturnsFalse(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3));
+
+        $this->assertFalse($this->playlist->removeTrack("nope"));
+        $this->assertCount(3, $this->playlist->getPlaylist()["tracks"]);
+    }
+
+    public function testRemoveLastRemainingTrackClampsIndex(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(1));
+
+        $this->assertTrue($this->playlist->removeTrack("t0"));
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame([], $state["tracks"]);
+        $this->assertSame(0, $state["index"]);
+    }
+
+    public function testRemoveTrackUnderShuffleKeepsOrderWalkingSameTracks(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(5), 0);
+        $this->playlist->toggleShuffle();
+
+        $this->assertTrue($this->playlist->removeTrack("t3"));
+
+        $state = $this->playlist->getPlaylist();
+        $order = $state["order"];
+        $sorted = $order;
+        sort($sorted);
+        // Order is a permutation of the surviving indices…
+        $this->assertSame(range(0, 3), $sorted);
+        // …and walking it never yields the removed track.
+        $walked = [$state["tracks"][$state["index"]]["hash"]];
+        for ($i = 0; $i < 3; $i++) {
+            $walked[] = $this->playlist->changePlaylistTrack(true)["hash"];
+        }
+        $this->assertNotContains("t3", $walked);
+        $this->assertCount(4, array_unique($walked));
+    }
+
+    public function testSetSourceRestoresLikedAfterQueueTrackReset(): void
+    {
+        // Liking into an emptied-out liked queue goes through queueTrack's
+        // empty path, which resets the source — setSource puts it back.
+        $this->playlist->setPlaylist($this->tracks(1), source: "liked");
+        $this->playlist->removeTrack("t0");
+        $this->playlist->queueTrack(["hash" => "new", "title" => "New"]);
+        $this->playlist->setSource("liked");
+
+        $this->assertTrue($this->playlist->isLikedQueue());
+    }
 }

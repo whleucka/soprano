@@ -136,23 +136,28 @@ class MusicService
         return (bool) $like;
     }
 
-    public function toggleTrackLike(string $hash): void
+    /**
+     * Returns the new liked state.
+     */
+    public function toggleTrackLike(string $hash): bool
     {
         $track = $this->getTrack($hash);
         if (!$track) {
-            return;
+            return false;
         }
         $like = TrackLike::where("track_id", $track->id)
             ->andWhere("client_id", client()->id)->first();
 
         if ($like) {
             $like->delete();
-        } else {
-            TrackLike::create([
-                'track_id'  => $track->id,
-                'client_id' => client()->id,
-            ]);
+            return false;
         }
+
+        TrackLike::create([
+            'track_id'  => $track->id,
+            'client_id' => client()->id,
+        ]);
+        return true;
     }
 
     public function albumTracks(int $albumId): array
