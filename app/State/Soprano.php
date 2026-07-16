@@ -16,7 +16,9 @@ class Soprano
         'playlist' => [
             'tracks' => [],
             'index' => 0,
-            'shuffle' => false
+            'shuffle' => false,
+            'order' => null,
+            'repeat' => 'off'
         ],
         'player' => [
             'type'        => 'track',
@@ -41,7 +43,9 @@ class Soprano
         foreach (['search', 'playlist', 'player'] as $key) {
             $data = session()->get($key);
             if (!empty($data)) {
-                $this->data[$key] = $data;
+                // Merge over defaults so sessions from before a key existed
+                // (e.g. playlist 'order'/'repeat') still have every key.
+                $this->data[$key] = array_merge($this->data[$key], $data);
             }
         }
     }

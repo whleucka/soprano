@@ -78,6 +78,13 @@ class PlaylistController extends Controller
         $this->hxTrigger("playlistActions");
     }
 
+    #[Get("/playlist/repeat", "playlist.repeat")]
+    public function repeat()
+    {
+        $this->playlist->cycleRepeat();
+        $this->hxTrigger("playlistActions");
+    }
+
     #[Get("/playlist/random", "playlist.random")]
     public function random()
     {

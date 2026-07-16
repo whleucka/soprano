@@ -1,0 +1,139 @@
+{% extends "layout/app.html.twig" %}
+
+{% block title %}Soprano - {{ review.year }} Wrapped{% endblock %}
+
+{% block view %}
+<section id="wrapped" class="h-100 d-flex flex-column">
+  <div class="hero d-flex flex-column justify-content-center p-3">
+    <div class="d-flex flex-column truncate">
+      <h5 class="stats mb-1">Your year in review</h5>
+      <h1 class="wrapped-title truncate">{{ review.year }} Wrapped</h1>
+      {% if review.totals.plays > 0 %}
+        <h5 class="stats">{{ review.totals.plays }} plays &middot; {{ review.totals.hours >= 2 ? review.totals.hours ~ " hours" : review.totals.minutes ~ " minutes" }} &middot; {{ review.totals.days }} {{ review.totals.days == 1 ? "day" : "days" }} with music</h5>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="p-3 scrollable">
+    {% if review.totals.plays == 0 %}
+      <p class="lead"><i class="bi bi-stars text-warning pe-1"></i> Nothing played in {{ review.year }} yet — press play and check back.</p>
+    {% else %}
+
+      <div class="wrapped-tiles">
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ review.totals.minutes }}</span>
+          <span class="wrapped-label">minutes listened</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ review.totals.tracks }}</span>
+          <span class="wrapped-label">different tracks</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ review.totals.artists }}</span>
+          <span class="wrapped-label">artists</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ review.totals.albums }}</span>
+          <span class="wrapped-label">albums</span>
+        </div>
+      </div>
+
+      {% if review.obsession or review.peak_day %}
+        <div class="wrapped-callouts mt-4" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+          {% if review.obsession %}
+            <a class="wrapped-callout" href="{{ uri('artist.index', [review.obsession.hash]) }}">
+              <i class="bi bi-fire"></i>
+              <span>Your {{ review.obsession.month }} obsession was <b>{{ review.obsession.artist }}</b> — {{ review.obsession.plays }} plays in one month.</span>
+            </a>
+          {% endif %}
+          {% if review.peak_day %}
+            <div class="wrapped-callout">
+              <i class="bi bi-calendar-heart"></i>
+              <span>Biggest day: <b>{{ review.peak_day.date }}</b>, with {{ review.peak_day.plays }} plays.</span>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if review.top_artists %}
+        <h2 class="mt-5"><i class="bi bi-person-hearts text-danger pe-1"></i> Top Artists</h2>
+        <div class="wrapped-artists py-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+          {% for a in review.top_artists %}
+            <a class="wrapped-artist" href="{{ uri('artist.index', [a.hash]) }}">
+              <span class="wrapped-rank">{{ loop.index }}</span>
+              <img src="{{ a.image|default('/images/no-album-art.png') }}" alt="" loading="lazy">
+              <span class="wrapped-artist-name truncate" title="{{ a.name }}">{{ a.name }}</span>
+              <span class="wrapped-plays">{{ a.plays }} plays</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if review.top_tracks %}
+        <h2 class="mt-5"><i class="bi bi-star-fill text-warning pe-1"></i> Top Tracks</h2>
+        <div class="wrapped-tracks py-2">
+          {% for t in review.top_tracks %}
+            <div class="wrapped-track" hx-get="{{ uri('player.play', [t.hash]) }}" hx-swap="none" title="Play {{ t.title }}">
+              <span class="wrapped-rank">{{ loop.index }}</span>
+              <img src="{{ t.cover|default('/images/no-album-art.png') }}" alt="" loading="lazy">
+              <span class="d-flex flex-column truncate">
+                <span class="title truncate">{{ t.title }}</span>
+                <span class="artist small truncate">{{ t.artist }}</span>
+              </span>
+              <span class="wrapped-plays ms-auto">{{ t.plays }} plays</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if review.top_albums %}
+        <h2 class="mt-5"><i class="bi bi-disc text-secondary pe-1"></i> Top Albums</h2>
+        <div class="wrapped-albums py-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+          {% for al in review.top_albums %}
+            <a class="wrapped-album" href="{{ uri('album.index', [al.hash]) }}">
+              <img src="{{ al.cover|default('/images/no-album-art.png') }}" alt="" loading="lazy">
+              <span class="title truncate" title="{{ al.title }}">{{ al.title }}</span>
+              <span class="artist small truncate">{{ al.artist }} &middot; {{ al.plays }} plays</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if review.top_genres %}
+        <h2 class="mt-5"><i class="bi bi-vinyl-fill text-info pe-1"></i> Top Genres</h2>
+        {% set gmax = (review.top_genres|first).plays %}
+        <div class="wrapped-genres py-2">
+          {% for g in review.top_genres %}
+            <div class="wrapped-genre">
+              <span class="wrapped-genre-name truncate">{{ g.genre }}</span>
+              <span class="wrapped-genre-bar"><span style="width: {{ (g.plays / gmax * 100)|round }}%"></span></span>
+              <span class="wrapped-plays">{{ g.plays }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <h2 class="mt-5"><i class="bi bi-bar-chart-fill text-success pe-1"></i> Month by Month</h2>
+      <div class="wrapped-chart py-2">
+        {% for m in review.by_month %}
+          <div class="wrapped-bar" title="{{ m.month }}: {{ m.plays }} plays">
+            <span class="wrapped-bar-fill" style="--h: {{ (m.plays / review.by_month_max * 100)|round }}"></span>
+            <span class="wrapped-bar-label">{{ m.month|slice(0, 1) }}</span>
+          </div>
+        {% endfor %}
+      </div>
+
+      <h2 class="mt-5"><i class="bi bi-clock-history text-warning pe-1"></i> Listening Clock</h2>
+      <div class="wrapped-chart wrapped-clock py-2">
+        {% for plays in review.by_hour %}
+          <div class="wrapped-bar" title="{{ '%02d'|format(loop.index0) }}:00 — {{ plays }} plays">
+            <span class="wrapped-bar-fill" style="--h: {{ (plays / review.by_hour_max * 100)|round }}"></span>
+            <span class="wrapped-bar-label">{{ loop.index0 % 6 == 0 ? loop.index0 : '' }}</span>
+          </div>
+        {% endfor %}
+      </div>
+
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

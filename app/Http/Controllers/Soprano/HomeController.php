@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Soprano;
 use App\Services\Soprano\MusicService;
 use App\Services\Soprano\RadioService;
 use App\Services\Soprano\PodcastService;
+use App\Services\Soprano\WrappedService;
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -16,6 +17,7 @@ class HomeController extends Controller
         private MusicService $music,
         private RadioService $radio,
         private PodcastService $podcasts,
+        private WrappedService $wrapped,
     ) {}
 
     #[Get("/", "home.root")]
@@ -27,7 +29,12 @@ class HomeController extends Controller
     #[Get("/home", "home.index")]
     public function home(): string
     {
-        return $this->render("home/index.html.twig");
+        return $this->render("home/index.html.twig", [
+            // Seasonal banner (Dec 15 – Jan 15); the /wrapped page itself
+            // works year-round for any year.
+            "wrapped_season" => $this->wrapped->isSeason(),
+            "wrapped_year"   => $this->wrapped->seasonYear(),
+        ]);
     }
 
     #[Get("/home/recently-added", "home.recently-added")]

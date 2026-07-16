@@ -1050,3 +1050,284 @@ input:-webkit-autofill:active {
     min-width: 500px;
   }
 }
+
+/** Wrapped (year in review) */
+#wrapped .hero { --hero-color: rgba(179, 4, 4, 0.85); }
+
+#wrapped .hero .wrapped-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(90deg, #fff 30%, var(--accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Home banner — only rendered Dec 15 through Jan 15 */
+.wrapped-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius);
+  background: var(--accent-grad);
+  color: #fff;
+  text-decoration: none;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.wrapped-banner:hover,
+.wrapped-banner:focus {
+  color: #fff;
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.wrapped-banner > .bi-stars { font-size: 1.6rem; }
+
+.wrapped-banner-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.wrapped-banner-sub {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+/* Headline stat tiles */
+.wrapped-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.wrapped-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.wrapped-num {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.wrapped-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Obsession / peak-day callouts */
+.wrapped-callouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.wrapped-callout {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-soft);
+  text-decoration: none;
+}
+
+.wrapped-callout .bi { font-size: 1.4rem; color: var(--accent-2); }
+.wrapped-callout b { color: var(--text); }
+
+a.wrapped-callout:hover,
+a.wrapped-callout:focus {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* Ranked lists (artists + tracks) */
+.wrapped-rank {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  min-width: 1.6rem;
+  text-align: center;
+}
+
+.wrapped-artists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.wrapped-artist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 0.75rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  text-align: center;
+}
+
+.wrapped-artist:hover,
+.wrapped-artist:focus {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.wrapped-artist img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.wrapped-artist-name {
+  font-weight: 700;
+  max-width: 100%;
+}
+
+.wrapped-plays {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.wrapped-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wrapped-track {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.wrapped-track:hover { background: var(--surface-hover); }
+
+.wrapped-track img {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+/* Top albums grid */
+.wrapped-albums {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.wrapped-album {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.wrapped-album:hover,
+.wrapped-album:focus {
+  color: var(--text);
+  filter: brightness(1.1);
+}
+
+.wrapped-album img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.35rem;
+}
+
+.wrapped-album .title { font-weight: 700; }
+
+/* Genre bars */
+.wrapped-genres {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 560px;
+}
+
+.wrapped-genre {
+  display: grid;
+  grid-template-columns: minmax(90px, 150px) 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.wrapped-genre-name { font-weight: 700; }
+
+.wrapped-genre-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.wrapped-genre-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--accent-grad);
+}
+
+/* Month / hour bar charts */
+.wrapped-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 150px;
+  max-width: 640px;
+}
+
+.wrapped-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+
+.wrapped-bar-fill {
+  width: 100%;
+  /* --h is the bar's 0–100 value set inline; the label row (1.1rem) is
+     reserved so a 100% bar never overflows the fixed chart height. */
+  height: calc((100% - 1.1rem) * var(--h, 0) / 100);
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent-grad);
+}
+
+.wrapped-bar-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  height: 1rem;
+  line-height: 1rem;
+}

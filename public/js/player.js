@@ -189,7 +189,9 @@ function setupRadio() {
       return;
     }
     if (progressBar) progressBar.style.width = 0;
-    next();
+    // auto=1 tells the server this is a natural end-of-track advance, so the
+    // repeat mode applies (repeat-one replays, repeat-off stops at queue end).
+    htmx.ajax('GET', next_track_url + '?auto=1', {swap: 'none'});
   }
 
   audio.onerror = function () {

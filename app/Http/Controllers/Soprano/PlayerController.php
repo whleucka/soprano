@@ -34,7 +34,10 @@ class PlayerController extends Controller
     #[Get("/player/next-track", "player.next-track")]
     public function nextTrack()
     {
-        $next = $this->playlist->changePlaylistTrack(true);
+        // auto=1 marks a natural end-of-track advance, which is where the
+        // repeat mode applies (replay on 'one', stop at queue end on 'off').
+        $auto = (bool) request()->get->get("auto");
+        $next = $this->playlist->changePlaylistTrack(true, $auto);
         if ($next) {
             $this->hxTrigger("nowPlaying");
             return $this->play($next['hash']);
