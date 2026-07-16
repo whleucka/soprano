@@ -36,6 +36,45 @@ class PlaylistService
         ];
     }
 
+    /**
+     * Splice a track into the queue right after the current one ("play
+     * next") or at the end ("add to queue"), keeping any shuffle order
+     * walking the same tracks it was.
+     */
+    public function queueTrack(array $track, bool $next = false): void
+    {
+        $playlist = state()->playlist;
+        $tracks = $playlist["tracks"] ?? [];
+
+        if (empty($tracks)) {
+            $this->setPlaylist([$track]);
+            return;
+        }
+
+        $index = (int) ($playlist["index"] ?? 0);
+        $insert_at = $next ? $index + 1 : count($tracks);
+        array_splice($tracks, $insert_at, 0, [$track]);
+
+        $order = $playlist["order"] ?? null;
+        if (is_array($order)) {
+            // Keep the shuffled walk valid: shift indices at/after the
+            // insert point, then slot the new track in — right after the
+            // current track for play-next, at the end of the walk otherwise.
+            foreach ($order as &$i) {
+                if ($i >= $insert_at) $i++;
+            }
+            unset($i);
+            if ($next) {
+                $pos = array_search($index, $order, true);
+                array_splice($order, ($pos === false ? 0 : $pos) + 1, 0, [$insert_at]);
+            } else {
+                $order[] = $insert_at;
+            }
+        }
+
+        state()->playlist = ["tracks" => $tracks, "order" => $order];
+    }
+
     public function toggleShuffle()
     {
         $playlist = state()->playlist;

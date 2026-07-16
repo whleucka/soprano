@@ -48,6 +48,22 @@ class MusicService
         return Track::where('hash', $hash)->first();
     }
 
+    /**
+     * Single track in the shared feed row shape — used to splice one
+     * track into the play queue.
+     */
+    public function trackRow(string $hash): ?array
+    {
+        $row = db()->fetch(
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
+             WHERE t.hash = ?",
+            [client()->id, $hash],
+        );
+
+        return $row ? $this->mapTrackRow($row) : null;
+    }
+
     public function getAlbumByHash(string $hash): ?Album
     {
         return Album::where('hash', $hash)->first();

@@ -201,6 +201,71 @@ class PlaylistServiceTest extends TestCase
         $this->assertFalse($this->playlist->changePlaylistTrack(true));
     }
 
+    public function testQueueNextInsertsAfterCurrentTrack(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), 1);
+
+        $this->playlist->queueTrack(["hash" => "new", "title" => "New"], next: true);
+
+        $hashes = array_column($this->playlist->getPlaylist()["tracks"], "hash");
+        $this->assertSame(["t0", "t1", "new", "t2"], $hashes);
+        $this->assertSame("new", $this->playlist->changePlaylistTrack(true)["hash"]);
+    }
+
+    public function testQueueLastAppendsToEnd(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), 1);
+
+        $this->playlist->queueTrack(["hash" => "new", "title" => "New"]);
+
+        $hashes = array_column($this->playlist->getPlaylist()["tracks"], "hash");
+        $this->assertSame(["t0", "t1", "t2", "new"], $hashes);
+        // Current position is untouched.
+        $this->assertSame(1, $this->playlist->getPlaylist()["index"]);
+    }
+
+    public function testQueueIntoEmptyQueueStartsNewQueue(): void
+    {
+        $this->playlist->clearPlaylist();
+
+        $this->playlist->queueTrack(["hash" => "new", "title" => "New"], next: true);
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame(["new"], array_column($state["tracks"], "hash"));
+        $this->assertSame(0, $state["index"]);
+    }
+
+    public function testQueueNextUnderShufflePlaysQueuedTrackNext(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(6), 2);
+        $this->playlist->toggleShuffle();
+
+        $this->playlist->queueTrack(["hash" => "new", "title" => "New"], next: true);
+
+        // The queued track comes immediately, then the walk still visits
+        // every remaining track exactly once.
+        $this->assertSame("new", $this->playlist->changePlaylistTrack(true)["hash"]);
+        $seen = ["t2", "new"];
+        for ($i = 0; $i < 5; $i++) {
+            $seen[] = $this->playlist->changePlaylistTrack(true)["hash"];
+        }
+        $this->assertCount(7, array_unique($seen));
+    }
+
+    public function testQueueLastUnderShufflePlaysQueuedTrackLast(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(4), 0);
+        $this->playlist->toggleShuffle();
+
+        $this->playlist->queueTrack(["hash" => "new", "title" => "New"]);
+
+        $walk = [];
+        for ($i = 0; $i < 4; $i++) {
+            $walk[] = $this->playlist->changePlaylistTrack(true)["hash"];
+        }
+        $this->assertSame("new", end($walk));
+    }
+
     public function testEmptyQueueReturnsFalse(): void
     {
         $this->playlist->clearPlaylist();

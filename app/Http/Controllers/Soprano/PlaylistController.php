@@ -71,6 +71,31 @@ class PlaylistController extends Controller
         $this->hxTrigger("loadPlaylist");
     }
 
+    #[Get("/playlist/queue-next/{hash}", "playlist.queue-next")]
+    public function queueNext(string $hash): void
+    {
+        $this->queueTrack($hash, true);
+    }
+
+    #[Get("/playlist/queue-last/{hash}", "playlist.queue-last")]
+    public function queueLast(string $hash): void
+    {
+        $this->queueTrack($hash, false);
+    }
+
+    private function queueTrack(string $hash, bool $next): void
+    {
+        $track = $this->music->trackRow($hash);
+        if (!$track) {
+            return;
+        }
+        $was_empty = empty($this->playlist->getPlaylist()["tracks"]);
+        $this->playlist->queueTrack($track, $next);
+        // A previously empty queue has no player hooked up — load it so
+        // next/prev reach the freshly queued track (same as liked()).
+        $this->hxTrigger("playlistQueue, playlistActions" . ($was_empty ? ", loadPlayer" : ""));
+    }
+
     #[Get("/playlist/shuffle", "playlist.shuffle")]
     public function shuffle()
     {
