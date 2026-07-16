@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{SearchService, MusicService, PlayerService, PlaylistsService};
+use App\Services\Soprano\{SearchService, MusicService, PlayerService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -11,10 +11,9 @@ use Echo\Framework\Routing\Route\Get;
 class SearchController extends Controller
 {
     public function __construct(
-        private SearchService $search, 
-        private MusicService $music, 
+        private SearchService $search,
+        private MusicService $music,
         private PlayerService $player,
-        private PlaylistsService $playlists,
     ) {}
 
     #[Get("/search", "search.index")]
@@ -32,65 +31,23 @@ class SearchController extends Controller
         ]);
     }
 
-    #[Get("/search/recently-played", "search.recently-played")]
-    public function recentlyPlayed(): string
+    /**
+     * Curated feeds ("More" links on the home rails). Each loads a canned
+     * track list into the search results view.
+     */
+    #[Get("/search/feed/{feed}", "search.feed")]
+    public function feed(string $feed): string
     {
-        $tracks = $this->music->recentlyPlayed(1000);
-        if ($tracks) {
-            $this->search->setSearchResults($tracks);
-            $this->hxTrigger("searchResults, searchActions");
-        }
-        return $this->index();
-    }
+        $tracks = match ($feed) {
+            "recently-played"  => $this->music->recentlyPlayed(1000),
+            "top-played"       => $this->music->topPlayed(1000),
+            "recently-added"   => $this->music->recentlyAddedTracks(1000),
+            "recently-liked"   => $this->music->recentlyLiked(1000),
+            "top-played-month" => $this->music->topPlayedThisMonth(1000),
+            "rediscover"       => $this->music->rediscover(1000),
+            default            => [],
+        };
 
-    #[Get("/search/top-played", "search.top-played")]
-    public function topPlayed(): string
-    {
-        $tracks = $this->music->topPlayed(1000);
-        if ($tracks) {
-            $this->search->setSearchResults($tracks);
-            $this->hxTrigger("searchResults, searchActions");
-        }
-        return $this->index();
-    }
-
-    #[Get("/search/recently-added", "search.recently-added")]
-    public function recentlyAdded(): string
-    {
-        $tracks = $this->music->recentlyAddedTracks(1000);
-        if ($tracks) {
-            $this->search->setSearchResults($tracks);
-            $this->hxTrigger("searchResults, searchActions");
-        }
-        return $this->index();
-    }
-
-    #[Get("/search/recently-liked", "search.recently-liked")]
-    public function recentlyLiked(): string
-    {
-        $tracks = $this->music->recentlyLiked(1000);
-        if ($tracks) {
-            $this->search->setSearchResults($tracks);
-            $this->hxTrigger("searchResults, searchActions");
-        }
-        return $this->index();
-    }
-
-    #[Get("/search/top-played-month", "search.top-played-month")]
-    public function topPlayedThisMonth(): string
-    {
-        $tracks = $this->music->topPlayedThisMonth(1000);
-        if ($tracks) {
-            $this->search->setSearchResults($tracks);
-            $this->hxTrigger("searchResults, searchActions");
-        }
-        return $this->index();
-    }
-
-    #[Get("/search/rediscover", "search.rediscover")]
-    public function rediscover(): string
-    {
-        $tracks = $this->music->rediscover(1000);
         if ($tracks) {
             $this->search->setSearchResults($tracks);
             $this->hxTrigger("searchResults, searchActions");

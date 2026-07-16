@@ -6,6 +6,43 @@ use App\Models\{Album, Artist, Track, TrackLike, TrackPlay};
 
 class MusicService
 {
+    /**
+     * Shared SELECT fragments for the track feeds. Every feed returns the same
+     * row shape (see mapTrackRow); queries differ only in their FROM/WHERE/
+     * ORDER BY and any extra aggregate columns (plays, last_played_at, …).
+     * The liked column is a per-client subquery and binds client()->id as its
+     * FIRST placeholder, so params for feeds using it start with the client id.
+     */
+    private const TRACK_COLUMNS =
+        "t.hash AS track_hash,
+         al.hash AS album_hash,
+         al.title AS album,
+         al.cover AS cover,
+         al.dominant_color AS dominant_color,
+         al.year AS year,
+         ar.hash AS artist_hash,
+         ar.name AS artist,
+         tm.title AS title,
+         tm.track_number AS track_number,
+         tm.playtime_string AS playtime_string";
+
+    private const LIKED_COLUMN =
+        "IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked";
+
+    private const TRACK_JOINS =
+        "JOIN albums al ON al.id = t.album_id
+         JOIN artists ar ON ar.id = t.artist_id
+         LEFT JOIN track_meta tm ON tm.track_id = t.id";
+
+    private const ALBUM_COLUMNS =
+        "al.hash AS album_hash,
+         al.title AS album,
+         al.cover AS cover,
+         al.dominant_color AS dominant_color,
+         al.year AS year,
+         ar.hash AS artist_hash,
+         ar.name AS artist";
+
     public function getTrack(string $hash): ?Track
     {
         return Track::where('hash', $hash)->first();
@@ -74,31 +111,30 @@ class MusicService
     public function isTrackLiked(string $hash): bool
     {
         $track = $this->getTrack($hash);
-        $trackId = $track->id;
-        $clientId = client()->id;
-        $like = TrackLike::where("track_id", $trackId)
-            ->andWhere("client_id", $clientId)->first();
+        if (!$track) {
+            return false;
+        }
+        $like = TrackLike::where("track_id", $track->id)
+            ->andWhere("client_id", client()->id)->first();
 
-        if ($like) {
-            return true;
-        } 
-        return false;
+        return (bool) $like;
     }
 
-    public function toggleTrackLike(string $hash)
+    public function toggleTrackLike(string $hash): void
     {
         $track = $this->getTrack($hash);
-        $trackId = $track->id;
-        $clientId = client()->id;
-        $like = TrackLike::where("track_id", $trackId)
-            ->andWhere("client_id", $clientId)->first();
+        if (!$track) {
+            return;
+        }
+        $like = TrackLike::where("track_id", $track->id)
+            ->andWhere("client_id", client()->id)->first();
 
         if ($like) {
             $like->delete();
         } else {
             TrackLike::create([
-                'track_id'  => $trackId,
-                'client_id' => $clientId,
+                'track_id'  => $track->id,
+                'client_id' => client()->id,
             ]);
         }
     }
@@ -106,56 +142,43 @@ class MusicService
     public function albumTracks(int $albumId): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
-             FROM tracks t
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
              WHERE t.album_id = ?
              ORDER BY CAST(tm.track_number AS UNSIGNED), tm.track_number",
             [client()->id, $albumId],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function playlistTracks(int $playlistId): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
              FROM playlist_tracks pt
-             JOIN tracks t ON t.id = pt.track_id
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             JOIN tracks t ON t.id = pt.track_id " . self::TRACK_JOINS . "
              WHERE pt.playlist_id = ?
              ORDER BY pt.id ASC",
             [client()->id, $playlistId],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
+    }
+
+    public function searchTracks(string $term, int $limit = 2500): array
+    {
+        $like = "%$term%";
+        $rows = db()->fetchAll(
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
+             WHERE ar.name LIKE ? OR al.title LIKE ? OR tm.title LIKE ?
+             ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
+             LIMIT ?",
+            [client()->id, $like, $like, $like, $limit],
+        );
+
+        return $this->mapTrackRows($rows);
     }
 
     /**
@@ -312,13 +335,7 @@ class MusicService
     public function discography(int $artistId, int $limit = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist
+            "SELECT " . self::ALBUM_COLUMNS . "
              FROM albums al
              JOIN artists ar ON ar.id = al.artist_id
              WHERE al.artist_id = ?
@@ -327,112 +344,56 @@ class MusicService
             [$artistId, $limit],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function randomTracks($limit = 2500): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
-             FROM tracks t
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
-            ORDER BY RAND()
-            LIMIT ?",
-            [client()->id, $limit]
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
+             ORDER BY RAND()
+             LIMIT ?",
+            [client()->id, $limit],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function likedTracks($limit = 2500): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    1 AS liked
+            "SELECT " . self::TRACK_COLUMNS . ", 1 AS liked
              FROM tracks t
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             JOIN track_likes tl ON tl.track_id = t.id AND tl.client_id=?
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
-            ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
-            LIMIT ?",
-            [client()->id, $limit]
+             JOIN track_likes tl ON tl.track_id = t.id AND tl.client_id=? " . self::TRACK_JOINS . "
+             ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
+             LIMIT ?",
+            [client()->id, $limit],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function artistTracks(string $artistHash): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
-             FROM tracks t
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
              WHERE ar.hash = ?
              GROUP BY t.id
              ORDER BY al.hash, CAST(tm.track_number AS UNSIGNED), tm.track_number",
             [client()->id, $artistHash],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function topTracksByArtist(int $artistId, int $limit = 10): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    COUNT(tp.id) AS plays,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
-             FROM tracks t
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+            "SELECT " . self::TRACK_COLUMNS . ",
+                    COUNT(tp.id) AS plays, " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
              JOIN track_plays tp ON tp.track_id = t.id
              WHERE t.artist_id = ?
              GROUP BY t.id
@@ -441,23 +402,13 @@ class MusicService
             [client()->id, $artistId, $limit],
         );
 
-        return array_map(function (array $row) {
-            $entry = $this->mapTrackRow($row);
-            $entry['plays'] = (int) $row['plays'];
-            return $entry;
-        }, $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function recentlyAdded(int $albumCount = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist
+            "SELECT " . self::ALBUM_COLUMNS . "
              FROM albums al
              JOIN artists ar ON ar.id = al.artist_id
              ORDER BY al.id DESC
@@ -465,37 +416,24 @@ class MusicService
             [$albumCount],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function recentlyAddedTracks(int $albumCount = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
-            FROM tracks t
-            JOIN albums al ON al.id = t.album_id
-            JOIN artists ar ON ar.id = t.artist_id
-            LEFT JOIN track_meta tm ON tm.track_id = t.id
-            ORDER BY t.id DESC
-            LIMIT ?",
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
+             ORDER BY t.id DESC
+             LIMIT ?",
             [client()->id, $albumCount],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
-    function timeAgo(string $datetime): string {
+    private function timeAgo(string $datetime): string
+    {
         $now  = new \DateTime();
         $past = new \DateTime($datetime);
         $diff = $now->diff($past);
@@ -503,7 +441,7 @@ class MusicService
         $intervals = [
             ['year',   $diff->y],
             ['month',  $diff->m],
-            ['week',   (int)($diff->days / 7)],
+            ['week',   intdiv($diff->d, 7)],
             ['day',    $diff->d % 7],
             ['hour',   $diff->h],
             ['minute', $diff->i],
@@ -524,61 +462,30 @@ class MusicService
         $since = (new \DateTime('- 1 WEEK'))->format('Y-m-d H:i:s');
 
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.playtime_string AS playtime_string,
+            "SELECT " . self::TRACK_COLUMNS . ",
                     c.username AS client,
-                    MAX(tp.id) AS last_play_id,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+                    MAX(tp.created_at) AS last_played_at, " . self::LIKED_COLUMN . "
              FROM track_plays tp
-             JOIN tracks t ON t.id = tp.track_id
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              LEFT JOIN clients c ON c.id = tp.client_id
              WHERE tp.created_at > ?
              GROUP BY t.id
-             ORDER BY last_play_id DESC
+             ORDER BY MAX(tp.id) DESC
              LIMIT ?",
             [client()->id, $since, $trackCount],
         );
 
-        return array_map(function($row) {
-            $entry = $this->mapTrackRow($row);
-            $tp = TrackPlay::find($row['last_play_id']);
-            $entry['ago'] = $this->timeAgo($tp->created_at);
-            return $entry;
-        }, $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function topPlayed(int $trackCount = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.playtime_string AS playtime_string,
+            "SELECT " . self::TRACK_COLUMNS . ",
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+                    MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
-             JOIN tracks t ON t.id = tp.track_id
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              WHERE tp.client_id = ?
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
@@ -586,11 +493,7 @@ class MusicService
             [client()->id, client()->id, $trackCount],
         );
 
-        return array_map(function (array $row) {
-            $entry = $this->mapTrackRow($row);
-            $entry['plays'] = (int) $row['plays'];
-            return $entry;
-        }, $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function topPlayedThisMonth(int $trackCount = 50): array
@@ -598,24 +501,11 @@ class MusicService
         $since = (new \DateTime('- 1 MONTH'))->format('Y-m-d H:i:s');
 
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.playtime_string AS playtime_string,
+            "SELECT " . self::TRACK_COLUMNS . ",
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+                    MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
-             JOIN tracks t ON t.id = tp.track_id
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              WHERE tp.client_id = ? AND tp.created_at > ?
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
@@ -623,11 +513,7 @@ class MusicService
             [client()->id, client()->id, $since, $trackCount],
         );
 
-        return array_map(function (array $row) {
-            $entry = $this->mapTrackRow($row);
-            $entry['plays'] = (int) $row['plays'];
-            return $entry;
-        }, $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function rediscover(int $trackCount = 50): array
@@ -635,24 +521,11 @@ class MusicService
         $since = (new \DateTime('- 30 DAY'))->format('Y-m-d H:i:s');
 
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.playtime_string AS playtime_string,
+            "SELECT " . self::TRACK_COLUMNS . ",
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
+                    MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
-             JOIN tracks t ON t.id = tp.track_id
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              WHERE tp.client_id = ?
              GROUP BY t.id
              HAVING COUNT(tp.id) >= 3 AND MAX(tp.created_at) < ?
@@ -661,39 +534,22 @@ class MusicService
             [client()->id, client()->id, $since, $trackCount],
         );
 
-        return array_map(function (array $row) {
-            $entry = $this->mapTrackRow($row);
-            $entry['plays'] = (int) $row['plays'];
-            return $entry;
-        }, $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function recentlyLiked(int $trackCount = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.playtime_string AS playtime_string,
-                    1 AS liked
+            "SELECT " . self::TRACK_COLUMNS . ", 1 AS liked
              FROM track_likes tl
-             JOIN tracks t ON t.id = tl.track_id
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             JOIN tracks t ON t.id = tl.track_id " . self::TRACK_JOINS . "
              WHERE tl.client_id = ?
              ORDER BY tl.id DESC
              LIMIT ?",
             [client()->id, $trackCount],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     /**
@@ -765,66 +621,44 @@ class MusicService
     public function tracksByGenre(string $genre, int $limit = 2500): array
     {
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
-             FROM tracks t
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
              WHERE al.genre = ?
              ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
              LIMIT ?",
-            [client()->id, $genre, $limit]
+            [client()->id, $genre, $limit],
         );
 
-        return array_map(fn($row) => $this->mapTrackRow($row), $rows);
+        return $this->mapTrackRows($rows);
     }
 
     public function tracksByDecade(int $decade, int $limit = 2500): array
     {
-        $album_title = $decade < 2000 ? substr($decade, 2, 2)  : $decade;
+        $album_title = $decade < 2000 ? substr((string) $decade, 2, 2) : (string) $decade;
         $album_title_s = $album_title . 's';
         $rows = db()->fetchAll(
-            "SELECT t.hash AS track_hash,
-                    al.hash AS album_hash,
-                    al.title AS album,
-                    al.cover AS cover,
-                    al.dominant_color AS dominant_color,
-                    al.year AS year,
-                    ar.hash AS artist_hash,
-                    ar.name AS artist,
-                    tm.title AS title,
-                    tm.track_number AS track_number,
-                    tm.playtime_string AS playtime_string,
-                    IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked
-             FROM tracks t
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
+            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+             FROM tracks t " . self::TRACK_JOINS . "
              WHERE (al.year REGEXP '^[0-9]{4}$'
                AND CAST(al.year AS UNSIGNED) BETWEEN ? AND ?
                OR al.title LIKE ? OR al.title LIKE ?)
              ORDER BY al.year ASC, ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
              LIMIT ?",
-            [client()->id, $decade, $decade + 9, "%$album_title%", "%$album_title_s%", $limit]
+            [client()->id, $decade, $decade + 9, "%$album_title%", "%$album_title_s%", $limit],
         );
 
+        return $this->mapTrackRows($rows);
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private function mapTrackRows(array $rows): array
+    {
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
     private function mapTrackRow(array $row): array
     {
-        return [
+        $entry = [
             'hash'            => $row['track_hash'] ?? null,
             'album_hash'      => $row['album_hash'] ?? null,
             'artist_hash'     => $row['artist_hash'] ?? null,
@@ -839,5 +673,14 @@ class MusicService
             'client'          => $row['client'] ?? null,
             'liked'           => (int) ($row['liked'] ?? 0),
         ];
+
+        if (isset($row['plays'])) {
+            $entry['plays'] = (int) $row['plays'];
+        }
+        if (isset($row['last_played_at'])) {
+            $entry['ago'] = $this->timeAgo((string) $row['last_played_at']);
+        }
+
+        return $entry;
     }
 }
