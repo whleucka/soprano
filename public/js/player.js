@@ -146,6 +146,39 @@ function setupRadio() {
   }
 }
 
+// Close out the outgoing track's play row: attach its hash/position to every
+// track-change request so the server can record ms_played/skipped, and flush
+// a last report when the tab goes away. The player partial re-runs this
+// script on every swap, so hook the (persistent) body/window exactly once and
+// read the live DOM inside the handlers.
+if (!window.__playReportHooked) {
+  window.__playReportHooked = true;
+
+  window.__playReport = function (params) {
+    const a = document.getElementById('audio');
+    if (!a || !a.dataset.hash || a.dataset.hash.length !== 32) return;
+    if (typeof player_type !== 'undefined' && player_type !== 'track') return;
+    if (!isFinite(a.currentTime)) return;
+    params.cur = a.dataset.hash;
+    params.pos = Math.round(a.currentTime * 1000);
+    if (isFinite(a.duration) && a.duration > 0) {
+      params.dur = Math.round(a.duration * 1000);
+    }
+  };
+
+  document.body.addEventListener('htmx:configRequest', function (evt) {
+    if (!/\/player\/(play|next-track|prev-track)/.test(evt.detail.path || '')) return;
+    window.__playReport(evt.detail.parameters);
+  });
+
+  window.addEventListener('pagehide', function () {
+    const params = {};
+    window.__playReport(params);
+    if (!params.cur || typeof progress_url === 'undefined') return;
+    fetch(progress_url + '?' + new URLSearchParams(params), { keepalive: true });
+  });
+}
+
 (function() {
   if (progressContainer) {
     progressContainer.addEventListener('click', (e) => {

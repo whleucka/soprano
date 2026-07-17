@@ -6,7 +6,7 @@
           <img title="{{ p.name }}" class="cover" src="{{ p.cover }}" loading="lazy" />
         </a>
       </div>
-      <span title="{{ p.name }}" class="title truncate fw-bold mt-1">{{ p.name }}</span>
+      <span title="{{ p.name }}" class="title truncate fw-bold mt-1">{% if p.generated %}<i class="bi bi-stars pe-1"></i>{% endif %}{{ p.name }}</span>
       <span class="artist small truncate">{{ p.track_count }} track{% if p.track_count != 1 %}s{% endif %}</span>
     </div>
   {% endfor %}

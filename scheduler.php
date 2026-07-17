@@ -39,6 +39,14 @@ $scheduler->php($jobs . "/soprano_transcode.php")
     ->onlyOne()
     ->output($logs . "soprano-transcode-" . date("Y-m-d") . ".log", true);
 
+// Soprano playlists - nightly regeneration of the per-client generated mixes
+// (Heavy Rotation, Rediscover, Fresh Arrivals, Time Machine, Morning/Evening
+// Mix). Each mix keeps its hash and swaps tracks in place, like a daily mix.
+$scheduler->php($jobs . "/soprano_playlists.php")
+    ->daily('04:00')
+    ->onlyOne()
+    ->output($logs . "soprano-playlists-" . date("Y-m-d") . ".log", true);
+
 // Mail worker - process queued emails
 $scheduler->php($jobs . "/mail_worker.php")
     ->everyMinute()

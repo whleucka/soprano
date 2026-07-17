@@ -17,7 +17,7 @@
   <div class="scrollable">
     <nav class="nav flex-column" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
       {% for p in playlists %}
-        <a class="nav-link shadow-none border-0 truncate" title="{{ p.name }}" href="{{ uri('playlists.show', [p.hash]) }}"><i class="bi bi-music-note-list pe-1"></i> {{ p.name }}</a>
+        <a class="nav-link shadow-none border-0 truncate" title="{{ p.name }}" href="{{ uri('playlists.show', [p.hash]) }}"><i class="bi bi-{{ p.generated ? 'stars' : 'music-note-list' }} pe-1"></i> {{ p.name }}</a>
       {% endfor %}
     </nav>
   </div>

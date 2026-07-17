@@ -117,7 +117,7 @@ class PlaylistController extends Controller
         if (empty($tracks)) {
             return;
         }
-        $this->playlist->setPlaylist($tracks);
+        $this->playlist->setPlaylist($tracks, source: "random");
         $this->hxTrigger("playlistActions, playlistQueue");
     }
 

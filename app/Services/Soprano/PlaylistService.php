@@ -45,6 +45,11 @@ class PlaylistService
         state()->playlist = ["source" => $source];
     }
 
+    public function getSource(): ?string
+    {
+        return state()->playlist["source"] ?? null;
+    }
+
     public function hasTrack(string $hash): bool
     {
         foreach (state()->playlist["tracks"] ?? [] as $track) {

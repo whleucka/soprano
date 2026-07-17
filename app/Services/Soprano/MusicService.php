@@ -116,12 +116,48 @@ class MusicService
         return sprintf('%dm', $minutes);
     }
 
-    public function trackPlay(int $trackId): void
+    public function trackPlay(int $trackId, ?string $source = null): void
     {
         TrackPlay::create([
             'track_id'  => $trackId,
             'client_id' => client()->id,
+            'source'    => $source,
         ]);
+    }
+
+    /**
+     * Close out the latest play of a track for this client: record how far
+     * playback got and whether it counts as a skip. A natural end never does;
+     * a manual change does when under 80% listened (falling back to the
+     * client-reported duration when length_ms is missing, unknown when both
+     * are). ms_played only grows and skipped is recomputed from the new
+     * position, so a play reported at pagehide that later resumes and
+     * finishes flips 1 -> 0.
+     */
+    public function finalizeTrackPlay(string $hash, int $posMs, ?int $durMs, bool $natural): void
+    {
+        $row = db()->fetch(
+            "SELECT tp.id, tp.ms_played, tm.length_ms
+             FROM track_plays tp
+             JOIN tracks t ON t.id = tp.track_id
+             LEFT JOIN track_meta tm ON tm.track_id = t.id
+             WHERE tp.client_id = ? AND t.hash = ?
+             ORDER BY tp.id DESC
+             LIMIT 1",
+            [client()->id, $hash],
+        );
+        if (!$row) {
+            return;
+        }
+
+        $msPlayed = max((int) ($row['ms_played'] ?? 0), $posMs, 0);
+        $length   = $durMs ?: (int) ($row['length_ms'] ?? 0);
+        $skipped  = $natural ? 0 : ($length > 0 ? (int) ($msPlayed < $length * 0.8) : null);
+
+        db()->execute(
+            "UPDATE track_plays SET ms_played = ?, skipped = ? WHERE id = ?",
+            [$msPlayed, $skipped, $row['id']],
+        );
     }
 
     public function isTrackLiked(string $hash): bool

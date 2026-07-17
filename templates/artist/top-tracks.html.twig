@@ -2,7 +2,7 @@
   {% for track in tracks %}
     {% embed 'components/track-row.html.twig' with {
       track: track,
-      play_uri: uri('player.play', [track.hash]),
+      play_uri: uri('player.play', [track.hash]) ~ '?src=artist',
       rank: loop.index
     } %}
       {% block leading %}

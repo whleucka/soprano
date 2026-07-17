@@ -2,7 +2,7 @@
   {% for track in search.tracks %}
     {% embed 'components/track-row.html.twig' with {
       track: track,
-      play_uri: uri('player.play', [track.hash])
+      play_uri: uri('player.play', [track.hash]) ~ '?src=search'
     } %}
       {% block leading %}
         <img title="{{ track.album }}" class="cover me-2" src="{{ track.cover }}" loading="lazy"/>

@@ -1,4 +1,4 @@
-<a id="play-track" class="btn btn-sm btn-outline-light" title="Play" hx-boost="true" hx-push-url="false" href="{{ uri("player.play", [hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
+<a id="play-track" class="btn btn-sm btn-outline-light" title="Play" hx-boost="true" hx-push-url="false" href="{{ uri("player.play", [hash]) }}?src=track" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
 <span hx-get="{{ uri("track.like", [hash]) }}" hx-trigger="load, like-{{ hash }} from:body"></span>
 <button class="btn btn-sm btn-outline-light" title="Add to playlist" data-bs-toggle="modal" data-bs-target="#modal"
         hx-get="{{ uri('playlists.modal') }}?src=track&ref={{ hash }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-music-note-list"></i></button>

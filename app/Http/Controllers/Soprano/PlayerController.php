@@ -42,6 +42,8 @@ class PlayerController extends Controller
             $this->hxTrigger("nowPlaying");
             return $this->play($next['hash']);
         }
+        // Queue ended with no advance (repeat off) — still close out the play.
+        $this->finalizeOutgoingPlay();
     }
 
     #[Get("/player/prev-track", "player.prev-track")]
@@ -52,6 +54,7 @@ class PlayerController extends Controller
             $this->hxTrigger("nowPlaying");
             return $this->play($prev['hash']);
         }
+        $this->finalizeOutgoingPlay();
     }
 
     #[Get("/player/play/album/{hash}/track/{index}", "player.play-album-track")]
@@ -65,7 +68,7 @@ class PlayerController extends Controller
         if (empty($tracks[$index])) {
             return;
         }
-        $this->playlist->setPlaylist($tracks, $index);
+        $this->playlist->setPlaylist($tracks, $index, source: "album");
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[$index]['hash']);
     }
@@ -77,7 +80,7 @@ class PlayerController extends Controller
         if (empty($tracks)) {
             return;
         }
-        $this->playlist->setPlaylist($tracks);
+        $this->playlist->setPlaylist($tracks, source: "artist");
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[0]['hash']);
     }
@@ -98,7 +101,7 @@ class PlayerController extends Controller
     {
         $search = $this->search->getSearch();
         if (!empty($search['tracks'])) {
-            $this->playlist->setPlaylist($search['tracks']);
+            $this->playlist->setPlaylist($search['tracks'], source: "search");
             $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
             return $this->play($search['tracks'][0]['hash']);
         }
@@ -115,7 +118,7 @@ class PlayerController extends Controller
         if (empty($tracks)) {
             return;
         }
-        $this->playlist->setPlaylist($tracks);
+        $this->playlist->setPlaylist($tracks, source: "playlist:$hash");
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[0]['hash']);
     }
@@ -131,7 +134,7 @@ class PlayerController extends Controller
         if (empty($tracks[$index])) {
             return;
         }
-        $this->playlist->setPlaylist($tracks, $index);
+        $this->playlist->setPlaylist($tracks, $index, source: "playlist:$hash");
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[$index]['hash']);
     }
@@ -147,7 +150,7 @@ class PlayerController extends Controller
         if (empty($tracks)) {
             return;
         }
-        $this->playlist->setPlaylist($tracks);
+        $this->playlist->setPlaylist($tracks, source: "album");
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[0]['hash']);
     }
@@ -160,6 +163,8 @@ class PlayerController extends Controller
             return;
         }
 
+        // Switching to radio abandons whatever track was playing.
+        $this->finalizeOutgoingPlay();
         // Radio is a single live stream — clear the playlist so prev/next
         // disable, and play the external HLS/stream URL directly (no transcode).
         $this->playlist->clearPlaylist();
@@ -185,6 +190,8 @@ class PlayerController extends Controller
             return;
         }
 
+        // Switching to a podcast abandons whatever track was playing.
+        $this->finalizeOutgoingPlay();
         // A podcast episode is a single finite MP3 — clear the playlist (prev/
         // next disable) and hand the external audio URL straight to the player.
         // Unlike radio it's seekable, so type 'podcast' keeps the progress bar.
@@ -211,6 +218,7 @@ class PlayerController extends Controller
             return;
         }
 
+        $this->finalizeOutgoingPlay();
         $this->playlist->clearPlaylist();
         $this->player->setPlayer([
             'type'   => 'podcast',
@@ -239,7 +247,12 @@ class PlayerController extends Controller
         $meta   = $track->meta();
         $src    = uri("player.stream", $track->hash);
 
-        $this->music->trackPlay($track->id);
+        $this->finalizeOutgoingPlay();
+        // One-off plays (track row, search result, wrapped) tag themselves
+        // with ?src= since they don't touch the queue; queue-driven plays
+        // inherit the queue's source.
+        $source = ((string) request()->get->get("src")) ?: $this->playlist->getSource();
+        $this->music->trackPlay($track->id, $source);
         $this->player->setPlayer([
             'hash'        => $track->hash,
             'album_hash'  => $album?->hash  ?? '#',
@@ -251,6 +264,36 @@ class PlayerController extends Controller
             'src'         => $src,
         ]);
         $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks, searchResults");
+    }
+
+    #[Get("/player/progress", "player.progress")]
+    public function progress(): void
+    {
+        // Fired by player.js on pagehide (fetch keepalive) so a play that
+        // never reaches another track-change request still gets closed out.
+        $this->finalizeOutgoingPlay();
+    }
+
+    /**
+     * Close out the outgoing track's play row. player.js attaches cur (the
+     * outgoing track's hash), pos and dur (ms) to every track-change request;
+     * auto=1 marks a natural end-of-track advance, which is never a skip.
+     */
+    private function finalizeOutgoingPlay(): void
+    {
+        $get = request()->get;
+        $cur = (string) ($get->get("cur") ?? '');
+        $pos = $get->get("pos");
+        if ($cur === '' || $pos === null || $pos === '') {
+            return;
+        }
+        $dur = $get->get("dur");
+        $this->music->finalizeTrackPlay(
+            $cur,
+            (int) $pos,
+            ($dur !== null && $dur !== '') ? (int) $dur : null,
+            (bool) $get->get("auto"),
+        );
     }
 
     #[Get("/player/stream/{hash}", "player.stream")]

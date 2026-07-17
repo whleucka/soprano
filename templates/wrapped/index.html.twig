@@ -73,7 +73,7 @@
         <h2 class="mt-5"><i class="bi bi-star-fill text-warning pe-1"></i> Top Tracks</h2>
         <div class="wrapped-tracks py-2">
           {% for t in review.top_tracks %}
-            <div class="wrapped-track" hx-get="{{ uri('player.play', [t.hash]) }}" hx-swap="none" title="Play {{ t.title }}">
+            <div class="wrapped-track" hx-get="{{ uri('player.play', [t.hash]) }}?src=wrapped" hx-swap="none" title="Play {{ t.title }}">
               <span class="wrapped-rank">{{ loop.index }}</span>
               <img src="{{ t.cover|default('/images/no-album-art.png') }}" alt="" loading="lazy">
               <span class="d-flex flex-column truncate">

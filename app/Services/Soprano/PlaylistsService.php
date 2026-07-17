@@ -27,6 +27,7 @@ class PlaylistsService
         $rows = db()->fetchAll(
             "SELECT p.hash AS hash,
                     p.name AS name,
+                    p.slot IS NOT NULL AS generated,
                     (SELECT COUNT(*) FROM playlist_tracks pt WHERE pt.playlist_id = p.id) AS track_count,
                     (SELECT al.cover
                        FROM playlist_tracks pt
@@ -44,6 +45,7 @@ class PlaylistsService
         return array_map(fn($row) => [
             'hash'        => $row['hash'],
             'name'        => $row['name'],
+            'generated'   => (bool) $row['generated'],
             'track_count' => (int) $row['track_count'],
             'cover'       => $row['cover'] ?: '/images/no-album-art.png',
         ], $rows);
@@ -133,9 +135,11 @@ class PlaylistsService
     {
         $ids = $this->trackIds($trackHashes);
 
+        // Generated mixes are excluded — the nightly job wipes their contents,
+        // so hand-adding tracks to them would be a trap.
         if (empty($ids)) {
             $rows = db()->fetchAll(
-                "SELECT hash, name FROM playlists WHERE client_id = ? ORDER BY name ASC",
+                "SELECT hash, name FROM playlists WHERE client_id = ? AND slot IS NULL ORDER BY name ASC",
                 [client()->id],
             );
             return array_map(fn($r) => [
@@ -152,7 +156,7 @@ class PlaylistsService
              FROM playlists p
              LEFT JOIN playlist_tracks pt
                ON pt.playlist_id = p.id AND pt.track_id IN ($ph)
-             WHERE p.client_id = ?
+             WHERE p.client_id = ? AND p.slot IS NULL
              GROUP BY p.id
              ORDER BY p.name ASC",
             [...$ids, client()->id],
