@@ -135,9 +135,14 @@ class SyncService
         try {
             $this->ensureCoversDir();
 
-            foreach (Track::query()->get() as $track) {
+            // Lightweight id/pathname rows, not hydrated models — the whole
+            // table of models plus getID3's per-file buffers blows the CLI
+            // memory limit on a full library.
+            $rows = db()->fetchAll("SELECT id, pathname FROM tracks ORDER BY id");
+
+            foreach ($rows as $row) {
                 $scanned++;
-                $pathname = (string) $track->pathname;
+                $pathname = (string) $row['pathname'];
 
                 if (!is_file($pathname)) {
                     // Leave it for sync's orphan removal to decide.
@@ -146,6 +151,10 @@ class SyncService
                 }
 
                 try {
+                    $track = Track::find((string) $row['id']);
+                    if (!$track instanceof Track) {
+                        continue;
+                    }
                     $this->refreshTrack($track, $pathname);
                     $updated++;
                 } catch (\Throwable $e) {

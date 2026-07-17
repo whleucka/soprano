@@ -9,6 +9,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Services\Soprano\SyncService;
 
+// getID3 buffers whole tag blocks (embedded art can be tens of MB); the
+// default CLI limit dies mid-library.
+ini_set('memory_limit', '512M');
+
 $service = container()->get(SyncService::class);
 $result = $service->refreshMetadata();
 
