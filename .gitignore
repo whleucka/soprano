@@ -17,6 +17,7 @@ composer.phar
 /storage/geoip/*.tar.gz
 /storage/geoip/*.tar
 /storage/covers
+/storage/transcode
 /storage/trash
 /public/covers
 
