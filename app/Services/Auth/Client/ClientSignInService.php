@@ -19,6 +19,7 @@ class ClientSignInService
         if ($client && $service->verifyPassword($password, $client->password)) {
             session()->regenerate();
             session()->set("client_uuid", $client->uuid);
+            container()->get(RememberTokenService::class)->issue($client);
             event(new ClientSignedIn($client, $ip));
             return true;
         }
@@ -40,6 +41,7 @@ class ClientSignInService
             $current?->username,
             request()->getClientIp(),
         ));
+        container()->get(RememberTokenService::class)->forget();
         session()->destroy();
     }
 }

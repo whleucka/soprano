@@ -21,6 +21,7 @@ class ClientRegisterService
         if ($client) {
             session()->regenerate();
             session()->set("client_uuid", $client->uuid);
+            container()->get(RememberTokenService::class)->issue($client);
             event(new ClientRegistered($client, $ip));
             return true;
         }

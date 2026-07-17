@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Auth\Client\RememberTokenService;
 use Closure;
 use Echo\Framework\Http\Response as HttpResponse;
 use Echo\Framework\Http\RequestInterface;
@@ -18,6 +19,12 @@ class ClientAuth implements MiddlewareInterface
 
         if (!in_array('client', $middleware, true)) {
             return $next($request);
+        }
+
+        // Session expired (or new browser session) but the device has a
+        // remember-me cookie — silently re-establish the session.
+        if (!session()->has('client_uuid') && isset($_COOKIE[RememberTokenService::COOKIE])) {
+            container()->get(RememberTokenService::class)->attempt();
         }
 
         $client = client();
