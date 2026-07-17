@@ -607,6 +607,13 @@ class SyncService
             $year = self::UNKNOWN_YEAR;
         }
 
+        // Some rips carry a mis-encoded (UTF-16) TBPM frame whose raw bytes
+        // MySQL rejects — keep BPM only when it's a plausible number.
+        $bpm = $tag('bpm');
+        if (!preg_match('/^\d{1,3}(\.\d+)?$/', $bpm)) {
+            $bpm = '';
+        }
+
         $bitrate = $info['bitrate'] ?? 0;
         if (is_numeric($bitrate)) {
             $bitrate = (string) (int) round($bitrate / 1000);
@@ -632,7 +639,7 @@ class SyncService
             'bitrate'                => (string) $bitrate,
             'mime_type'              => (string) ($info['mime_type'] ?? ''),
             'composer'               => $tag('composer'),
-            'bpm'                    => $tag('bpm'),
+            'bpm'                    => $bpm,
             'lyrics'                 => $tag('unsynchronised_lyric'),
             'replaygain_track_gain'  => $this->replayGain($info, 'track', 'adjustment'),
             'replaygain_track_peak'  => $this->replayGain($info, 'track', 'peak'),

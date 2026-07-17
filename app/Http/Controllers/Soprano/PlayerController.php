@@ -197,13 +197,15 @@ class PlayerController extends Controller
         // Unlike radio it's seekable, so type 'podcast' keeps the progress bar.
         $this->playlist->clearPlaylist();
         $this->player->setPlayer([
-            'type'   => 'podcast',
-            'hash'   => $hash,
-            'title'  => $episode['title'],
-            'artist' => $episode['podcast_title'],
-            'album'  => 'Soprano Podcasts',
-            'cover'  => $episode['image'],
-            'src'    => $episode['audio'],
+            'type'       => 'podcast',
+            'hash'       => $hash,
+            'episode_id' => $episode['id'],
+            'resume_ms'  => $this->podcasts->touchProgress($episode),
+            'title'      => $episode['title'],
+            'artist'     => $episode['podcast_title'],
+            'album'      => 'Soprano Podcasts',
+            'cover'      => $episode['image'],
+            'src'        => $episode['audio'],
         ]);
         // Clearing the playlist makes the rendered queue stale — refresh it so
         // clicking a leftover row doesn't hit the now-empty playlist (no-op).
@@ -221,13 +223,15 @@ class PlayerController extends Controller
         $this->finalizeOutgoingPlay();
         $this->playlist->clearPlaylist();
         $this->player->setPlayer([
-            'type'   => 'podcast',
-            'hash'   => $episode['podcast_hash'],
-            'title'  => $episode['title'],
-            'artist' => $episode['podcast_title'],
-            'album'  => "Soprano Podcasts",
-            'cover'  => $episode['image'],
-            'src'    => $episode['audio'],
+            'type'       => 'podcast',
+            'hash'       => $episode['podcast_hash'],
+            'episode_id' => $episode['id'],
+            'resume_ms'  => $this->podcasts->touchProgress($episode),
+            'title'      => $episode['title'],
+            'artist'     => $episode['podcast_title'],
+            'album'      => "Soprano Podcasts",
+            'cover'      => $episode['image'],
+            'src'        => $episode['audio'],
         ]);
         // Clearing the playlist makes the rendered queue stale — refresh it so
         // clicking a leftover row doesn't hit the now-empty playlist (no-op).
@@ -264,6 +268,25 @@ class PlayerController extends Controller
             'src'         => $src,
         ]);
         $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks, searchResults");
+    }
+
+    #[Get("/player/podcast-progress", "player.podcast-progress")]
+    public function podcastProgress(): void
+    {
+        // Fired by player.js every ~15s during podcast playback (and on
+        // pause/pagehide) so the episode can resume where it left off.
+        $get = request()->get;
+        $episode = (string) ($get->get("episode") ?? '');
+        $pos = $get->get("pos");
+        if ($episode === '' || $pos === null || $pos === '') {
+            return;
+        }
+        $dur = $get->get("dur");
+        $this->podcasts->saveProgress(
+            $episode,
+            (int) $pos,
+            ($dur !== null && $dur !== '') ? (int) $dur : null,
+        );
     }
 
     #[Get("/player/progress", "player.progress")]

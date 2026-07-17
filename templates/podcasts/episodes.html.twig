@@ -6,7 +6,13 @@
       <span class="artist small">
         {% if e.pub_date %}{{ e.pub_date }}{% endif %}
         {% if e.duration_min %} &middot; {{ e.duration_min }} min{% endif %}
+        {% if e.progress %} &middot; <span class="text-success">{{ e.progress.remaining_min }} min left</span>{% endif %}
       </span>
+      {% if e.progress %}
+      <div class="episode-progress mt-1" role="progressbar" aria-valuenow="{{ e.progress.percent }}" aria-valuemin="0" aria-valuemax="100">
+        <div class="episode-progress-bar" style="width: {{ e.progress.percent }}%"></div>
+      </div>
+      {% endif %}
     </div>
   </div>
 {% endfor %}

@@ -14,6 +14,8 @@ class PlayerService
         state()->player = [
             'type'        => $state['type']        ?? 'track',
             'hash'        => $state['hash']        ?? '#',
+            'episode_id'  => $state['episode_id']  ?? null,
+            'resume_ms'   => $state['resume_ms']   ?? 0,
             'album_hash'  => $state['album_hash']  ?? '#',
             'artist_hash' => $state['artist_hash'] ?? '#',
             'title'       => $state['title']       ?? 'N/A',

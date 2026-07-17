@@ -179,6 +179,37 @@ if (!window.__playReportHooked) {
   });
 }
 
+// Podcast resume: report the playhead so the server can save a resume point.
+// Fires every 15s while playing, plus on pause/ended/pagehide. Same
+// hook-once-read-live-DOM pattern as the track play reporter above.
+if (!window.__podcastReportHooked) {
+  window.__podcastReportHooked = true;
+
+  window.__podcastReport = function (keepalive) {
+    const a = document.getElementById('audio');
+    if (!a || a.dataset.type !== 'podcast' || !a.dataset.episode) return;
+    if (typeof podcast_progress_url === 'undefined') return;
+    if (!isFinite(a.currentTime) || a.currentTime <= 0) return;
+    const params = new URLSearchParams({
+      episode: a.dataset.episode,
+      pos: Math.round(a.currentTime * 1000),
+    });
+    if (isFinite(a.duration) && a.duration > 0) {
+      params.set('dur', Math.round(a.duration * 1000));
+    }
+    fetch(podcast_progress_url + '?' + params, keepalive ? { keepalive: true } : {});
+  };
+
+  setInterval(function () {
+    const a = document.getElementById('audio');
+    if (a && a.dataset.type === 'podcast' && !a.paused) window.__podcastReport(false);
+  }, 15000);
+
+  window.addEventListener('pagehide', function () {
+    window.__podcastReport(true);
+  });
+}
+
 (function() {
   if (progressContainer) {
     progressContainer.addEventListener('click', (e) => {
@@ -191,6 +222,12 @@ if (!window.__playReportHooked) {
   }
 
   audio.onloadedmetadata = function() {
+    // Podcast resume: the server stamps the saved position (ms) on the audio
+    // element; seek before autoplay so playback picks up where it left off.
+    const resume = parseInt(audio.dataset.resume || '0', 10);
+    if (resume > 0 && isFinite(audio.duration) && resume / 1000 < audio.duration) {
+      audio.currentTime = resume / 1000;
+    }
     setupMediaSession();
     updatePositionState();
     // New media just loaded — always start it. Using the play() *toggle* here
@@ -200,6 +237,7 @@ if (!window.__playReportHooked) {
   }
 
   audio.onpause = function () {
+    if (audio.dataset.type === 'podcast') window.__podcastReport(false);
     if (radioBadge) radioBadge.classList.remove("active");
     if (progressBar) progressBar.classList.add("disabled");
     playBtn.innerHTML = `<i class="bi bi-play-circle-fill"></i>`;
@@ -222,6 +260,12 @@ if (!window.__playReportHooked) {
       return;
     }
     if (progressBar) progressBar.style.width = 0;
+    // A finished podcast has no queue to advance — send the final position
+    // (which clears the resume row server-side) instead of hitting next-track.
+    if (audio.dataset.type === 'podcast') {
+      window.__podcastReport(false);
+      return;
+    }
     // auto=1 tells the server this is a natural end-of-track advance, so the
     // repeat mode applies (repeat-one replays, repeat-off stops at queue end).
     htmx.ajax('GET', next_track_url + '?auto=1', {swap: 'none'});

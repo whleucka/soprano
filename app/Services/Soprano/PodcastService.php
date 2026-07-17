@@ -2,7 +2,7 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\{Podcast, PodcastLike};
+use App\Models\{Podcast, PodcastLike, PodcastProgress};
 
 /**
  * Podcast business logic: search, the per-client liked library, podcast/episode
@@ -102,6 +102,7 @@ class PodcastService
             $data['episodes'] ?? [],
         );
         $podcast['next_episode_pub_date'] = $data['next_episode_pub_date'] ?? null;
+        $podcast['episodes'] = $this->markProgress($podcast['episodes']);
 
         return $podcast;
     }
@@ -219,6 +220,157 @@ class PodcastService
                 'client_id'  => client()->id,
             ]);
         }
+    }
+
+    /**
+     * Upsert the resume row for an episode at play time (the only moment we
+     * hold full episode metadata) and return the position to resume from.
+     * A nearly-finished episode restarts from the top instead of resuming
+     * into the outro.
+     */
+    public function touchProgress(array $episode): int
+    {
+        $row = PodcastProgress::where('episode_id', $episode['id'])
+            ->andWhere('client_id', client()->id)->first();
+
+        if (!$row) {
+            PodcastProgress::create([
+                'client_id'     => client()->id,
+                'episode_id'    => $episode['id'],
+                'podcast_hash'  => $episode['podcast_hash'],
+                'podcast_title' => $episode['podcast_title'],
+                'episode_title' => $episode['title'],
+                'image'         => $episode['image'] ?: null,
+                'duration_sec'  => $episode['audio_length_sec'] ?: null,
+                'position_ms'   => 0,
+            ]);
+            return 0;
+        }
+
+        $pos = (int) $row->position_ms;
+        if ($this->isFinished($pos, (int) $row->duration_sec)) {
+            $pos = 0;
+        }
+        // Refresh metadata (title/artwork can change upstream) and bump
+        // updated_at so this episode floats to the top of Continue Listening.
+        $row->update([
+            'podcast_title' => $episode['podcast_title'],
+            'episode_title' => $episode['title'],
+            'image'         => $episode['image'] ?: null,
+            'duration_sec'  => $episode['audio_length_sec'] ?: null,
+            'position_ms'   => $pos,
+        ]);
+
+        return $pos;
+    }
+
+    /**
+     * Periodic position report from player.js. Only updates a row created at
+     * play time; a finished episode drops its row so it leaves Continue
+     * Listening and replays from the start.
+     */
+    public function saveProgress(string $episodeId, int $positionMs, ?int $durationMs): void
+    {
+        $row = PodcastProgress::where('episode_id', $episodeId)
+            ->andWhere('client_id', client()->id)->first();
+        if (!$row) {
+            return;
+        }
+
+        $durationSec = $durationMs !== null
+            ? (int) round($durationMs / 1000)
+            : (int) $row->duration_sec;
+
+        if ($this->isFinished($positionMs, $durationSec)) {
+            $row->delete();
+            return;
+        }
+
+        $row->update([
+            'position_ms'  => max(0, $positionMs),
+            'duration_sec' => $durationSec ?: null,
+        ]);
+    }
+
+    /**
+     * Episodes the client is partway through, most recent first, for the
+     * "Continue Listening" section. Rows under 30s in are noise, not progress.
+     */
+    public function getInProgress(int $limit = 12): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT episode_id, podcast_hash, podcast_title, episode_title,
+                    image, duration_sec, position_ms
+             FROM podcast_progress
+             WHERE client_id = ? AND position_ms >= 30000
+             ORDER BY COALESCE(updated_at, created_at) DESC
+             LIMIT $limit",
+            [client()->id],
+        );
+
+        return array_map(fn($row) => $this->mapProgress($row), $rows);
+    }
+
+    /**
+     * Progress view-model shared by Continue Listening and the episode list.
+     */
+    private function mapProgress(array $row): array
+    {
+        $posSec = (int) floor(((int) $row['position_ms']) / 1000);
+        $durSec = (int) ($row['duration_sec'] ?? 0);
+
+        return [
+            'episode_id'    => $row['episode_id'],
+            'podcast_hash'  => $row['podcast_hash'],
+            'podcast_title' => $row['podcast_title'] ?? '',
+            'episode_title' => $row['episode_title'] ?? '',
+            'image'         => $row['image'] ?: '/images/no-album-art.png',
+            'position_ms'   => (int) $row['position_ms'],
+            'percent'       => $durSec > 0 ? min(100, (int) round($posSec / $durSec * 100)) : 0,
+            'remaining_min' => $durSec > $posSec ? (int) ceil(($durSec - $posSec) / 60) : 0,
+        ];
+    }
+
+    /**
+     * Within 5% or 30 seconds of the end counts as done — resuming into the
+     * outro isn't worth a Continue Listening slot.
+     */
+    private function isFinished(int $positionMs, int $durationSec): bool
+    {
+        if ($durationSec <= 0) {
+            return false;
+        }
+        $remaining = $durationSec - ($positionMs / 1000);
+        return $remaining <= max(30, $durationSec * 0.05);
+    }
+
+    /**
+     * Stamp saved progress onto a page of mapped episodes (single query),
+     * so the episode list can show a resume bar per row.
+     */
+    private function markProgress(array $episodes): array
+    {
+        $ids = array_filter(array_column($episodes, 'id'));
+        if (empty($ids)) {
+            return $episodes;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $rows = db()->fetchAll(
+            "SELECT episode_id, podcast_hash, podcast_title, episode_title,
+                    image, duration_sec, position_ms
+             FROM podcast_progress
+             WHERE client_id = ? AND position_ms > 0 AND episode_id IN ($placeholders)",
+            array_merge([client()->id], array_values($ids)),
+        );
+        $byId = array_column($rows, null, 'episode_id');
+
+        foreach ($episodes as &$e) {
+            $progress = $byId[$e['id']] ?? null;
+            $e['progress'] = $progress ? $this->mapProgress($progress) : null;
+        }
+
+        return $episodes;
     }
 
     /**
