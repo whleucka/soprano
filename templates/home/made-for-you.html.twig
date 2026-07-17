@@ -6,10 +6,10 @@
           <img title="{{ p.name }}" class="cover" src="{{ p.cover }}" loading="lazy" />
         </a>
       </div>
-      <span title="{{ p.name }}" class="title truncate fw-bold mt-1">{{ p.name }}</span>
+      <span title="{{ p.name }}" class="title truncate fw-bold mt-1"><i class="bi bi-stars pe-1"></i>{{ p.name }}</span>
       <span class="artist small truncate">{{ p.track_count }} track{% if p.track_count != 1 %}s{% endif %}</span>
     </div>
   {% endfor %}
 {% else %}
-  <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No playlists yet.</p>
+  <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No mixes yet — they appear once you've listened for a while</p>
 {% endif %}

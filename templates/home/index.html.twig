@@ -21,6 +21,11 @@
     {% endif %}
 
     <div class="d-inline-flex align-items-center gap-2">
+      <h2 class="mb-0"><i class="bi bi-stars text-warning pe-1"></i> Made For You</h2>
+    </div>
+    <div id="made-for-you" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.made-for-you") }}" hx-trigger="load">{% include 'components/skeleton-rail.html.twig' with { count: 6 } %}</div>
+
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-clock text-secondary pe-1"></i> Recently Played</h2>
       <span class="badge bg-dark ms-1">
           <a hx-boost="true" href="{{ uri('search.feed', ['recently-played']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>

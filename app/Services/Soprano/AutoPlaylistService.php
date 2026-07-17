@@ -18,7 +18,7 @@ use App\Models\Playlist;
  */
 class AutoPlaylistService
 {
-    private const PLAYLIST_SIZE = 50;
+    private const PLAYLIST_SIZE = 100;
 
     /** Slots with fewer tracks than this are removed rather than published. */
     private const MIN_TRACKS = 5;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Soprano;
 
 use App\Services\Soprano\MusicService;
+use App\Services\Soprano\PlaylistsService;
 use App\Services\Soprano\RadioService;
 use App\Services\Soprano\PodcastService;
 use App\Services\Soprano\WrappedService;
@@ -15,6 +16,7 @@ class HomeController extends Controller
 {
     public function __construct(
         private MusicService $music,
+        private PlaylistsService $playlists,
         private RadioService $radio,
         private PodcastService $podcasts,
         private WrappedService $wrapped,
@@ -34,6 +36,14 @@ class HomeController extends Controller
             // works year-round for any year.
             "wrapped_season" => $this->wrapped->isSeason(),
             "wrapped_year"   => $this->wrapped->seasonYear(),
+        ]);
+    }
+
+    #[Get("/home/made-for-you", "home.made-for-you")]
+    public function madeForYou(): string
+    {
+        return $this->render("home/made-for-you.html.twig", [
+            "playlists" => $this->playlists->getGeneratedPlaylists(),
         ]);
     }
 

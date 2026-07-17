@@ -16,9 +16,11 @@ use App\Models\Playlist;
 class PlaylistsService
 {
     /**
-     * Current client's playlists, most-recently-touched first, each with a
-     * track_count and a cover (the album art of the first track added, or the
-     * default placeholder when empty). Drives the sidebar and the index grid.
+     * Current client's user-created playlists, most-recently-touched first,
+     * each with a track_count and a cover (the album art of the first track
+     * added, or the default placeholder when empty). Drives the sidebar and
+     * the index grid. Generated mixes (slot set) live on the home rail via
+     * getGeneratedPlaylists() instead.
      *
      * @return array<int, array{hash: string, name: string, track_count: int, cover: string}>
      */
@@ -27,7 +29,6 @@ class PlaylistsService
         $rows = db()->fetchAll(
             "SELECT p.hash AS hash,
                     p.name AS name,
-                    p.slot IS NOT NULL AS generated,
                     (SELECT COUNT(*) FROM playlist_tracks pt WHERE pt.playlist_id = p.id) AS track_count,
                     (SELECT al.cover
                        FROM playlist_tracks pt
@@ -37,18 +38,53 @@ class PlaylistsService
                        ORDER BY pt.id ASC
                        LIMIT 1) AS cover
              FROM playlists p
-             WHERE p.client_id = ?
+             WHERE p.client_id = ? AND p.slot IS NULL
              ORDER BY p.updated_at DESC, p.id DESC",
             [client()->id],
         );
 
-        return array_map(fn($row) => [
+        return array_map(fn($row) => $this->mapPlaylistRow($row), $rows);
+    }
+
+    /**
+     * The nightly generated mixes for the current client, in a fixed showcase
+     * order. Same row shape as getPlaylists(); drives the home "Made For You"
+     * rail.
+     *
+     * @return array<int, array{hash: string, name: string, track_count: int, cover: string}>
+     */
+    public function getGeneratedPlaylists(): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT p.hash AS hash,
+                    p.name AS name,
+                    (SELECT COUNT(*) FROM playlist_tracks pt WHERE pt.playlist_id = p.id) AS track_count,
+                    (SELECT al.cover
+                       FROM playlist_tracks pt
+                       JOIN tracks t ON t.id = pt.track_id
+                       JOIN albums al ON al.id = t.album_id
+                       WHERE pt.playlist_id = p.id
+                       ORDER BY pt.id ASC
+                       LIMIT 1) AS cover
+             FROM playlists p
+             WHERE p.client_id = ? AND p.slot IS NOT NULL
+             ORDER BY FIELD(p.slot, 'heavy-rotation', 'morning-mix', 'evening-mix',
+                            'time-machine', 'rediscover', 'fresh-arrivals'), p.id ASC",
+            [client()->id],
+        );
+
+        return array_map(fn($row) => $this->mapPlaylistRow($row), $rows);
+    }
+
+    /** @return array{hash: string, name: string, track_count: int, cover: string} */
+    private function mapPlaylistRow(array $row): array
+    {
+        return [
             'hash'        => $row['hash'],
             'name'        => $row['name'],
-            'generated'   => (bool) $row['generated'],
             'track_count' => (int) $row['track_count'],
             'cover'       => $row['cover'] ?: '/images/no-album-art.png',
-        ], $rows);
+        ];
     }
 
     public function getPlaylistByHash(string $hash): ?Playlist
