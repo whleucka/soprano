@@ -64,7 +64,7 @@ class MusicStatsService
             "SELECT tm.title AS title, ar.name AS artist, COUNT(tp.id) AS plays
              FROM tracks t
              LEFT JOIN track_meta tm ON tm.track_id = t.id
-             LEFT JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN artists ar ON ar.id = t.track_artist_id
              LEFT JOIN track_plays tp ON tp.track_id = t.id
              GROUP BY t.id
              HAVING plays > 0
@@ -82,7 +82,7 @@ class MusicStatsService
         return db()->fetchAll(
             "SELECT ar.name AS artist, ar.image AS image, COUNT(tp.id) AS plays
              FROM artists ar
-             LEFT JOIN tracks t ON t.artist_id = ar.id
+             LEFT JOIN tracks t ON t.track_artist_id = ar.id
              LEFT JOIN track_plays tp ON tp.track_id = t.id
              GROUP BY ar.id
              HAVING plays > 0
@@ -101,7 +101,7 @@ class MusicStatsService
             "SELECT tm.title AS title, ar.name AS artist, t.created_at AS created_at
              FROM tracks t
              LEFT JOIN track_meta tm ON tm.track_id = t.id
-             LEFT JOIN artists ar ON ar.id = t.artist_id
+             LEFT JOIN artists ar ON ar.id = t.track_artist_id
              ORDER BY t.id DESC
              LIMIT " . (int)$limit
         );

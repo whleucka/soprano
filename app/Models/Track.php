@@ -13,9 +13,20 @@ class Track extends Model
         return $this->hasOne(TrackMeta::class);
     }
 
+    /**
+     * Album artist (grouping row — "Various Artists" on compilations).
+     */
     public function artist(): ?Artist
     {
         return $this->belongsTo(Artist::class);
+    }
+
+    /**
+     * Performing artist for this track; same as artist() outside compilations.
+     */
+    public function trackArtist(): ?Artist
+    {
+        return $this->belongsTo(Artist::class, 'track_artist_id');
     }
 
     public function album(): ?Album

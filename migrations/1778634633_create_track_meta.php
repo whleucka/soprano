@@ -19,6 +19,8 @@ return new class implements MigrationInterface
             $table->varchar("bitrate");
             $table->varchar("mime_type");
             $table->text("composer")->nullable();
+            $table->varchar("genre")->nullable();
+            $table->varchar("year")->nullable();
             $table->varchar("bpm")->nullable();
             $table->varchar("replaygain_track_gain")->nullable();
             $table->varchar("replaygain_track_peak")->nullable();

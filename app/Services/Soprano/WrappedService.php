@@ -76,7 +76,7 @@ class WrappedService
             "SELECT COUNT(*) AS plays,
                     COALESCE(SUM(tm.length_ms), 0) AS listened_ms,
                     COUNT(DISTINCT tp.track_id) AS tracks,
-                    COUNT(DISTINCT t.artist_id) AS artists,
+                    COUNT(DISTINCT t.track_artist_id) AS artists,
                     COUNT(DISTINCT t.album_id) AS albums,
                     COUNT(DISTINCT DATE(tp.created_at)) AS days
              FROM track_plays tp
@@ -111,7 +111,7 @@ class WrappedService
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.artist_id
+             JOIN artists ar ON ar.id = t.track_artist_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
              GROUP BY t.id
@@ -130,7 +130,7 @@ class WrappedService
                     COUNT(*) AS plays
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
-             JOIN artists ar ON ar.id = t.artist_id
+             JOIN artists ar ON ar.id = t.track_artist_id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
              GROUP BY ar.id
              ORDER BY plays DESC
@@ -264,7 +264,7 @@ class WrappedService
                     COUNT(*) AS plays
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
-             JOIN artists ar ON ar.id = t.artist_id
+             JOIN artists ar ON ar.id = t.track_artist_id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
              GROUP BY ar.id, m
              ORDER BY plays DESC

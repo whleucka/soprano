@@ -12,6 +12,7 @@ return new class implements MigrationInterface
             $table->id();
             $table->char("hash", 32);
             $table->unsignedBigInteger("artist_id");
+            $table->unsignedBigInteger("track_artist_id");
             $table->unsignedBigInteger("album_id");
             $table->text("filename");
             $table->text("pathname");
@@ -19,6 +20,8 @@ return new class implements MigrationInterface
             $table->unique("hash");
             $table->primaryKey("id");
             $table->foreignKey("artist_id")
+                ->references("artists", "id");
+            $table->foreignKey("track_artist_id")
                 ->references("artists", "id");
             $table->foreignKey("album_id")
                 ->references("albums", "id");

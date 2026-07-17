@@ -15,7 +15,7 @@ class TracksController extends ModuleController
     {
         $builder->primaryKey('tracks.id')
                 ->join('LEFT JOIN track_meta ON track_meta.track_id = tracks.id')
-                ->join('LEFT JOIN artists ON artists.id = tracks.artist_id')
+                ->join('LEFT JOIN artists ON artists.id = tracks.track_artist_id')
                 ->join('LEFT JOIN albums ON albums.id = tracks.album_id')
                 ->dateColumn('tracks.created_at')
                 ->defaultSort('tracks.id', 'DESC');
@@ -31,7 +31,7 @@ class TracksController extends ModuleController
                 ->formatUsing(fn($col, $val) => $this->frontendLink($val, 'track.index'));
         $builder->column('created_at', 'Added', 'tracks.created_at');
 
-        $builder->filter('artist', 'tracks.artist_id')
+        $builder->filter('artist', 'tracks.track_artist_id')
                 ->label('Artist')
                 ->optionsFrom("SELECT id as value, name as label FROM artists ORDER BY name");
         $builder->filter('genre', 'albums.genre')
@@ -48,7 +48,7 @@ class TracksController extends ModuleController
     {
         // Read-only view form (tracks are filesystem-synced; no create/edit).
         $builder->field('title', 'Title', "(SELECT title FROM track_meta WHERE track_meta.track_id = tracks.id)")->input();
-        $builder->field('artist', 'Artist', "(SELECT name FROM artists WHERE artists.id = tracks.artist_id)")->input();
+        $builder->field('artist', 'Artist', "(SELECT name FROM artists WHERE artists.id = tracks.track_artist_id)")->input();
         $builder->field('album', 'Album', "(SELECT title FROM albums WHERE albums.id = tracks.album_id)")->input();
         $builder->field('duration', 'Duration', "(SELECT playtime_string FROM track_meta WHERE track_meta.track_id = tracks.id)")->input();
         $builder->field('bitrate', 'Bitrate', "(SELECT bitrate FROM track_meta WHERE track_meta.track_id = tracks.id)")->input();

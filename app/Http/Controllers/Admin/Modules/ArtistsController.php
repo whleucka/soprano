@@ -21,7 +21,7 @@ class ArtistsController extends ModuleController
         $builder->column('image', 'Image', 'artists.image')
                 ->formatUsing(fn($col, $val) => $this->thumbnail($val));
         $builder->column('name', 'Name', 'artists.name')->searchable();
-        $builder->column('tracks', 'Tracks', '(SELECT COUNT(*) FROM tracks WHERE tracks.artist_id = artists.id)');
+        $builder->column('tracks', 'Tracks', '(SELECT COUNT(*) FROM tracks WHERE tracks.track_artist_id = artists.id)');
         $builder->column('albums', 'Albums', '(SELECT COUNT(*) FROM albums WHERE albums.artist_id = artists.id)');
         $builder->column('open', 'Open', 'artists.hash')
                 ->formatUsing(fn($col, $val) => $this->frontendLink($val, 'artist.index'));
@@ -38,7 +38,7 @@ class ArtistsController extends ModuleController
         // Read-only view form (artists are filesystem-synced; no create/edit).
         $builder->field('name', 'Name')->input();
         $builder->field('image', 'Image')->input();
-        $builder->field('tracks', 'Tracks', "(SELECT COUNT(*) FROM tracks WHERE tracks.artist_id = artists.id)")->input();
+        $builder->field('tracks', 'Tracks', "(SELECT COUNT(*) FROM tracks WHERE tracks.track_artist_id = artists.id)")->input();
         $builder->field('albums', 'Albums', "(SELECT COUNT(*) FROM albums WHERE albums.artist_id = artists.id)")->input();
         $builder->field('musicbrainz_artist_id', 'MusicBrainz ID')->input();
         $builder->field('created_at', 'Added')->input();

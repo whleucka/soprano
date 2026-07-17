@@ -116,6 +116,130 @@ class SyncService
     }
 
     /**
+     * Re-read tags for every track already in the library and update its
+     * artist/album links and tag-derived meta IN PLACE — track ids never
+     * change, so likes, playlists, and play history are untouched. Use after
+     * retagging files (e.g. fixing "VA" artist tags). Files must keep their
+     * pathname: a rename changes the track hash and is a delete+insert on the
+     * next sync, not a refresh.
+     */
+    public function refreshMetadata(): object
+    {
+        $scanned = 0;
+        $updated = 0;
+        $missing = 0;
+        $failed  = 0;
+        $success = true;
+        $error   = null;
+
+        try {
+            $this->ensureCoversDir();
+
+            foreach (Track::query()->get() as $track) {
+                $scanned++;
+                $pathname = (string) $track->pathname;
+
+                if (!is_file($pathname)) {
+                    // Leave it for sync's orphan removal to decide.
+                    $missing++;
+                    continue;
+                }
+
+                try {
+                    $this->refreshTrack($track, $pathname);
+                    $updated++;
+                } catch (\Throwable $e) {
+                    $failed++;
+                    error_log(sprintf(
+                        '[soprano refresh] failed for %s: %s',
+                        $pathname,
+                        $e->getMessage(),
+                    ));
+                }
+            }
+
+            if ($updated > 0) {
+                $this->pruneEmptyAlbumsAndArtists();
+            }
+        } catch (\Throwable $e) {
+            $success = false;
+            $error   = $e->getMessage();
+        }
+
+        return (object) [
+            'success' => $success,
+            'scanned' => $scanned,
+            'updated' => $updated,
+            'missing' => $missing,
+            'failed'  => $failed,
+            'error'   => $error,
+        ];
+    }
+
+    private function refreshTrack(Track $track, string $pathname): void
+    {
+        $file = new SplFileInfo($pathname);
+        $info = $this->analyze($pathname);
+        $tags = $this->extractTags($info, $file);
+
+        $trackArtistId = $this->resolveArtist(
+            $tags['artist'],
+            $tags['musicbrainz_artist_id'],
+        );
+        $artistId = $tags['album_artist'] === $tags['artist']
+            ? $trackArtistId
+            : $this->resolveArtist($tags['album_artist'], '');
+        $albumId = $this->resolveAlbum(
+            $artistId,
+            $tags['album_artist'],
+            $tags['album'],
+            $tags['genre'],
+            $tags['year'],
+            $tags['replaygain_album_gain'],
+            $tags['replaygain_album_peak'],
+            $tags['musicbrainz_album_id'],
+            $info,
+        );
+
+        $track->update([
+            'artist_id'       => $artistId,
+            'track_artist_id' => $trackArtistId,
+            'album_id'        => $albumId,
+        ]);
+
+        // Tag-derived meta only — lyrics stay untouched unless the file
+        // actually carries them, so LRCLIB backfill is never clobbered.
+        $meta = TrackMeta::where('track_id', (string) $track->id)->first();
+        $fields = [
+            'title'                 => $tags['title'],
+            'track_number'          => $tags['track_number'],
+            'disc_number'           => $tags['disc_number'] ?: null,
+            'composer'              => $tags['composer'] ?: null,
+            'genre'                 => $tags['track_genre'],
+            'year'                  => $tags['track_year'],
+            'bpm'                   => $tags['bpm'] ?: null,
+            'replaygain_track_gain' => $tags['replaygain_track_gain'],
+            'replaygain_track_peak' => $tags['replaygain_track_peak'],
+            'musicbrainz_track_id'  => $tags['musicbrainz_track_id'] ?: null,
+        ];
+        if ($tags['lyrics'] !== '') {
+            $fields['lyrics'] = $tags['lyrics'];
+        }
+
+        if ($meta instanceof TrackMeta) {
+            $meta->update($fields);
+        } else {
+            TrackMeta::create($fields + [
+                'track_id'        => (int) $track->id,
+                'playtime_string' => $tags['playtime_string'],
+                'length_ms'       => $tags['length_ms'],
+                'bitrate'         => $tags['bitrate'],
+                'mime_type'       => $tags['mime_type'],
+            ]);
+        }
+    }
+
+    /**
      * Re-resolve album cover art without a full library scan.
      *
      * By default this only touches albums missing a cover (filling holes left by
@@ -226,6 +350,7 @@ class SyncService
         $db->execute("DELETE FROM albums WHERE id NOT IN (SELECT DISTINCT album_id FROM tracks)");
         $db->execute(
             "DELETE FROM artists WHERE id NOT IN (SELECT DISTINCT artist_id FROM tracks)
+             AND id NOT IN (SELECT DISTINCT track_artist_id FROM tracks)
              AND id NOT IN (SELECT DISTINCT artist_id FROM albums)"
         );
     }
@@ -236,10 +361,16 @@ class SyncService
         $info     = $this->analyze($pathname);
         $tags     = $this->extractTags($info, $file);
 
-        $artistId = $this->resolveArtist(
-            $tags['album_artist'],
+        // The MusicBrainz artist id in the tags belongs to the performing
+        // (track) artist; the album artist only shares it when they're the
+        // same name (i.e. everything except compilations).
+        $trackArtistId = $this->resolveArtist(
+            $tags['artist'],
             $tags['musicbrainz_artist_id'],
         );
+        $artistId = $tags['album_artist'] === $tags['artist']
+            ? $trackArtistId
+            : $this->resolveArtist($tags['album_artist'], '');
         $albumId  = $this->resolveAlbum(
             $artistId,
             $tags['album_artist'],
@@ -253,11 +384,12 @@ class SyncService
         );
 
         $track = Track::create([
-            'hash'      => $trackHash,
-            'artist_id' => $artistId,
-            'album_id'  => $albumId,
-            'filename'  => $file->getFilename(),
-            'pathname'  => $pathname,
+            'hash'            => $trackHash,
+            'artist_id'       => $artistId,
+            'track_artist_id' => $trackArtistId,
+            'album_id'        => $albumId,
+            'filename'        => $file->getFilename(),
+            'pathname'        => $pathname,
         ]);
 
         if (!$track instanceof Track) {
@@ -274,6 +406,8 @@ class SyncService
             'bitrate'               => $tags['bitrate'],
             'mime_type'             => $tags['mime_type'],
             'composer'              => $tags['composer'] ?: null,
+            'genre'                 => $tags['track_genre'],
+            'year'                  => $tags['track_year'],
             'bpm'                   => $tags['bpm'] ?: null,
             'replaygain_track_gain' => $tags['replaygain_track_gain'],
             'replaygain_track_peak' => $tags['replaygain_track_peak'],
@@ -375,6 +509,15 @@ class SyncService
         return strtolower(trim(preg_replace('/\s+/u', ' ', $value) ?? $value));
     }
 
+    private function isVariousArtists(string $name): bool
+    {
+        return in_array(
+            $this->normalize($name),
+            ['va', 'v.a.', 'v/a', 'various', 'various artists'],
+            true,
+        );
+    }
+
     private function analyze(string $pathname): array
     {
         try {
@@ -418,6 +561,18 @@ class SyncService
             $albumArtist = self::UNKNOWN_ARTIST;
         }
 
+        // Collapse "VA"/"Various" spellings to one canonical row so comps
+        // group together regardless of how the rip was tagged.
+        if ($this->isVariousArtists($albumArtist)) {
+            $albumArtist = self::VARIOUS_ARTISTS;
+        }
+        if ($this->isVariousArtists($artist)) {
+            $artist = self::VARIOUS_ARTISTS;
+        }
+        if ($artist === '') {
+            $artist = $albumArtist;
+        }
+
         $album = $tag('album');
         if ($album === '') {
             $album = self::UNKNOWN_ALBUM;
@@ -427,6 +582,11 @@ class SyncService
         if ($title === '') {
             $title = pathinfo($file->getFilename(), PATHINFO_FILENAME);
         }
+
+        // Raw per-track genre/year go to track_meta (null when untagged);
+        // the defaulted values below are only for the album row.
+        $trackGenre = $tag('genre') ?: null;
+        $trackYear  = $tag('year') ?: null;
 
         $genre = $tag('genre');
         if ($genre === '') {
@@ -448,11 +608,14 @@ class SyncService
             : null;
 
         return [
+            'artist'                 => $artist,
             'album_artist'           => $albumArtist,
             'album'                  => $album,
             'title'                  => $title,
             'genre'                  => $genre,
             'year'                   => $year,
+            'track_genre'            => $trackGenre,
+            'track_year'             => $trackYear,
             'track_number'           => $tag('track_number'),
             'disc_number'            => $tag('part_of_a_set'),
             'playtime_string'        => (string) ($info['playtime_string'] ?? ''),

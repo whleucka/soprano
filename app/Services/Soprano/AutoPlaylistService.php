@@ -207,11 +207,11 @@ class AutoPlaylistService
         }
 
         $artistIds = $this->ids(db()->fetchAll(
-            "SELECT t.artist_id AS id
+            "SELECT t.track_artist_id AS id
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              WHERE tp.client_id = ? AND $band AND " . self::NOT_SKIPPED . "
-             GROUP BY t.artist_id
+             GROUP BY t.track_artist_id
              ORDER BY COUNT(*) DESC
              LIMIT 15",
             [$clientId, $fromHour, $toHour],
@@ -237,7 +237,7 @@ class AutoPlaylistService
         $where  = [];
         $params = [$clientId, $fromHour, $toHour];
         if (!empty($artistIds)) {
-            $where[]  = "t.artist_id IN (" . implode(',', array_fill(0, count($artistIds), '?')) . ")";
+            $where[]  = "t.track_artist_id IN (" . implode(',', array_fill(0, count($artistIds), '?')) . ")";
             $params   = array_merge($params, $artistIds);
         }
         if (!empty($genres)) {

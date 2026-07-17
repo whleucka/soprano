@@ -31,7 +31,7 @@ class MusicService
 
     private const TRACK_JOINS =
         "JOIN albums al ON al.id = t.album_id
-         JOIN artists ar ON ar.id = t.artist_id
+         JOIN artists ar ON ar.id = t.track_artist_id
          LEFT JOIN track_meta tm ON tm.track_id = t.id";
 
     private const ALBUM_COLUMNS =
@@ -85,11 +85,11 @@ class MusicService
         $row = db()->fetch(
             "SELECT
                 (SELECT COUNT(*) FROM albums WHERE artist_id = ?) AS album_count,
-                (SELECT COUNT(*) FROM tracks WHERE artist_id = ?) AS track_count,
+                (SELECT COUNT(*) FROM tracks WHERE track_artist_id = ?) AS track_count,
                 (SELECT SUM(tm.length_ms)
                  FROM tracks t
                  LEFT JOIN track_meta tm ON tm.track_id = t.id
-                 WHERE t.artist_id = ?) AS total_length_ms",
+                 WHERE t.track_artist_id = ?) AS total_length_ms",
             [$artistId, $artistId, $artistId],
         );
 
@@ -254,7 +254,7 @@ class MusicService
         $rows = db()->fetchAll(
             "SELECT t.id AS track_id,
                     t.album_id,
-                    t.artist_id,
+                    t.track_artist_id AS artist_id,
                     t.pathname,
                     ar.name AS artist,
                     al.title AS album,
@@ -262,7 +262,7 @@ class MusicService
                     tm.length_ms AS length_ms,
                     tm.playtime_string AS playtime_string
              FROM tracks t
-             JOIN artists ar ON ar.id = t.artist_id
+             JOIN artists ar ON ar.id = t.track_artist_id
              JOIN albums al ON al.id = t.album_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
              ORDER BY ar.name, al.title, tm.title"
@@ -385,6 +385,7 @@ class MusicService
         $db->execute("DELETE FROM albums WHERE id NOT IN (SELECT DISTINCT album_id FROM tracks)");
         $db->execute(
             "DELETE FROM artists WHERE id NOT IN (SELECT DISTINCT artist_id FROM tracks)
+             AND id NOT IN (SELECT DISTINCT track_artist_id FROM tracks)
              AND id NOT IN (SELECT DISTINCT artist_id FROM albums)"
         );
     }
@@ -452,7 +453,7 @@ class MusicService
                     COUNT(tp.id) AS plays, " . self::LIKED_COLUMN . "
              FROM tracks t " . self::TRACK_JOINS . "
              JOIN track_plays tp ON tp.track_id = t.id
-             WHERE t.artist_id = ?
+             WHERE t.track_artist_id = ?
              GROUP BY t.id
              ORDER BY plays DESC, tm.title ASC
              LIMIT ?",
