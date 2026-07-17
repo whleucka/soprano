@@ -757,16 +757,17 @@ input:-webkit-autofill:active {
   object-fit: cover;
   flex-shrink: 0;
 }
-/* Thin resume bar under partially-played episodes (Continue Listening + the
-   episode list). max-width keeps it from spanning the whole row on desktop. */
-#podcasts .episode-progress {
+/* Thin resume bar under partially-played episodes. Unscoped: used by the
+   podcasts page (episode list + Continue Listening) and the home rail.
+   max-width keeps it from spanning the whole row on desktop. */
+.episode-progress {
   height: 3px;
   max-width: 320px;
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.12);
   overflow: hidden;
 }
-#podcasts .episode-progress-bar {
+.episode-progress-bar {
   height: 100%;
   border-radius: 2px;
   background: var(--accent);

@@ -1,0 +1,24 @@
+{% if episodes %}
+<div class="d-inline-flex align-items-center gap-2 mt-5">
+  <h2 class="mb-0"><i class="bi bi-play-btn text-success pe-1"></i> Continue Listening</h2>
+  <span class="badge bg-dark ms-1">
+      <a hx-boost="true" href="{{ uri('podcasts.index') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
+  </span>
+</div>
+<div class="d-flex justify-content-start py-2 scrollable">
+  {% for e in episodes %}
+    <div class="d-flex flex-column album-cont radio-cont" title="{{ e.episode_title }}"
+         hx-get="{{ uri('player.play-podcast-episode', [e.podcast_hash, e.episode_id]) }}" hx-swap="none">
+      <div class="cover-wrap position-relative">
+        <img title="{{ e.episode_title }}" class="cover" src="{{ e.image }}" loading="lazy" style="cursor: pointer;" />
+      </div>
+      <div class="episode-progress mt-1" role="progressbar" aria-valuenow="{{ e.percent }}" aria-valuemin="0" aria-valuemax="100">
+        <div class="episode-progress-bar" style="width: {{ e.percent }}%"></div>
+      </div>
+      <span title="{{ e.episode_title }}" class="title truncate fw-bold mt-1">{{ e.episode_title }}</span>
+      <span title="{{ e.podcast_title }}" class="artist small truncate"><i class="bi bi-mic pe-1"></i> {{ e.podcast_title }}</span>
+      <span class="artist small">{{ e.remaining_min }} min left</span>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

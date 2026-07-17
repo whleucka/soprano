@@ -103,6 +103,16 @@ class HomeController extends Controller
         ]);
     }
 
+    #[Get("/home/continue-listening", "home.continue-listening")]
+    public function continueListening(): string
+    {
+        // Renders its own section header so the whole block disappears when
+        // nothing is in progress (unlike the always-visible rails).
+        return $this->render("home/continue-listening.html.twig", [
+            "episodes" => $this->podcasts->getInProgress(),
+        ]);
+    }
+
     #[Get("/home/rediscover", "home.rediscover")]
     public function rediscover(): string
     {
