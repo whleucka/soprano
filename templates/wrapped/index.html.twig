@@ -16,7 +16,7 @@
 
   <div class="p-3 scrollable">
     {% if review.totals.plays == 0 %}
-      <p class="lead"><i class="bi bi-stars text-warning pe-1"></i> Nothing played in {{ review.year }} yet — press play and check back.</p>
+      <p class="lead"><i class="bi bi-stars tn-icon-purple pe-1"></i> Nothing played in {{ review.year }} yet — press play and check back.</p>
     {% else %}
 
       <div class="wrapped-tiles">
@@ -56,7 +56,7 @@
       {% endif %}
 
       {% if review.top_artists %}
-        <h2 class="mt-5"><i class="bi bi-person-hearts text-danger pe-1"></i> Top Artists</h2>
+        <h2 class="mt-5"><i class="bi bi-person-hearts tn-icon-purple pe-1"></i> Top Artists</h2>
         <div class="wrapped-artists py-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
           {% for a in review.top_artists %}
             <a class="wrapped-artist" href="{{ uri('artist.index', [a.hash]) }}">
@@ -70,7 +70,7 @@
       {% endif %}
 
       {% if review.top_tracks %}
-        <h2 class="mt-5"><i class="bi bi-star-fill text-warning pe-1"></i> Top Tracks</h2>
+        <h2 class="mt-5"><i class="bi bi-star-fill tn-icon-yellow pe-1"></i> Top Tracks</h2>
         <div class="wrapped-tracks py-2">
           {% for t in review.top_tracks %}
             <div class="wrapped-track" hx-get="{{ uri('player.play', [t.hash]) }}?src=wrapped" hx-swap="none" title="Play {{ t.title }}">
@@ -87,7 +87,7 @@
       {% endif %}
 
       {% if review.top_albums %}
-        <h2 class="mt-5"><i class="bi bi-disc text-secondary pe-1"></i> Top Albums</h2>
+        <h2 class="mt-5"><i class="bi bi-disc tn-icon-cyan pe-1"></i> Top Albums</h2>
         <div class="wrapped-albums py-2" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
           {% for al in review.top_albums %}
             <a class="wrapped-album" href="{{ uri('album.index', [al.hash]) }}">
@@ -100,7 +100,7 @@
       {% endif %}
 
       {% if review.top_genres %}
-        <h2 class="mt-5"><i class="bi bi-vinyl-fill text-info pe-1"></i> Top Genres</h2>
+        <h2 class="mt-5"><i class="bi bi-vinyl-fill tn-icon-green pe-1"></i> Top Genres</h2>
         {% set gmax = (review.top_genres|first).plays %}
         <div class="wrapped-genres py-2">
           {% for g in review.top_genres %}
@@ -113,7 +113,7 @@
         </div>
       {% endif %}
 
-      <h2 class="mt-5"><i class="bi bi-bar-chart-fill text-success pe-1"></i> Month by Month</h2>
+      <h2 class="mt-5"><i class="bi bi-bar-chart-fill tn-icon-blue pe-1"></i> Month by Month</h2>
       <div class="wrapped-chart py-2">
         {% for m in review.by_month %}
           <div class="wrapped-bar" title="{{ m.month }}: {{ m.plays }} plays">
@@ -123,7 +123,7 @@
         {% endfor %}
       </div>
 
-      <h2 class="mt-5"><i class="bi bi-clock-history text-warning pe-1"></i> Listening Clock</h2>
+      <h2 class="mt-5"><i class="bi bi-clock-history tn-icon-orange pe-1"></i> Listening Clock</h2>
       <div class="wrapped-chart wrapped-clock py-2">
         {% for plays in review.by_hour %}
           <div class="wrapped-bar" title="{{ '%02d'|format(loop.index0) }}:00 — {{ plays }} plays">

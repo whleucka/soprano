@@ -48,6 +48,24 @@
   --accent-4: turquoise;
   --accent-grad: linear-gradient(90deg, #b30404 41%, #ff00aa 100%);
 
+  /* Tokyo Night palette — scoped to profile + wrapped views (keeps the
+     red/pink brand accent above reserved for the player bar + auth pages) */
+  --tn-bg: #1a1b26;
+  --tn-surface: #16161e;
+  --tn-elevated: #24283b;
+  --tn-fg: #c0caf5;
+  --tn-muted: #565f89;
+  --tn-blue: #7aa2f7;
+  --tn-cyan: #7dcfff;
+  --tn-green: #9ece6a;
+  --tn-purple: #bb9af7;
+  --tn-orange: #ff9e64;
+  --tn-yellow: #e0af68;
+  --tn-teal: #1abc9c;
+  --tn-red: #f7768e;
+  --tn-grad: linear-gradient(90deg, var(--tn-blue) 0%, var(--tn-purple) 100%);
+  --tn-grad-2: linear-gradient(135deg, var(--tn-cyan) 0%, var(--tn-teal) 100%);
+
   /* Text */
   --text: #fff;
   --text-soft: #ccc;
@@ -1067,18 +1085,35 @@ input:-webkit-autofill:active {
 }
 
 /** Wrapped (year in review) */
-#wrapped .hero { --hero-color: rgba(179, 4, 4, 0.85); }
+#wrapped .hero { --hero-color: rgba(187, 154, 247, 0.5); }
 
 #wrapped .hero .wrapped-title {
   font-family: var(--font-display);
   font-size: clamp(2.4rem, 6vw, 4rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  background: linear-gradient(90deg, #fff 30%, var(--accent-2) 100%);
+  background: linear-gradient(90deg, #fff 20%, var(--tn-purple) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
+
+/* Section headings on wrapped + profile read as a designed set */
+#wrapped h2,
+#profile h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Tokyo Night icon accents for section headings + callouts */
+.tn-icon-blue   { color: var(--tn-blue); }
+.tn-icon-cyan   { color: var(--tn-cyan); }
+.tn-icon-green  { color: var(--tn-green); }
+.tn-icon-purple { color: var(--tn-purple); }
+.tn-icon-orange { color: var(--tn-orange); }
+.tn-icon-yellow { color: var(--tn-yellow); }
+.tn-icon-red    { color: var(--tn-red); }
 
 /* Home banner — only rendered Dec 15 through Jan 15 */
 .wrapped-banner {
@@ -1087,15 +1122,15 @@ input:-webkit-autofill:active {
   gap: 1rem;
   padding: 0.9rem 1.1rem;
   border-radius: var(--radius);
-  background: var(--accent-grad);
-  color: #fff;
+  background: var(--tn-grad);
+  color: #1a1b26;
   text-decoration: none;
   transition: transform 0.12s ease, filter 0.12s ease;
 }
 
 .wrapped-banner:hover,
 .wrapped-banner:focus {
-  color: #fff;
+  color: #1a1b26;
   transform: translateY(-2px);
   filter: brightness(1.1);
 }
@@ -1127,6 +1162,7 @@ input:-webkit-autofill:active {
   padding: 1rem;
   border-radius: var(--radius);
   background: var(--surface);
+  border: 1px solid rgba(122, 162, 247, 0.12);
 }
 
 .wrapped-num {
@@ -1134,7 +1170,7 @@ input:-webkit-autofill:active {
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   font-weight: 800;
   line-height: 1.1;
-  background: var(--accent-grad);
+  background: var(--tn-grad);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1159,11 +1195,12 @@ input:-webkit-autofill:active {
   padding: 0.9rem 1.1rem;
   border-radius: var(--radius);
   background: var(--surface);
+  border: 1px solid rgba(122, 162, 247, 0.12);
   color: var(--text-soft);
   text-decoration: none;
 }
 
-.wrapped-callout .bi { font-size: 1.4rem; color: var(--accent-2); }
+.wrapped-callout .bi { font-size: 1.4rem; color: var(--tn-cyan); }
 .wrapped-callout b { color: var(--text); }
 
 a.wrapped-callout:hover,
@@ -1308,7 +1345,7 @@ a.wrapped-callout:focus {
   display: block;
   height: 100%;
   border-radius: 5px;
-  background: var(--accent-grad);
+  background: var(--tn-grad);
 }
 
 /* Month / hour bar charts */
@@ -1337,11 +1374,11 @@ a.wrapped-callout:focus {
   height: calc((100% - 1.1rem) * var(--h, 0) / 100);
   min-height: 2px;
   border-radius: 3px 3px 0 0;
-  background: var(--accent-grad);
+  background: var(--tn-grad-2);
 }
 
 /* ---- Profile page -------------------------------------------------------- */
-#profile .hero { --hero-color: rgba(23, 96, 255, 0.8); }
+#profile .hero { --hero-color: rgba(122, 162, 247, 0.5); }
 
 /* Player-settings + danger-zone panels reuse the wrapped surface look. */
 .settings-card,
@@ -1349,11 +1386,12 @@ a.wrapped-callout:focus {
   padding: 1.1rem;
   border-radius: var(--radius);
   background: var(--surface);
+  border: 1px solid rgba(122, 162, 247, 0.12);
   max-width: 560px;
 }
 
 .danger-card {
-  border: 1px solid rgba(248, 113, 113, 0.35);
+  border: 1px solid rgba(247, 118, 142, 0.35);
 }
 
 .settings-hint {
@@ -1385,4 +1423,19 @@ a.wrapped-callout:focus {
   color: var(--text-muted);
   height: 1rem;
   line-height: 1rem;
+}
+
+/* Mobile: lock grids to clean columns so tiles/art don't get too wide or
+   too cramped, and shrink the avatar + genre-name column to fit. */
+@media (max-width: 575.98px) {
+  .wrapped-tiles { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .wrapped-tile { padding: 0.75rem; }
+  .wrapped-callouts { grid-template-columns: 1fr; }
+  .wrapped-artists,
+  .wrapped-albums { grid-template-columns: repeat(2, 1fr); }
+  .wrapped-artist { padding: 0.75rem 0.5rem; }
+  .wrapped-artist img { width: 72px; height: 72px; }
+  .wrapped-genre { grid-template-columns: minmax(70px, 90px) 1fr auto; gap: 0.5rem; }
+  .settings-card .form-select,
+  .danger-card .form-control { max-width: 100%; }
 }

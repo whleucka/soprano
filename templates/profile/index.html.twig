@@ -16,7 +16,7 @@
     {% include "components/flash.html.twig" %}
 
     {# ---- Listening stats ------------------------------------------------ #}
-    <h2 class="mb-3"><i class="bi bi-bar-chart-fill text-warning pe-1"></i> Your listening</h2>
+    <h2 class="mb-3"><i class="bi bi-bar-chart-fill tn-icon-blue pe-1"></i> Your listening</h2>
 
     {% if stats.plays == 0 %}
       <p class="lead"><i class="bi bi-music-note-beamed pe-1"></i> Nothing played yet — press play and your stats will show up here.</p>
@@ -86,7 +86,7 @@
     {% endif %}
 
     {# ---- Player settings ------------------------------------------------ #}
-    <h2 class="mt-5 mb-3"><i class="bi bi-sliders text-info pe-1"></i> Player settings</h2>
+    <h2 class="mt-5 mb-3"><i class="bi bi-sliders tn-icon-purple pe-1"></i> Player settings</h2>
     <form class="settings-card" hx-post="{{ uri('profile.settings') }}"
           hx-target="#profile" hx-select="#profile" hx-swap="outerHTML">
       {{ csrf()|raw }}
@@ -111,7 +111,7 @@
     </form>
 
     {# ---- Danger zone ---------------------------------------------------- #}
-    <h2 class="mt-5 mb-3"><i class="bi bi-exclamation-triangle-fill text-danger pe-1"></i> Danger zone</h2>
+    <h2 class="mt-5 mb-3"><i class="bi bi-exclamation-triangle-fill tn-icon-red pe-1"></i> Danger zone</h2>
     <div class="danger-card">
       <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
         <div class="flex-grow-1">
