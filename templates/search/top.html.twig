@@ -17,6 +17,8 @@
     <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a></li>
     <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("playlists.index") }}"><i class="bi bi-music-note-list pe-1"></i> Playlists</a></li>
 
+    <li class="d-block"><a class="dropdown-item" href="{{ uri("profile.index") }}"><i class="bi bi-person pe-1"></i> Profile</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li class="d-block">
       <form method="POST" action="{{ uri('client.auth.sign-out.post') }}" hx-post="{{ uri('client.auth.sign-out.post') }}" hx-target="this" hx-swap="none" class="m-0">
         {{ csrf()|raw }}

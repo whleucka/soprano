@@ -1340,6 +1340,46 @@ a.wrapped-callout:focus {
   background: var(--accent-grad);
 }
 
+/* ---- Profile page -------------------------------------------------------- */
+#profile .hero { --hero-color: rgba(23, 96, 255, 0.8); }
+
+/* Player-settings + danger-zone panels reuse the wrapped surface look. */
+.settings-card,
+.danger-card {
+  padding: 1.1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  max-width: 560px;
+}
+
+.danger-card {
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.settings-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.settings-card .form-check-label { font-weight: 600; }
+
+.settings-card .form-select,
+.danger-card .form-control {
+  max-width: 320px;
+  background: var(--surface-hover);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+.settings-card .form-select:focus,
+.danger-card .form-control:focus {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: #555;
+  box-shadow: none;
+}
+
 .wrapped-bar-label {
   font-size: 0.68rem;
   color: var(--text-muted);

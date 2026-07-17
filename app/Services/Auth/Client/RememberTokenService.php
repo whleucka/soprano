@@ -72,6 +72,13 @@ class RememberTokenService
         session()->regenerate();
         session()->set("client_uuid", $client->uuid);
 
+        // Restored session starts empty — seed the queue with the client's
+        // saved shuffle/repeat defaults, same as a fresh sign-in.
+        container()->get(\App\Services\Soprano\PlaylistService::class)->applyDefaults(
+            (bool) ($client->default_shuffle ?? false),
+            $client->default_repeat ?? 'off',
+        );
+
         // Sliding expiry: stays signed in as long as the app gets used
         // at least once a year on this device.
         $token->update(["expires_at" => time() + self::LIFETIME]);

@@ -20,6 +20,7 @@ class ClientSignInService
             session()->regenerate();
             session()->set("client_uuid", $client->uuid);
             container()->get(RememberTokenService::class)->issue($client);
+            $this->seedPlayerDefaults($client);
             event(new ClientSignedIn($client, $ip));
             return true;
         }
@@ -31,6 +32,18 @@ class ClientSignInService
         ));
 
         return false;
+    }
+
+    /**
+     * Seed the fresh session's queue with the client's saved shuffle/repeat
+     * defaults so a new listening session starts how they prefer.
+     */
+    private function seedPlayerDefaults(Client $client): void
+    {
+        container()->get(\App\Services\Soprano\PlaylistService::class)->applyDefaults(
+            (bool) ($client->default_shuffle ?? false),
+            $client->default_repeat ?? 'off',
+        );
     }
 
     public function signOut(): void

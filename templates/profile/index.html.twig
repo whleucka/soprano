@@ -1,0 +1,138 @@
+{% extends "layout/app.html.twig" %}
+
+{% block title %}Soprano - Profile{% endblock %}
+
+{% block view %}
+<section id="profile" class="h-100 d-flex flex-column">
+  <div class="hero d-flex flex-column p-3">
+    <h1><i class="bi bi-person-circle pe-1"></i> {{ client.username }}</h1>
+    <h5 class="stats">
+      Member since {{ client.created_at|date("F Y") }}
+      {% if stats.plays > 0 %}&middot; {{ stats.plays }} {{ stats.plays == 1 ? "play" : "plays" }}{% endif %}
+    </h5>
+  </div>
+
+  <div class="p-3 scrollable">
+    {% include "components/flash.html.twig" %}
+
+    {# ---- Listening stats ------------------------------------------------ #}
+    <h2 class="mb-3"><i class="bi bi-bar-chart-fill text-warning pe-1"></i> Your listening</h2>
+
+    {% if stats.plays == 0 %}
+      <p class="lead"><i class="bi bi-music-note-beamed pe-1"></i> Nothing played yet — press play and your stats will show up here.</p>
+    {% else %}
+      <div class="wrapped-tiles">
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ stats.plays }}</span>
+          <span class="wrapped-label">tracks played</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ stats.tracks }}</span>
+          <span class="wrapped-label">different tracks</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ stats.hours >= 1 ? stats.hours : stats.minutes }}</span>
+          <span class="wrapped-label">{{ stats.hours >= 1 ? "hours of music" : "minutes of music" }}</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ stats.artists }}</span>
+          <span class="wrapped-label">artists</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ stats.albums }}</span>
+          <span class="wrapped-label">albums</span>
+        </div>
+        <div class="wrapped-tile">
+          <span class="wrapped-num">{{ stats.days }}</span>
+          <span class="wrapped-label">{{ stats.days == 1 ? "day" : "days" }} with music</span>
+        </div>
+      </div>
+
+      <div class="wrapped-callouts mt-3">
+        {% if stats.top_artist %}
+          <a class="wrapped-callout" hx-boost="true" href="{{ uri('artist.index', [stats.top_artist.hash]) }}"
+             hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
+            <i class="bi bi-person-fill"></i>
+            <span>Most played artist<br><b>{{ stats.top_artist.name }}</b> &middot; {{ stats.top_artist.plays }} plays</span>
+          </a>
+        {% endif %}
+        {% if stats.top_genre %}
+          <div class="wrapped-callout">
+            <i class="bi bi-vinyl-fill"></i>
+            <span>Top genre<br><b>{{ stats.top_genre.genre }}</b> &middot; {{ stats.top_genre.plays }} plays</span>
+          </div>
+        {% endif %}
+        <div class="wrapped-callout">
+          <i class="bi bi-heart-fill text-heart"></i>
+          <span>Liked tracks<br><b>{{ stats.likes }}</b> in your library</span>
+        </div>
+        <div class="wrapped-callout">
+          <i class="bi bi-music-note-list"></i>
+          <span>Playlists<br><b>{{ stats.playlists }}</b> created</span>
+        </div>
+      </div>
+
+      {% if wrapped_season|default(false) %}
+        <a class="wrapped-banner mt-4" hx-boost="true" href="{{ uri('wrapped.show', [wrapped_year]) }}"
+           hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-on::before-request="hidePlaylist()">
+          <i class="bi bi-stars"></i>
+          <span class="d-flex flex-column">
+            <span class="wrapped-banner-title">Your {{ wrapped_year }} Wrapped is here</span>
+            <span class="wrapped-banner-sub">A year of listening, all in one place</span>
+          </span>
+          <i class="bi bi-arrow-right ms-auto"></i>
+        </a>
+      {% endif %}
+    {% endif %}
+
+    {# ---- Player settings ------------------------------------------------ #}
+    <h2 class="mt-5 mb-3"><i class="bi bi-sliders text-info pe-1"></i> Player settings</h2>
+    <form class="settings-card" hx-post="{{ uri('profile.settings') }}"
+          hx-target="#profile" hx-select="#profile" hx-swap="outerHTML">
+      {{ csrf()|raw }}
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="default_shuffle"
+               name="default_shuffle" value="1" {% if settings.shuffle %}checked{% endif %}>
+        <label class="form-check-label" for="default_shuffle">
+          Shuffle by default
+          <span class="settings-hint d-block">Start new queues with shuffle turned on.</span>
+        </label>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="default_repeat">Repeat by default</label>
+        <select class="form-select" id="default_repeat" name="default_repeat">
+          <option value="off" {{ settings.repeat == 'off' ? 'selected' }}>Off</option>
+          <option value="all" {{ settings.repeat == 'all' ? 'selected' }}>Repeat all</option>
+          <option value="one" {{ settings.repeat == 'one' ? 'selected' }}>Repeat one</option>
+        </select>
+        <span class="settings-hint d-block mt-1">Applied to new queues, and to your current one right away.</span>
+      </div>
+      <button type="submit" class="btn btn-success"><i class="bi bi-check-lg pe-1"></i> Save settings</button>
+    </form>
+
+    {# ---- Danger zone ---------------------------------------------------- #}
+    <h2 class="mt-5 mb-3"><i class="bi bi-exclamation-triangle-fill text-danger pe-1"></i> Danger zone</h2>
+    <div class="danger-card">
+      <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+        <div class="flex-grow-1">
+          <strong>Delete your account</strong>
+          <span class="settings-hint d-block">Permanently removes your account, listening history, likes and playlists. This cannot be undone.</span>
+        </div>
+        <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#delete-confirm" aria-expanded="false">
+          Delete account&hellip;
+        </button>
+      </div>
+      <div class="collapse mt-3" id="delete-confirm">
+        <form hx-post="{{ uri('profile.delete') }}" hx-target="#profile" hx-select="#profile" hx-swap="outerHTML">
+          {{ csrf()|raw }}
+          <label class="form-label" for="delete-password">Enter your password to confirm</label>
+          <input type="password" class="form-control mb-2 {% if validationErrors.password is defined %}is-invalid{% endif %}"
+                 id="delete-password" name="password" autocomplete="current-password" placeholder="Password">
+          {% include 'components/validation.html.twig' with {'validate': 'password'} %}
+          <button type="submit" class="btn btn-danger mt-2"><i class="bi bi-trash pe-1"></i> Permanently delete my account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

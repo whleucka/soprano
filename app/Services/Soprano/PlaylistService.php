@@ -148,6 +148,28 @@ class PlaylistService
         state()->playlist = ["tracks" => $tracks, "order" => $order];
     }
 
+    /**
+     * Seed the session queue with a client's saved player defaults. Called
+     * once per session (sign-in / remember-me restore) before any queue is
+     * built, so it just sets the flags — the shuffle order is dealt later
+     * when tracks actually get queued.
+     */
+    public function applyDefaults(bool $shuffle, string $repeat): void
+    {
+        if (!in_array($repeat, self::REPEAT_MODES, true)) {
+            $repeat = "off";
+        }
+
+        $tracks = state()->playlist["tracks"] ?? [];
+        state()->playlist = [
+            "shuffle" => $shuffle,
+            "repeat"  => $repeat,
+            "order"   => $shuffle && !empty($tracks)
+                ? $this->buildOrder(count($tracks), (int) (state()->playlist["index"] ?? 0))
+                : null,
+        ];
+    }
+
     public function toggleShuffle()
     {
         $playlist = state()->playlist;
