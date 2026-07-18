@@ -1,3 +1,11 @@
+{% set slot_icons = {
+  'heavy-rotation': 'bi-fire text-danger',
+  'morning-mix':    'bi-sunrise text-warning',
+  'evening-mix':    'bi-moon-stars text-info',
+  'time-machine':   'bi-hourglass-split text-secondary',
+  'rediscover':     'bi-compass text-success',
+  'fresh-arrivals': 'bi-stars text-warning',
+} %}
 {% if playlists %}
   {% for p in playlists %}
     <div class="d-flex flex-column album-cont" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" style="cursor: pointer;">
@@ -6,8 +14,7 @@
           <img title="{{ p.name }}" class="cover" src="{{ p.cover }}" loading="lazy" />
         </a>
       </div>
-      <span title="{{ p.name }}" class="title truncate fw-bold mt-1"><i class="bi bi-stars pe-1"></i>{{ p.name }}</span>
-      <span class="artist small truncate">{{ p.track_count }} track{% if p.track_count != 1 %}s{% endif %}</span>
+      <span title="{{ p.name }}" class="title truncate fw-bold mt-1"><i class="bi {{ slot_icons[p.slot]|default('bi-stars text-warning') }} pe-1"></i>{{ p.name }}</span>
     </div>
   {% endfor %}
 {% else %}

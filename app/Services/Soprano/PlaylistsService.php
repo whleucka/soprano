@@ -51,13 +51,14 @@ class PlaylistsService
      * order. Same row shape as getPlaylists(); drives the home "Made For You"
      * rail.
      *
-     * @return array<int, array{hash: string, name: string, track_count: int, cover: string}>
+     * @return array<int, array{hash: string, name: string, slot: ?string, track_count: int, cover: string}>
      */
     public function getGeneratedPlaylists(): array
     {
         $rows = db()->fetchAll(
             "SELECT p.hash AS hash,
                     p.name AS name,
+                    p.slot AS slot,
                     (SELECT COUNT(*) FROM playlist_tracks pt WHERE pt.playlist_id = p.id) AS track_count,
                     (SELECT al.cover
                        FROM playlist_tracks pt
@@ -76,12 +77,13 @@ class PlaylistsService
         return array_map(fn($row) => $this->mapPlaylistRow($row), $rows);
     }
 
-    /** @return array{hash: string, name: string, track_count: int, cover: string} */
+    /** @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string} */
     private function mapPlaylistRow(array $row): array
     {
         return [
             'hash'        => $row['hash'],
             'name'        => $row['name'],
+            'slot'        => $row['slot'] ?? null,
             'track_count' => (int) $row['track_count'],
             'cover'       => $row['cover'] ?: '/images/no-album-art.png',
         ];
