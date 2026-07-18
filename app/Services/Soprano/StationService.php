@@ -48,13 +48,10 @@ class StationService
             'blurb' => 'Quieter, low-key listening',
             'where' => '(tf.danceability < 1.05 AND tf.avg_loudness_db <= -15)',
         ],
-        'kids-dance' => [
-            'name'  => "Kids' Dance Party",
+        'dance-party' => [
+            'name'  => 'Dance Party',
             'icon'  => 'bi-balloon',
             'blurb' => 'Bright, bouncy, major-key',
-            // Sound-only filter: bright major-key bounce in the dance-tempo
-            // band. It cannot screen lyrics — explicit tracks that *sound*
-            // bouncy will still land here.
             'where' => "(tf.danceability >= 1.2
                          AND tf.key_scale = 'major'
                          AND (tf.bpm BETWEEN 100 AND 165 OR tf.bpm / 2 BETWEEN 100 AND 165)
