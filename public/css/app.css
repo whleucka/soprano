@@ -883,10 +883,11 @@ input:-webkit-autofill:active {
 /* White hearts floating over cover art — overrides the base off-colour; the
    later equal-specificity hover/active rules keep the accent transition. */
 .like-overlay .liked {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   color: #fff;
   opacity: 0.85;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  margin: -4px;
 }
 .like-overlay .liked:hover {
   color: var(--accent);

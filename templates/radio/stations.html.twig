@@ -4,7 +4,7 @@
       <div class="cover-wrap position-relative">
         <img title="{{ s.name }}" class="cover" src="{{ s.cover }}" loading="lazy"
              hx-get="{{ uri('player.play-radio', [s.hash]) }}" hx-swap="none" style="cursor: pointer;" />
-        <div class="like-overlay position-absolute top-0 end-0 m-1"
+        <div class="like-overlay position-absolute top-0 end-0"
              hx-get="{{ uri('radio.like', [s.hash]) }}"
              hx-trigger="like-{{ s.hash }} from:body">
           {% include 'components/like-btn.html.twig' with { liked: s.liked, like_uri: uri('radio.like-toggle', [s.hash]) } %}

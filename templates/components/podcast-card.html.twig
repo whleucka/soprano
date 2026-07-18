@@ -3,7 +3,7 @@
     <a hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" href="{{ uri('podcasts.show', [p.hash]) }}">
       <img title="{{ p.title }}" class="cover" src="{{ p.thumbnail }}" loading="lazy" style="cursor: pointer;" />
     </a>
-    <div class="like-overlay position-absolute top-0 end-0 m-1"
+    <div class="like-overlay position-absolute top-0 end-0"
          hx-get="{{ uri('podcasts.like', [p.hash]) }}"
          hx-trigger="like-{{ p.hash }} from:body">
       {% include 'components/like-btn.html.twig' with { liked: p.liked, like_uri: uri('podcasts.like-toggle', [p.hash]) } %}
