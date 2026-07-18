@@ -34,6 +34,13 @@ RUN apt-get update && apt-get install -y \
 # Install Redis extension
 RUN pecl install redis && docker-php-ext-enable redis
 
+# Essentia (audio feature extraction for auto-playlist stations) lives in its
+# own venv; jobs find it via ESSENTIA_PYTHON (defaults to this path).
+RUN apt-get update && apt-get install -y python3 python3-venv \
+    && python3 -m venv /opt/essentia \
+    && /opt/essentia/bin/pip install --no-cache-dir essentia \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Xdebug and PCOV only in dev mode
 RUN if [ "$BUILD_MODE" = "dev" ]; then \
         pecl install xdebug && docker-php-ext-enable xdebug && \

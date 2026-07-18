@@ -47,6 +47,15 @@ $scheduler->php($jobs . "/soprano_playlists.php")
     ->onlyOne()
     ->output($logs . "soprano-playlists-" . date("Y-m-d") . ".log", true);
 
+// Soprano features - backfill audio features (BPM, danceability, key, energy)
+// via bin/essentia_extract.py for station queries. Keyless, CPU-only; batches
+// of 200/run (~2s per track), no-op once the library is analyzed or when the
+// extractor isn't installed.
+$scheduler->php($jobs . "/soprano_features.php")
+    ->everyMinute(30)
+    ->onlyOne()
+    ->output($logs . "soprano-features-" . date("Y-m-d") . ".log", true);
+
 // Mail worker - process queued emails
 $scheduler->php($jobs . "/mail_worker.php")
     ->everyMinute()

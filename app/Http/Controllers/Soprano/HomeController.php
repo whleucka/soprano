@@ -6,6 +6,7 @@ use App\Services\Soprano\MusicService;
 use App\Services\Soprano\PlaylistsService;
 use App\Services\Soprano\RadioService;
 use App\Services\Soprano\PodcastService;
+use App\Services\Soprano\StationService;
 use App\Services\Soprano\WrappedService;
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
@@ -20,6 +21,7 @@ class HomeController extends Controller
         private RadioService $radio,
         private PodcastService $podcasts,
         private WrappedService $wrapped,
+        private StationService $stations,
     ) {}
 
     #[Get("/", "home.root")]
@@ -36,6 +38,16 @@ class HomeController extends Controller
             // works year-round for any year.
             "wrapped_season" => $this->wrapped->isSeason(),
             "wrapped_year"   => $this->wrapped->seasonYear(),
+        ]);
+    }
+
+    #[Get("/home/stations", "home.stations")]
+    public function stations(): string
+    {
+        // Header lives in the fragment so the section vanishes until the
+        // feature backfill has analyzed something.
+        return $this->render("home/stations.html.twig", [
+            "stations" => $this->stations->available() ? $this->stations->stations() : [],
         ]);
     }
 

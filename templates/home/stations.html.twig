@@ -1,0 +1,15 @@
+{% if stations %}
+  <div class="d-inline-flex align-items-center gap-2">
+    <h2 class="mb-0"><i class="bi bi-broadcast-pin text-success pe-1"></i> Stations</h2>
+  </div>
+  <div class="d-flex justify-content-start gap-2 py-2 scrollable">
+    {% for slug, s in stations %}
+      <button class="btn btn-dark d-flex flex-column align-items-start p-3 text-start"
+              hx-get="{{ uri('player.play-station', [slug]) }}" hx-swap="none"
+              title="{{ s.blurb }}">
+        <span class="fw-bold text-nowrap"><i class="bi {{ s.icon }} pe-1"></i>{{ s.name }}</span>
+        <span class="small text-secondary text-nowrap">{{ s.blurb }}</span>
+      </button>
+    {% endfor %}
+  </div>
+{% endif %}

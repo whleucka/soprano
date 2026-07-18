@@ -13,7 +13,7 @@ class MusicService
      * The liked column is a per-client subquery and binds client()->id as its
      * FIRST placeholder, so params for feeds using it start with the client id.
      */
-    private const TRACK_COLUMNS =
+    public const TRACK_COLUMNS =
         "t.hash AS track_hash,
          al.hash AS album_hash,
          al.title AS album,
@@ -26,10 +26,10 @@ class MusicService
          tm.track_number AS track_number,
          tm.playtime_string AS playtime_string";
 
-    private const LIKED_COLUMN =
+    public const LIKED_COLUMN =
         "IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked";
 
-    private const TRACK_JOINS =
+    public const TRACK_JOINS =
         "JOIN albums al ON al.id = t.album_id
          JOIN artists ar ON ar.id = t.track_artist_id
          LEFT JOIN track_meta tm ON tm.track_id = t.id";
@@ -709,12 +709,12 @@ class MusicService
     }
 
     /** @return array<int,array<string,mixed>> */
-    private function mapTrackRows(array $rows): array
+    public function mapTrackRows(array $rows): array
     {
         return array_map(fn($row) => $this->mapTrackRow($row), $rows);
     }
 
-    private function mapTrackRow(array $row): array
+    public function mapTrackRow(array $row): array
     {
         $entry = [
             'hash'            => $row['track_hash'] ?? null,
