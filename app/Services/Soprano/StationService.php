@@ -48,9 +48,9 @@ class StationService
             'blurb' => 'Quieter, low-key listening',
             'where' => '(tf.danceability < 1.05 AND tf.avg_loudness_db <= -15)',
         ],
-        'dance-party' => [
-            'name'  => 'Dance Party',
-            'icon'  => 'bi-balloon',
+        'feel-good' => [
+            'name'  => 'Feel Good',
+            'icon'  => 'bi-sun',
             'blurb' => 'Bright, bouncy, major-key',
             'where' => "(tf.danceability >= 1.2
                          AND tf.key_scale = 'major'
