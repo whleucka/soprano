@@ -223,16 +223,32 @@ class MusicService
         return $this->mapTrackRows($rows);
     }
 
+    /**
+     * Results are ranked by relevance tier — exact track title, then title
+     * starts-with/contains, then album, then artist — so the song someone
+     * typed lands on top instead of wherever its artist falls alphabetically.
+     * Alphabetical order still applies within each tier.
+     */
     public function searchTracks(string $term, int $limit = 2500): array
     {
         $like = "%$term%";
+        $starts = "$term%";
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
              FROM tracks t " . self::TRACK_JOINS . "
              WHERE ar.name LIKE ? OR al.title LIKE ? OR tm.title LIKE ?
-             ORDER BY ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
+             ORDER BY CASE
+                 WHEN tm.title = ? THEN 0
+                 WHEN tm.title LIKE ? THEN 1
+                 WHEN tm.title LIKE ? THEN 2
+                 WHEN al.title LIKE ? THEN 3
+                 WHEN al.title LIKE ? THEN 4
+                 WHEN ar.name LIKE ? THEN 5
+                 ELSE 6
+             END,
+             ar.name, al.title, CAST(tm.track_number AS UNSIGNED)
              LIMIT ?",
-            [client()->id, $like, $like, $like, $limit],
+            [client()->id, $like, $like, $like, $term, $starts, $like, $starts, $like, $starts, $limit],
         );
 
         return $this->mapTrackRows($rows);
