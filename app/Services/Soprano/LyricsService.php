@@ -96,7 +96,7 @@ class LyricsService
         }
 
         $title    = trim((string) ($meta->title ?? ''));
-        $artist   = trim((string) ($track->artist()->name ?? ''));
+        $artist   = trim((string) ($track->trackArtist()->name ?? ''));
         $album    = trim((string) ($track->album()->title ?? ''));
         $duration = (int) round(((int) ($meta->length_ms ?? 0)) / 1000);
 

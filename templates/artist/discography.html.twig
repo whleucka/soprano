@@ -9,6 +9,9 @@
     {% block extra %}
       <span title="{{ track.album }}" class="title truncate fw-bold mt-1">{{ track.album }}</span>
       <span title="{{ track.artist }}" class="artist small truncate"><i class="bi bi-person pe-1"></i> {{ track.artist }}</span>
+      {% if track.appears_on %}
+        <span class="small text-secondary fst-italic">Appears on</span>
+      {% endif %}
     {% endblock %}
     {% endembed %}
   {% endfor %}

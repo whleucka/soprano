@@ -91,13 +91,16 @@ class MusicService
     {
         $row = db()->fetch(
             "SELECT
-                (SELECT COUNT(*) FROM albums WHERE artist_id = ?) AS album_count,
+                (SELECT COUNT(*) FROM albums al
+                 WHERE al.artist_id = ?
+                    OR EXISTS (SELECT 1 FROM tracks tx
+                               WHERE tx.album_id = al.id AND tx.track_artist_id = ?)) AS album_count,
                 (SELECT COUNT(*) FROM tracks WHERE track_artist_id = ?) AS track_count,
                 (SELECT SUM(tm.length_ms)
                  FROM tracks t
                  LEFT JOIN track_meta tm ON tm.track_id = t.id
                  WHERE t.track_artist_id = ?) AS total_length_ms",
-            [$artistId, $artistId, $artistId],
+            [$artistId, $artistId, $artistId, $artistId],
         );
 
         return [
@@ -413,16 +416,24 @@ class MusicService
         );
     }
 
+    /**
+     * Own albums plus albums the artist appears on (a track's performer
+     * without being the album artist — VA compilations, guest spots). Own
+     * albums sort first; appearances carry appears_on for the template.
+     */
     public function discography(int $artistId, int $limit = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT " . self::ALBUM_COLUMNS . "
+            "SELECT " . self::ALBUM_COLUMNS . ",
+                    (al.artist_id <> ?) AS appears_on
              FROM albums al
              JOIN artists ar ON ar.id = al.artist_id
              WHERE al.artist_id = ?
-             ORDER BY al.year DESC, al.title ASC
+                OR EXISTS (SELECT 1 FROM tracks tx
+                           WHERE tx.album_id = al.id AND tx.track_artist_id = ?)
+             ORDER BY appears_on ASC, al.year DESC, al.title ASC
              LIMIT ?",
-            [$artistId, $limit],
+            [$artistId, $artistId, $artistId, $limit],
         );
 
         return $this->mapTrackRows($rows);
@@ -768,6 +779,9 @@ class MusicService
 
         if (isset($row['plays'])) {
             $entry['plays'] = (int) $row['plays'];
+        }
+        if (isset($row['appears_on'])) {
+            $entry['appears_on'] = (int) $row['appears_on'];
         }
         if (isset($row['last_played_at'])) {
             $entry['ago'] = $this->timeAgo((string) $row['last_played_at']);

@@ -26,7 +26,7 @@ class TrackController extends Controller
         }
 
         $meta = $track->meta();
-        $artist = $track->artist();
+        $artist = $track->trackArtist();
         $album = $track->album();
 
         return $this->render("tracks/index.html.twig", [

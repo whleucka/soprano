@@ -261,7 +261,7 @@ class PlayerController extends Controller
         }
 
         $album  = $track->album();
-        $artist = $track->artist();
+        $artist = $track->trackArtist();
         $meta   = $track->meta();
         $src    = uri("player.stream", $track->hash);
 
