@@ -72,13 +72,18 @@ class WrappedService
      */
     private function totals(string $from, string $to): array
     {
+        $ns = MusicService::NOT_SKIPPED;
+
+        // Skip-aware counts, but listened time keeps every play's ms_played —
+        // a skipped track still contributes the seconds actually heard. Rows
+        // predating skip-tracking (NULL ms_played) fall back to full length.
         $row = db()->fetch(
-            "SELECT COUNT(*) AS plays,
-                    COALESCE(SUM(tm.length_ms), 0) AS listened_ms,
-                    COUNT(DISTINCT tp.track_id) AS tracks,
-                    COUNT(DISTINCT t.track_artist_id) AS artists,
-                    COUNT(DISTINCT t.album_id) AS albums,
-                    COUNT(DISTINCT DATE(tp.created_at)) AS days
+            "SELECT SUM(CASE WHEN $ns THEN 1 ELSE 0 END) AS plays,
+                    COALESCE(SUM(COALESCE(tp.ms_played, tm.length_ms)), 0) AS listened_ms,
+                    COUNT(DISTINCT CASE WHEN $ns THEN tp.track_id END) AS tracks,
+                    COUNT(DISTINCT CASE WHEN $ns THEN t.track_artist_id END) AS artists,
+                    COUNT(DISTINCT CASE WHEN $ns THEN t.album_id END) AS albums,
+                    COUNT(DISTINCT CASE WHEN $ns THEN DATE(tp.created_at) END) AS days
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
@@ -114,6 +119,7 @@ class WrappedService
              JOIN artists ar ON ar.id = t.track_artist_id
              LEFT JOIN track_meta tm ON tm.track_id = t.id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
              GROUP BY t.id
              ORDER BY plays DESC, MAX(tp.id) DESC
              LIMIT ?",
@@ -132,6 +138,7 @@ class WrappedService
              JOIN tracks t ON t.id = tp.track_id
              JOIN artists ar ON ar.id = t.track_artist_id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
              GROUP BY ar.id
              ORDER BY plays DESC
              LIMIT ?",
@@ -152,6 +159,7 @@ class WrappedService
              JOIN albums al ON al.id = t.album_id
              JOIN artists ar ON ar.id = al.artist_id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
              GROUP BY al.id
              ORDER BY plays DESC
              LIMIT ?",
@@ -168,6 +176,7 @@ class WrappedService
              JOIN tracks t ON t.id = tp.track_id
              JOIN albums al ON al.id = t.album_id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
                AND al.genre <> '' AND al.genre <> 'Unknown'
              GROUP BY al.genre
              ORDER BY plays DESC
@@ -188,6 +197,7 @@ class WrappedService
             "SELECT MONTH(tp.created_at) AS m, COUNT(*) AS plays
              FROM track_plays tp
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
              GROUP BY m",
             [client()->id, $from, $to],
         );
@@ -215,6 +225,7 @@ class WrappedService
             "SELECT HOUR(tp.created_at) AS h, COUNT(*) AS plays
              FROM track_plays tp
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
              GROUP BY h",
             [client()->id, $from, $to],
         );
@@ -233,6 +244,7 @@ class WrappedService
             "SELECT DATE(tp.created_at) AS d, COUNT(*) AS plays
              FROM track_plays tp
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
              GROUP BY d
              ORDER BY plays DESC
              LIMIT 1",
@@ -266,6 +278,7 @@ class WrappedService
              JOIN tracks t ON t.id = tp.track_id
              JOIN artists ar ON ar.id = t.track_artist_id
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
              GROUP BY ar.id, m
              ORDER BY plays DESC
              LIMIT 1",

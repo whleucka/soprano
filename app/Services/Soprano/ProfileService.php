@@ -7,7 +7,9 @@ use App\Models\Client;
 /**
  * All-time listening stats and account settings for the current client.
  * Stats are computed from track_plays the same way WrappedService does it,
- * just without the calendar-year window.
+ * just without the calendar-year window: skip-aware counts (a confirmed skip
+ * isn't a listen), while listened time uses ms_played so even a skipped play
+ * contributes the seconds actually heard.
  */
 class ProfileService
 {
@@ -18,13 +20,18 @@ class ProfileService
      */
     public function getStats(): array
     {
+        $ns = MusicService::NOT_SKIPPED;
+
+        // ms_played fallback: rows predating skip-tracking (NULL, never
+        // finalized) count their full length; skipped rows always carry
+        // ms_played, so the length fallback can't inflate them.
         $row = db()->fetch(
-            "SELECT COUNT(*) AS plays,
-                    COALESCE(SUM(tm.length_ms), 0) AS listened_ms,
-                    COUNT(DISTINCT tp.track_id) AS tracks,
-                    COUNT(DISTINCT t.track_artist_id) AS artists,
-                    COUNT(DISTINCT t.album_id) AS albums,
-                    COUNT(DISTINCT DATE(tp.created_at)) AS days,
+            "SELECT SUM(CASE WHEN $ns THEN 1 ELSE 0 END) AS plays,
+                    COALESCE(SUM(COALESCE(tp.ms_played, tm.length_ms)), 0) AS listened_ms,
+                    COUNT(DISTINCT CASE WHEN $ns THEN tp.track_id END) AS tracks,
+                    COUNT(DISTINCT CASE WHEN $ns THEN t.track_artist_id END) AS artists,
+                    COUNT(DISTINCT CASE WHEN $ns THEN t.album_id END) AS albums,
+                    COUNT(DISTINCT CASE WHEN $ns THEN DATE(tp.created_at) END) AS days,
                     MIN(tp.created_at) AS first_play
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
@@ -77,7 +84,7 @@ class ProfileService
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              JOIN artists ar ON ar.id = t.track_artist_id
-             WHERE tp.client_id = ?
+             WHERE tp.client_id = ? AND " . MusicService::NOT_SKIPPED . "
              GROUP BY ar.id
              ORDER BY plays DESC
              LIMIT 1",
@@ -103,7 +110,7 @@ class ProfileService
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id
              JOIN albums al ON al.id = t.album_id
-             WHERE tp.client_id = ?
+             WHERE tp.client_id = ? AND " . MusicService::NOT_SKIPPED . "
                AND al.genre <> '' AND al.genre <> 'Unknown'
              GROUP BY al.genre
              ORDER BY plays DESC
