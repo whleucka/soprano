@@ -10,10 +10,16 @@ $scheduler = new Scheduler();
 $jobs = config("paths.jobs");
 $logs = config("paths.logs");
 
+// onlyOne() skips a job while its lock file exists, but a php container
+// restart mid-run kills the job before the lock is removed — which would
+// silently disable that job forever. Treat locks older than an hour as
+// orphaned and run anyway (no legitimate job runs that long).
+$stale_lock = fn ($lock_time) => (time() - $lock_time) > 3600;
+
 // Soprano sync - ingest new tracks, remove orphans
 $scheduler->php($jobs . "/soprano_sync.php")
     ->everyMinute(5)
-    ->onlyOne()
+    ->onlyOne(null, $stale_lock)
     ->output($logs . "soprano-sync-" . date("Y-m-d") . ".log", true);
 
 // Soprano artist images - backfill photos for artists sync added (keyless:
@@ -21,14 +27,14 @@ $scheduler->php($jobs . "/soprano_sync.php")
 // runs are no-ops;
 $scheduler->php($jobs . "/soprano_artist_images.php")
     ->everyMinute(10)
-    ->onlyOne()
+    ->onlyOne(null, $stale_lock)
     ->output($logs . "soprano-artist-images-" . date("Y-m-d") . ".log", true);
 
 // Soprano lyrics - backfill plain lyrics for tracks sync added (keyless:
 // LRCLIB exact /api/get). Only touches unchecked rows, so most runs are no-ops.
 $scheduler->php($jobs . "/soprano_lyrics.php")
     ->everyMinute(15)
-    ->onlyOne()
+    ->onlyOne(null, $stale_lock)
     ->output($logs . "soprano-lyrics-" . date("Y-m-d") . ".log", true);
 
 // Soprano transcode - warm the Opus cache for lossless tracks sync added and
@@ -36,7 +42,7 @@ $scheduler->php($jobs . "/soprano_lyrics.php")
 // cache file, so most runs are no-ops.
 $scheduler->php($jobs . "/soprano_transcode.php")
     ->everyMinute(10)
-    ->onlyOne()
+    ->onlyOne(null, $stale_lock)
     ->output($logs . "soprano-transcode-" . date("Y-m-d") . ".log", true);
 
 // Soprano playlists - nightly regeneration of the per-client generated mixes
@@ -44,16 +50,16 @@ $scheduler->php($jobs . "/soprano_transcode.php")
 // Mix). Each mix keeps its hash and swaps tracks in place, like a daily mix.
 $scheduler->php($jobs . "/soprano_playlists.php")
     ->daily('04:00')
-    ->onlyOne()
+    ->onlyOne(null, $stale_lock)
     ->output($logs . "soprano-playlists-" . date("Y-m-d") . ".log", true);
 
 // Soprano features - backfill audio features (BPM, danceability, key, energy)
 // via bin/essentia_extract.py for station queries. Keyless, CPU-only; batches
-// of 200/run (~2s per track), no-op once the library is analyzed or when the
+// of 100/run (~15s per track), no-op once the library is analyzed or when the
 // extractor isn't installed.
 $scheduler->php($jobs . "/soprano_features.php")
     ->everyMinute(30)
-    ->onlyOne()
+    ->onlyOne(null, $stale_lock)
     ->output($logs . "soprano-features-" . date("Y-m-d") . ".log", true);
 
 // Mail worker - process queued emails

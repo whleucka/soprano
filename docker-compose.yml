@@ -5,6 +5,10 @@ services:
       args:
         # Default to dev; docker-compose.prod.yml overrides to prod
         BUILD_MODE: ${BUILD_MODE:-dev}
+    # Any scheduler lock present at boot is orphaned — a restart killed the
+    # job before it could remove its lock, and onlyOne() would skip that job
+    # forever otherwise.
+    command: sh -c "rm -f /tmp/*.lock && exec php-fpm"
     volumes:
       - ./:/var/www/html
       # Mount dev.ini in development (default)

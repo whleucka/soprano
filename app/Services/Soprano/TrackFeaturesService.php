@@ -2,8 +2,6 @@
 
 namespace App\Services\Soprano;
 
-use App\Models\TrackFeature;
-
 /**
  * Backfills audio features (BPM, danceability, key, energy, loudness) for
  * station queries by piping track pathnames through bin/essentia_extract.py:
@@ -23,8 +21,9 @@ class TrackFeaturesService
 {
     private const DEFAULT_PYTHON = '/opt/essentia/bin/python';
 
-    /** Per-run cap: ~2s/track keeps a run inside one scheduler slot. */
-    private const DEFAULT_LIMIT = 200;
+    /** Per-run cap: ~15s/track on prod, so 100 keeps a run under ~25 min —
+     * inside the 30-min schedule and the scheduler's stale-lock window. */
+    private const DEFAULT_LIMIT = 100;
 
     public function __construct(private ?array $command = null)
     {
@@ -74,20 +73,30 @@ class TrackFeaturesService
                 $checked++;
                 empty($data['error']) ? $analyzed++ : $failed++;
 
-                TrackFeature::create([
-                    'track_id'        => $trackId,
-                    'bpm'             => $data['bpm'] ?? null,
-                    'danceability'    => $data['danceability'] ?? null,
-                    'energy'          => $data['energy'] ?? null,
-                    'avg_loudness_db' => $data['avg_loudness_db'] ?? null,
-                    'dyn_complexity'  => $data['dyn_complexity'] ?? null,
-                    'key_root'        => $data['key_root'] ?? null,
-                    'key_scale'       => $data['key_scale'] ?? null,
-                    'key_strength'    => $data['key_strength'] ?? null,
-                    'zcr'             => $data['zcr'] ?? null,
-                    'extractor'       => $data['extractor'] ?? 'unknown',
-                    'error'           => $data['error'] ?? null,
-                ]);
+                // INSERT IGNORE: a concurrent run (manual vs scheduler) may
+                // land the same track first — skip it rather than abort the
+                // whole batch on the track_id unique key.
+                db()->execute(
+                    "INSERT IGNORE INTO track_features
+                     (track_id, bpm, danceability, energy, avg_loudness_db,
+                      dyn_complexity, key_root, key_scale, key_strength, zcr,
+                      extractor, error)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [
+                        $trackId,
+                        $data['bpm'] ?? null,
+                        $data['danceability'] ?? null,
+                        $data['energy'] ?? null,
+                        $data['avg_loudness_db'] ?? null,
+                        $data['dyn_complexity'] ?? null,
+                        $data['key_root'] ?? null,
+                        $data['key_scale'] ?? null,
+                        $data['key_strength'] ?? null,
+                        $data['zcr'] ?? null,
+                        $data['extractor'] ?? 'unknown',
+                        $data['error'] ?? null,
+                    ],
+                );
             }
         } catch (\Throwable $e) {
             return $this->result(false, true, $checked, $analyzed, $failed, $e->getMessage());
