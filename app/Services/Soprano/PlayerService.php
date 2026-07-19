@@ -23,6 +23,7 @@ class PlayerService
             'album'       => $state['album']       ?? 'N/A',
             'cover'       => $state['cover']       ?? '/images/no-album-art.png',
             'src'         => $state['src']         ?? '#',
+            'gain'        => $state['gain']        ?? 0,
         ];
     }
 }

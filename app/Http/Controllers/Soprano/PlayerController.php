@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MusicService, PlaylistService, PlaylistsService, PlayerService, PodcastService, RadioService, SearchService, StationService, TranscodeService};
+use App\Services\Soprano\{MusicService, PlaylistService, PlaylistsService, PlayerService, PodcastService, RadioService, ReplayGainService, SearchService, StationService, TranscodeService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -21,6 +21,7 @@ class PlayerController extends Controller
         private PodcastService $podcasts,
         private TranscodeService $transcode,
         private StationService $stations,
+        private ReplayGainService $replaygain,
     ) {}
 
     #[Get("/player", "player.index")]
@@ -279,6 +280,11 @@ class PlayerController extends Controller
             'album'       => $album?->title ?? '',
             'cover'       => $album?->cover,
             'src'         => $src,
+            // ReplayGain the client should apply (WebAudio). Transcoded tracks
+            // get 0 — their gain is baked into the cached Opus file.
+            'gain'        => $this->transcode->needsTranscode($track)
+                ? 0.0
+                : $this->replaygain->trackGainDb($track),
         ]);
         $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks, searchResults");
     }

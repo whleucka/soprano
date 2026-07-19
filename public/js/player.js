@@ -90,6 +90,61 @@ function setupMediaSession() {
   } catch (_) { /* ignore unsupported actions */ }
 }
 
+// --- ReplayGain (WebAudio) -------------------------------------------------
+// Direct-streamed tracks (mp3/aac/…) get their ReplayGain applied here via a
+// gain node; transcoded tracks arrive with data-gain="0" because the gain is
+// baked into the cached Opus file server-side. Radio and podcasts never route
+// through WebAudio: their sources are cross-origin, and CORS-tainted media
+// plays silent through an AudioContext.
+//
+// The AudioContext persists on window across player partial swaps; the
+// source/gain pair is rebuilt for each new <audio> element (a media element
+// can only be wired to a context once).
+function setupReplayGain() {
+  if (audio.dataset.type) return; // tracks only — radio/podcast set data-type
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+
+  const db = parseFloat(audio.dataset.gain || '0') || 0;
+  try {
+    if (!window.__audioCtx) window.__audioCtx = new AC();
+    const ctx = window.__audioCtx;
+
+    // The old element is gone from the DOM after a swap — detach its nodes.
+    if (window.__audioGraph && window.__audioGraph.el !== audio) {
+      try { window.__audioGraph.source.disconnect(); } catch (_) { /* ignore */ }
+      try { window.__audioGraph.gain.disconnect(); } catch (_) { /* ignore */ }
+      window.__audioGraph = null;
+    }
+
+    if (!window.__audioGraph) {
+      const source = ctx.createMediaElementSource(audio);
+      const gain = ctx.createGain();
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      window.__audioGraph = { el: audio, source: source, gain: gain };
+    }
+
+    window.__audioGraph.gain.gain.value = Math.pow(10, db / 20);
+  } catch (e) {
+    console.warn('[player] WebAudio gain unavailable', e);
+  }
+}
+
+// A media element routed through a suspended AudioContext plays silent, and
+// contexts start suspended until a user gesture. Resume on playback and, as a
+// fallback, on the first gesture anywhere (hooked once — window survives swaps).
+function resumeAudioCtx() {
+  const ctx = window.__audioCtx;
+  if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+}
+if (!window.__audioCtxResumeHooked) {
+  window.__audioCtxResumeHooked = true;
+  ['click', 'keydown', 'touchstart'].forEach(function (type) {
+    document.addEventListener(type, resumeAudioCtx, { capture: true, passive: true });
+  });
+}
+
 // --- Radio (HLS) playback --------------------------------------------------
 // The player partial reloads on every track/station change, re-running this
 // script. We keep the Hls instance on window so we can tear it down before
@@ -245,6 +300,7 @@ if (!window.__podcastReportHooked) {
   }
 
   audio.onplaying = function () {
+    resumeAudioCtx();
     if (radioBadge) radioBadge.classList.add("active");
     if (progressBar) progressBar.classList.remove("disabled");
     playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;
@@ -284,6 +340,7 @@ if (!window.__podcastReportHooked) {
   } else {
     // Switched back to music — make sure no radio stream keeps running.
     teardownRadio();
+    setupReplayGain();
   }
 
   requestAnimationFrame(updateProgress);

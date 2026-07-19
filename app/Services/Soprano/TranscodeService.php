@@ -18,6 +18,12 @@ use FilesystemIterator;
  * The cache is warmed ahead of time by the soprano:transcode command / scheduled
  * job. resolve() also transcodes on demand as a fallback, guarded by an flock so
  * two concurrent stream requests never encode the same track twice.
+ *
+ * ReplayGain is baked into the encode (ffmpeg volume filter), so cached files
+ * play at reference loudness with no client-side work; the player applies gain
+ * via WebAudio only for sources that stream as-is. Freshness is mtime-based
+ * and doesn't see gain changes — after tag or feature updates that shift a
+ * track's gain, re-encode with soprano:transcode --force.
  */
 class TranscodeService
 {
@@ -32,7 +38,7 @@ class TranscodeService
     /** @var array<string,bool> audio codecs that warrant transcoding when probed */
     private array $losslessCodecs;
 
-    public function __construct()
+    public function __construct(private ReplayGainService $replaygain)
     {
         $this->cachePath     = rtrim((string) config('soprano.transcode_path'), '/');
         $this->bitrate       = (string) config('soprano.transcode_bitrate');
@@ -119,7 +125,9 @@ class TranscodeService
             return null;
         }
 
-        return $this->transcode($src, $cache) ? $cache : null;
+        return $this->transcode($src, $cache, $this->replaygain->trackGainDb($track))
+            ? $cache
+            : null;
     }
 
     /** A cache file counts as fresh when it exists and is newer than the source. */
@@ -131,11 +139,12 @@ class TranscodeService
     }
 
     /**
-     * Encode $src to Opus at $dest. Writes to a temp file and atomically renames
-     * so a half-written file is never served, and holds an flock so concurrent
-     * callers don't encode the same track at once.
+     * Encode $src to Opus at $dest, applying $gainDb of ReplayGain. Writes to a
+     * temp file and atomically renames so a half-written file is never served,
+     * and holds an flock so concurrent callers don't encode the same track at
+     * once.
      */
-    public function transcode(string $src, string $dest): bool
+    public function transcode(string $src, string $dest, float $gainDb = 0.0): bool
     {
         if (!is_file($src) || !is_readable($src)) {
             return false;
@@ -166,9 +175,13 @@ class TranscodeService
                 // stereo downmix (browsers output stereo anyway), which sidesteps
                 // the surround channel-mapping path entirely.
                 '%s -nostdin -y -hide_banner -loglevel error -i %s '
-                . '-vn -map_metadata 0 -ac 2 -ar 48000 -c:a libopus -b:a %s -vbr on -f opus %s 2>&1',
+                . '-vn -map_metadata 0 -ac 2 -ar 48000 %s-c:a libopus -b:a %s -vbr on -f opus %s 2>&1',
                 escapeshellcmd($this->ffmpeg),
                 escapeshellarg($src),
+                // Bake ReplayGain into the cache so the client plays it flat.
+                abs($gainDb) >= 0.05
+                    ? sprintf('-af %s ', escapeshellarg(sprintf('volume=%.2fdB', $gainDb)))
+                    : '',
                 escapeshellarg($this->bitrate),
                 escapeshellarg($tmp),
             );
@@ -242,7 +255,9 @@ class TranscodeService
                     continue;
                 }
 
-                $this->transcode($src, $cache) ? $encoded++ : $failed++;
+                $this->transcode($src, $cache, $this->replaygain->trackGainDb($track))
+                    ? $encoded++
+                    : $failed++;
             }
 
             $pruned = $this->pruneOrphans();
