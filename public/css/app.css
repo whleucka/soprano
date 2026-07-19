@@ -101,21 +101,32 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface-2); 
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #444; 
+  background: #666;
   border-radius: 10px; /* Makes it look like a pill */
-  border: 2px solid var(--surface-2); /* Creates "padding" around the thumb */
+  border: 2px solid transparent; /* Creates "padding" around the thumb */
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555; 
+  background: #999;
+  background-clip: padding-box;
+}
+
+/* Firefox (no ::-webkit-scrollbar) — scoped so Chrome keeps the pill thumb
+   above; unguarded scrollbar-color would disable it. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #666 transparent;
+  }
 }
 
 .scrollable {
