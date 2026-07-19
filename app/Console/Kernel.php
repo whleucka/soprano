@@ -84,5 +84,6 @@ class Kernel extends ConsoleKernel
         AppCommands\ArtistImageCommand::class,
         AppCommands\LyricsCommand::class,
         AppCommands\TranscodeCommand::class,
+        AppCommands\StationsCommand::class,
     ];
 }

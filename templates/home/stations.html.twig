@@ -7,7 +7,8 @@
       <button class="btn btn-dark d-flex flex-column align-items-start p-3 text-start"
               hx-get="{{ uri('player.play-station', [slug]) }}" hx-swap="none"
               title="{{ s.blurb }}">
-        <span class="fw-bold text-nowrap"><i class="bi {{ s.icon }} pe-1"></i>{{ s.name }}</span>
+        <span class="fw-bold text-nowrap"><i class="bi {{ s.icon }} pe-1"></i>{{ s.name }}
+          {%- if s.now %} <span class="badge text-bg-success ms-1 align-middle">now</span>{% endif %}</span>
         <span class="small text-secondary text-nowrap">{{ s.blurb }}</span>
       </button>
     {% endfor %}
