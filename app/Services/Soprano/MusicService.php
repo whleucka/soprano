@@ -29,6 +29,13 @@ class MusicService
     public const LIKED_COLUMN =
         "IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked";
 
+    /**
+     * Confirmed skips don't count as listens in the play-count feeds. NULL
+     * (pre-tracking rows and unreported plays) counts as played — same
+     * semantics as AutoPlaylistService.
+     */
+    public const NOT_SKIPPED = "(tp.skipped IS NULL OR tp.skipped = 0)";
+
     public const TRACK_JOINS =
         "JOIN albums al ON al.id = t.album_id
          JOIN artists ar ON ar.id = t.track_artist_id
@@ -469,7 +476,7 @@ class MusicService
                     COUNT(tp.id) AS plays, " . self::LIKED_COLUMN . "
              FROM tracks t " . self::TRACK_JOINS . "
              JOIN track_plays tp ON tp.track_id = t.id
-             WHERE t.track_artist_id = ?
+             WHERE t.track_artist_id = ? AND " . self::NOT_SKIPPED . "
              GROUP BY t.id
              ORDER BY plays DESC, tm.title ASC
              LIMIT ?",
@@ -542,7 +549,7 @@ class MusicService
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              LEFT JOIN clients c ON c.id = tp.client_id
-             WHERE tp.created_at > ?
+             WHERE tp.created_at > ? AND " . self::NOT_SKIPPED . "
              GROUP BY t.id
              ORDER BY MAX(tp.id) DESC
              LIMIT ?",
@@ -560,7 +567,7 @@ class MusicService
                     MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
-             WHERE tp.client_id = ?
+             WHERE tp.client_id = ? AND " . self::NOT_SKIPPED . "
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
@@ -580,7 +587,7 @@ class MusicService
                     MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
-             WHERE tp.client_id = ? AND tp.created_at > ?
+             WHERE tp.client_id = ? AND tp.created_at > ? AND " . self::NOT_SKIPPED . "
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
@@ -590,19 +597,26 @@ class MusicService
         return $this->mapTrackRows($rows);
     }
 
+    /**
+     * Tracks with 3+ completed listens that haven't been touched in 30 days.
+     * Confirmed skips don't count toward the listen bar, but they do count as
+     * "touched" — a track you skipped last week was seen and passed on, not
+     * forgotten, so it stays out until the skip ages past the window.
+     */
     public function rediscover(int $trackCount = 50): array
     {
         $since = (new \DateTime('- 30 DAY'))->format('Y-m-d H:i:s');
 
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ",
-                    COUNT(tp.id) AS plays,
+                    SUM(CASE WHEN tp.skipped = 1 THEN 0 ELSE 1 END) AS plays,
                     MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              WHERE tp.client_id = ?
              GROUP BY t.id
-             HAVING COUNT(tp.id) >= 3 AND MAX(tp.created_at) < ?
+             HAVING SUM(CASE WHEN tp.skipped = 1 THEN 0 ELSE 1 END) >= 3
+                AND MAX(tp.created_at) < ?
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
             [client()->id, client()->id, $since, $trackCount],
