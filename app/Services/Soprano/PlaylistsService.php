@@ -209,6 +209,8 @@ class PlaylistsService
 
     /**
      * Resolve track hashes to integer ids, deduped. Unknown hashes are dropped.
+     * Selection order is preserved — playlist_tracks has no position column, so
+     * insertion order (pt.id) IS the playlist order.
      *
      * @return int[]
      */
@@ -218,9 +220,17 @@ class PlaylistsService
         if (empty($hashes)) {
             return [];
         }
-        $ph   = implode(',', array_fill(0, count($hashes), '?'));
-        $rows = db()->fetchAll("SELECT id FROM tracks WHERE hash IN ($ph)", $hashes);
-        return array_map(fn($r) => (int) $r['id'], $rows);
+        $ph     = implode(',', array_fill(0, count($hashes), '?'));
+        $rows   = db()->fetchAll("SELECT id, hash FROM tracks WHERE hash IN ($ph)", $hashes);
+        $byHash = array_column($rows, 'id', 'hash');
+
+        $ids = [];
+        foreach ($hashes as $hash) {
+            if (isset($byHash[$hash])) {
+                $ids[] = (int) $byHash[$hash];
+            }
+        }
+        return $ids;
     }
 
     private function insertIds(int $playlistId, array $ids): void

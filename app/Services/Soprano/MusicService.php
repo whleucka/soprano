@@ -538,6 +538,10 @@ class MusicService
         return 'just now';
     }
 
+    /**
+     * Raw listening history — skips stay visible here, unlike the play-count
+     * feeds, since a track you changed away from was still played.
+     */
     public function recentlyPlayed(int $trackCount = 1000): array
     {
         $since = (new \DateTime('- 1 WEEK'))->format('Y-m-d H:i:s');
@@ -549,7 +553,7 @@ class MusicService
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              LEFT JOIN clients c ON c.id = tp.client_id
-             WHERE tp.created_at > ? AND " . self::NOT_SKIPPED . "
+             WHERE tp.created_at > ?
              GROUP BY t.id
              ORDER BY MAX(tp.id) DESC
              LIMIT ?",
