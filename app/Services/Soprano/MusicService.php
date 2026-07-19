@@ -36,6 +36,15 @@ class MusicService
      */
     public const NOT_SKIPPED = "(tp.skipped IS NULL OR tp.skipped = 0)";
 
+    /**
+     * A play that's been closed out and confirmed a listen: 0 is a finalized
+     * listen, NULL with ms_played set means finalized with unknown duration.
+     * A bare NULL/NULL row is still in progress (or never reported) — the top
+     * feeds ignore it so a track doesn't enter Top Played the moment it
+     * starts, then vanish when it's skipped.
+     */
+    public const CLOSED_PLAY = "(tp.skipped = 0 OR (tp.skipped IS NULL AND tp.ms_played IS NOT NULL))";
+
     public const TRACK_JOINS =
         "JOIN albums al ON al.id = t.album_id
          JOIN artists ar ON ar.id = t.track_artist_id
@@ -487,7 +496,7 @@ class MusicService
                     COUNT(tp.id) AS plays, " . self::LIKED_COLUMN . "
              FROM tracks t " . self::TRACK_JOINS . "
              JOIN track_plays tp ON tp.track_id = t.id
-             WHERE t.track_artist_id = ? AND " . self::NOT_SKIPPED . "
+             WHERE t.track_artist_id = ? AND " . self::CLOSED_PLAY . "
              GROUP BY t.id
              ORDER BY plays DESC, tm.title ASC
              LIMIT ?",
@@ -582,7 +591,7 @@ class MusicService
                     MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
-             WHERE tp.client_id = ? AND " . self::NOT_SKIPPED . "
+             WHERE tp.client_id = ? AND " . self::CLOSED_PLAY . "
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
@@ -602,7 +611,7 @@ class MusicService
                     MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
-             WHERE tp.client_id = ? AND tp.created_at > ? AND " . self::NOT_SKIPPED . "
+             WHERE tp.client_id = ? AND tp.created_at > ? AND " . self::CLOSED_PLAY . "
              GROUP BY t.id
              ORDER BY plays DESC, last_play_id DESC
              LIMIT ?",
