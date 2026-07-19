@@ -32,10 +32,6 @@
     </div>
     <div id="recently-played" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-played") }}" hx-trigger="every 2m, load, recentlyPlayed from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
-    {# Header lives inside the fragment so the section vanishes when empty;
-       loadPlayer refreshes it when a new episode starts playing. #}
-    <div id="continue-listening" hx-get="{{ uri("home.continue-listening") }}" hx-trigger="every 2m, load, loadPlayer from:body"></div>
-
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-heart-fill text-danger pe-1"></i> Recently Liked</h2>
       <span class="badge bg-dark ms-1">
@@ -48,22 +44,6 @@
       <h2 class="mb-0"><i class="bi bi-stars text-warning pe-1"></i> Made For You</h2>
     </div>
     <div id="made-for-you" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.made-for-you") }}" hx-trigger="load">{% include 'components/skeleton-rail.html.twig' with { count: 6 } %}</div>
-
-    <div class="d-inline-flex align-items-center gap-2 mt-5">
-      <h2 class="mb-0"><i class="bi bi-broadcast text-danger pe-1"></i> Favourite Radio</h2>
-      <span class="badge bg-dark ms-1">
-          <a hx-boost="true" href="{{ uri('radio.index') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
-      </span>
-    </div>
-    <div id="favourite-radio" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.favourite-radio") }}" hx-trigger="load, radioStations from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
-
-    <div class="d-inline-flex align-items-center gap-2 mt-5">
-      <h2 class="mb-0"><i class="bi bi-mic-fill text-info pe-1"></i> My Podcasts</h2>
-      <span class="badge bg-dark ms-1">
-          <a hx-boost="true" href="{{ uri('podcasts.index') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
-      </span>
-    </div>
-    <div id="my-podcasts" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.my-podcasts") }}" hx-trigger="load, podcastLikes from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-star-fill text-warning pe-1"></i> Top Played</h2>
@@ -96,6 +76,26 @@
       </span>
     </div>
     <div id="recently-added" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-added") }}" hx-trigger="every 5m, load, recentlyAdded from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
+      <h2 class="mb-0"><i class="bi bi-mic-fill text-info pe-1"></i> My Podcasts</h2>
+      <span class="badge bg-dark ms-1">
+          <a hx-boost="true" href="{{ uri('podcasts.index') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
+      </span>
+    </div>
+    <div id="my-podcasts" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.my-podcasts") }}" hx-trigger="load, podcastLikes from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+
+    {# Header lives inside the fragment so the section vanishes when empty;
+       loadPlayer refreshes it when a new episode starts playing. #}
+    <div id="continue-listening" hx-get="{{ uri("home.continue-listening") }}" hx-trigger="every 2m, load, loadPlayer from:body"></div>
+
+    <div class="d-inline-flex align-items-center gap-2 mt-5">
+      <h2 class="mb-0"><i class="bi bi-broadcast text-danger pe-1"></i> Favourite Radio</h2>
+      <span class="badge bg-dark ms-1">
+          <a hx-boost="true" href="{{ uri('radio.index') }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
+      </span>
+    </div>
+    <div id="favourite-radio" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.favourite-radio") }}" hx-trigger="load, radioStations from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
   </div>
 </section>
 {% endblock %}
