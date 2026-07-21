@@ -828,6 +828,14 @@ input:-webkit-autofill:active {
 .track:has(.dropdown-menu.show) {
   z-index: 5;
 }
+.track .dropdown-menu {
+  max-width: 280px;
+}
+.track .dropdown-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .track .dropdown-toggle {
   color: #fff;
   text-align: right;
