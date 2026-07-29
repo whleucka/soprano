@@ -94,6 +94,66 @@ class LyricsService
     }
 
     /**
+     * Backfill synced (LRC) lyrics onto rows that already have plain lyrics but
+     * no synced version yet — the one-time upgrade path for a library populated
+     * before syncedLyrics was stored. Rows LRCLIB has no synced lyrics for are
+     * stamped with an empty-string marker so a re-run skips them (resumable),
+     * distinct from NULL "never attempted".
+     *
+     * @return object{success:bool,checked:int,found:int,missed:int,failed:int,error:?string}
+     */
+    public function fillSynced(int $limit = 0): object
+    {
+        $checked = 0;
+        $found   = 0;
+        $missed  = 0;
+        $failed  = 0;
+        $success = true;
+        $error   = null;
+
+        try {
+            $rows = TrackMeta::query()
+                ->whereNotNull('lyrics')
+                ->whereNull('synced_lyrics')
+                ->get($limit);
+
+            foreach ($rows as $meta) {
+                $checked++;
+                try {
+                    $synced = $this->resolveSynced($meta);
+                    if ($synced !== null) {
+                        $meta->update(['synced_lyrics' => $synced]);
+                        $found++;
+                    } else {
+                        // Attempted, none available — mark so re-runs skip it.
+                        $meta->update(['synced_lyrics' => '']);
+                        $missed++;
+                    }
+                } catch (\Throwable $e) {
+                    $failed++;
+                    error_log(sprintf(
+                        '[soprano lyrics] synced fill failed for track_meta #%s: %s',
+                        $meta->id,
+                        $e->getMessage(),
+                    ));
+                }
+            }
+        } catch (\Throwable $e) {
+            $success = false;
+            $error   = $e->getMessage();
+        }
+
+        return (object) [
+            'success' => $success,
+            'checked' => $checked,
+            'found'   => $found,
+            'missed'  => $missed,
+            'failed'  => $failed,
+            'error'   => $error,
+        ];
+    }
+
+    /**
      * Plain + synced (LRC) lyrics from LRCLIB, or null when nothing usable was
      * found. When LRCLIB only returns timestamped lines, the plain text is
      * derived from them so the fallback view still has something to show.
@@ -101,6 +161,48 @@ class LyricsService
      * @return array{plain:string,synced:?string}|null
      */
     private function resolveLyrics(TrackMeta $meta): ?array
+    {
+        $data = $this->fetchLrclib($meta);
+        if ($data === null) {
+            return null;
+        }
+
+        $plain  = $data['plainLyrics'] ?? null;
+        $synced = $data['syncedLyrics'] ?? null;
+
+        $plain  = is_string($plain) && trim($plain) !== '' ? $plain : null;
+        $synced = is_string($synced) && trim($synced) !== '' ? $synced : null;
+
+        // Some LRCLIB entries carry only timestamped lines; derive the plain
+        // fallback from them so there's always readable text to store.
+        if ($plain === null && $synced !== null) {
+            $plain = $this->stripTimestamps($synced);
+        }
+        if ($plain === null) {
+            return null;
+        }
+
+        return ['plain' => $plain, 'synced' => $synced];
+    }
+
+    /** Synced (LRC) lyrics from LRCLIB, or null when none are available. */
+    private function resolveSynced(TrackMeta $meta): ?string
+    {
+        $data = $this->fetchLrclib($meta);
+        if ($data === null) {
+            return null;
+        }
+        $synced = $data['syncedLyrics'] ?? null;
+        return is_string($synced) && trim($synced) !== '' ? $synced : null;
+    }
+
+    /**
+     * Hit LRCLIB's exact /api/get for this track and return the decoded body,
+     * or null when the row lacks the fields needed for a meaningful lookup.
+     *
+     * @return array<string,mixed>|null
+     */
+    private function fetchLrclib(TrackMeta $meta): ?array
     {
         $track = $meta->track();
         if ($track === null) {
@@ -130,27 +232,7 @@ class LyricsService
             $params['album_name'] = $album;
         }
 
-        $data = $this->httpJson(self::LRCLIB_GET . '?' . http_build_query($params));
-        if ($data === null) {
-            return null;
-        }
-
-        $plain  = $data['plainLyrics'] ?? null;
-        $synced = $data['syncedLyrics'] ?? null;
-
-        $plain  = is_string($plain) && trim($plain) !== '' ? $plain : null;
-        $synced = is_string($synced) && trim($synced) !== '' ? $synced : null;
-
-        // Some LRCLIB entries carry only timestamped lines; derive the plain
-        // fallback from them so there's always readable text to store.
-        if ($plain === null && $synced !== null) {
-            $plain = $this->stripTimestamps($synced);
-        }
-        if ($plain === null) {
-            return null;
-        }
-
-        return ['plain' => $plain, 'synced' => $synced];
+        return $this->httpJson(self::LRCLIB_GET . '?' . http_build_query($params));
     }
 
     /** Strip leading [mm:ss.xx] LRC tags, yielding plain lyric text. */

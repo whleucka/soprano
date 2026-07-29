@@ -18,16 +18,20 @@ class LyricsCommand extends Command
     protected function configure(): void
     {
         $this->addOption('limit', null, InputOption::VALUE_REQUIRED, 'Max tracks to process (0 = all)', '0')
-             ->addOption('recheck', null, InputOption::VALUE_NONE, 'Retry tracks previously checked but still without lyrics');
+             ->addOption('recheck', null, InputOption::VALUE_NONE, 'Retry tracks previously checked but still without lyrics')
+             ->addOption('synced', null, InputOption::VALUE_NONE, 'Backfill synced (LRC) lyrics onto tracks that already have plain lyrics');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $limit   = (int) $input->getOption('limit');
         $recheck = (bool) $input->getOption('recheck');
+        $synced  = (bool) $input->getOption('synced');
 
         $service = container()->get(LyricsService::class);
-        $result  = $service->backfill($limit, $recheck);
+        $result  = $synced
+            ? $service->fillSynced($limit)
+            : $service->backfill($limit, $recheck);
 
         $stats = sprintf(
             "  checked: %d, found: %d, missed: %d, failed: %d",
