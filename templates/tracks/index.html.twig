@@ -16,13 +16,93 @@
       <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-3" hx-get="{{ uri("track.actions", [hash]) }}" hx-trigger="load, trackActions from:body"></div>
     </div>
   </div>
-  <div class="p-2 scrollable">
+  <div class="p-2 scrollable" id="lyrics-pane">
     <h2><i class="bi bi-music-note-list text-light pe-1"></i> Lyrics</h2>
-    {% if lyrics %}
+    {% if synced_lyrics %}
+      <div id="lyrics-synced" class="lyrics synced" data-hash="{{ hash }}" data-lrc="{{ synced_lyrics|e('html_attr') }}"></div>
+      <p class="lyrics lyrics-plain" style="white-space: pre-line;">{{ lyrics }}</p>
+    {% elseif lyrics %}
       <p class="lyrics" style="white-space: pre-line;">{{ lyrics }}</p>
     {% else %}
       <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No lyrics available</p>
     {% endif %}
   </div>
 </section>
+
+{% if synced_lyrics %}
+<script>
+(function () {
+  var pane = document.getElementById('lyrics-pane');
+  var box = document.getElementById('lyrics-synced');
+  if (!pane || !box) return;
+
+  var TAG = /\[(\d+):(\d+(?:\.\d+)?)\]/g;
+
+  // Parse LRC into time-sorted {t, text} lines (a line may carry >1 timestamp).
+  var lines = [];
+  (box.dataset.lrc || '').split(/\r\n|\r|\n/).forEach(function (line) {
+    var tags = line.match(TAG);
+    if (!tags) return;
+    var text = line.replace(TAG, '').trim();
+    tags.forEach(function (tag) {
+      var m = /\[(\d+):(\d+(?:\.\d+)?)\]/.exec(tag);
+      lines.push({ t: parseInt(m[1], 10) * 60 + parseFloat(m[2]), text: text });
+    });
+  });
+  lines.sort(function (a, b) { return a.t - b.t; });
+  if (!lines.length) return;
+
+  // Render lines; hide the plain fallback now that the synced view is live.
+  box.innerHTML = '';
+  lines.forEach(function (ln, i) {
+    var el = document.createElement('p');
+    el.className = 'lyric-line';
+    el.textContent = ln.text || ' ';
+    el.dataset.i = i;
+    el.addEventListener('click', function () {
+      var audio = document.getElementById('audio');
+      if (audio && audio.dataset.hash === box.dataset.hash) audio.currentTime = ln.t;
+    });
+    box.appendChild(el);
+  });
+  var plain = pane.querySelector('.lyrics-plain');
+  if (plain) plain.style.display = 'none';
+
+  var current = -1;
+  function tick() {
+    var audio = document.getElementById('audio');
+    // The lyrics view and the player swap independently — only follow playback
+    // when the track on this page is the one actually playing. Detach once the
+    // pane leaves the DOM (navigated away) so the listener can't leak.
+    if (!box.isConnected) { if (audio) audio.removeEventListener('timeupdate', tick); return; }
+    if (!audio || audio.dataset.hash !== box.dataset.hash) return;
+
+    var now = audio.currentTime, idx = -1;
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].t <= now) idx = i; else break;
+    }
+    if (idx === current) return;
+    current = idx;
+
+    var els = box.children;
+    for (var j = 0; j < els.length; j++) els[j].classList.toggle('active', j === idx);
+    if (idx >= 0 && els[idx]) {
+      var pr = pane.getBoundingClientRect(), er = els[idx].getBoundingClientRect();
+      var delta = (er.top - pr.top) - (pane.clientHeight / 2 - els[idx].clientHeight / 2);
+      pane.scrollTo({ top: pane.scrollTop + delta, behavior: 'smooth' });
+    }
+  }
+
+  // Bind to the persistent audio element; drop any handler from a prior view.
+  var audio = document.getElementById('audio');
+  if (window.__lyricsTick && window.__lyricsAudio) {
+    window.__lyricsAudio.removeEventListener('timeupdate', window.__lyricsTick);
+  }
+  window.__lyricsTick = tick;
+  window.__lyricsAudio = audio;
+  if (audio) audio.addEventListener('timeupdate', tick);
+  tick();
+})();
+</script>
+{% endif %}
 {% endblock %}

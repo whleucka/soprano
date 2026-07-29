@@ -11,11 +11,13 @@ use App\Models\TrackMeta;
  *      └─ LRCLIB /api/get (exact match) ─► plainLyrics
  *
  * Only the exact /api/get endpoint is used (no /api/search fallback) to keep
- * matches tight and avoid attaching the wrong lyrics. Each row is stamped
- * lyrics_checked_at after an attempt so misses aren't retried every run.
- * Rows that already have lyrics (e.g. embedded tags picked up during sync)
- * are left untouched and just stamped. LRCLIB asks for a descriptive
- * User-Agent and reasonable request rates, so calls are throttled.
+ * matches tight and avoid attaching the wrong lyrics. Both the plain text and
+ * the timestamped syncedLyrics (LRC) are stored when present, so the track page
+ * can offer a karaoke-style synced view. Each row is stamped lyrics_checked_at
+ * after an attempt so misses aren't retried every run. Rows that already have
+ * lyrics (e.g. embedded tags picked up during sync) are left untouched and just
+ * stamped. LRCLIB asks for a descriptive User-Agent and reasonable request
+ * rates, so calls are throttled.
  */
 class LyricsService
 {
@@ -55,9 +57,13 @@ class LyricsService
                         continue;
                     }
 
-                    $lyrics = $this->resolveLyrics($meta);
-                    if ($lyrics !== null) {
-                        $meta->update(['lyrics' => $lyrics, 'lyrics_checked_at' => date('Y-m-d H:i:s')]);
+                    $resolved = $this->resolveLyrics($meta);
+                    if ($resolved !== null) {
+                        $meta->update([
+                            'lyrics'            => $resolved['plain'],
+                            'synced_lyrics'     => $resolved['synced'],
+                            'lyrics_checked_at' => date('Y-m-d H:i:s'),
+                        ]);
                         $found++;
                     } else {
                         $meta->update(['lyrics_checked_at' => date('Y-m-d H:i:s')]);
@@ -87,8 +93,14 @@ class LyricsService
         ];
     }
 
-    /** Plain lyrics from LRCLIB, or null when nothing usable was found. */
-    private function resolveLyrics(TrackMeta $meta): ?string
+    /**
+     * Plain + synced (LRC) lyrics from LRCLIB, or null when nothing usable was
+     * found. When LRCLIB only returns timestamped lines, the plain text is
+     * derived from them so the fallback view still has something to show.
+     *
+     * @return array{plain:string,synced:?string}|null
+     */
+    private function resolveLyrics(TrackMeta $meta): ?array
     {
         $track = $meta->track();
         if ($track === null) {
@@ -123,8 +135,35 @@ class LyricsService
             return null;
         }
 
-        $plain = $data['plainLyrics'] ?? null;
-        return is_string($plain) && trim($plain) !== '' ? $plain : null;
+        $plain  = $data['plainLyrics'] ?? null;
+        $synced = $data['syncedLyrics'] ?? null;
+
+        $plain  = is_string($plain) && trim($plain) !== '' ? $plain : null;
+        $synced = is_string($synced) && trim($synced) !== '' ? $synced : null;
+
+        // Some LRCLIB entries carry only timestamped lines; derive the plain
+        // fallback from them so there's always readable text to store.
+        if ($plain === null && $synced !== null) {
+            $plain = $this->stripTimestamps($synced);
+        }
+        if ($plain === null) {
+            return null;
+        }
+
+        return ['plain' => $plain, 'synced' => $synced];
+    }
+
+    /** Strip leading [mm:ss.xx] LRC tags, yielding plain lyric text. */
+    private function stripTimestamps(string $lrc): string
+    {
+        $lines = [];
+        foreach (preg_split('/\r\n|\r|\n/', $lrc) as $line) {
+            $text = trim(preg_replace('/\[\d+:\d+(?:\.\d+)?\]/', '', $line));
+            if ($text !== '') {
+                $lines[] = $text;
+            }
+        }
+        return implode("\n", $lines);
     }
 
     /** @return array<string,mixed>|null */

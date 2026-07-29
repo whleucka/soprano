@@ -25,6 +25,7 @@ return new class implements MigrationInterface
             $table->varchar("replaygain_track_gain")->nullable();
             $table->varchar("replaygain_track_peak")->nullable();
             $table->longText("lyrics")->nullable();
+            $table->longText("synced_lyrics")->nullable();
             $table->timestamp("lyrics_checked_at")->nullable();
             $table->varchar("musicbrainz_track_id")->nullable();
             $table->timestamps();

@@ -135,6 +135,34 @@ body {
   overflow: auto;
 }
 
+/** Synced (karaoke) lyrics */
+.lyrics.synced {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.lyric-line {
+  margin: 0;
+  padding: 0.15rem 0.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 1.15rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: color var(--ease), opacity var(--ease), transform var(--ease);
+}
+.lyric-line:hover {
+  opacity: 0.85;
+  color: var(--text-soft);
+}
+.lyric-line.active {
+  opacity: 1;
+  color: var(--text);
+  font-weight: 600;
+  transform: translateX(2px);
+}
+
 /** Utils */
 .lead {
   font-size: 1.1rem;

@@ -38,6 +38,7 @@ class TrackController extends Controller
             "artist" => $artist->name,
             "album" => $album->title,
             "lyrics" => $meta->lyrics,
+            "synced_lyrics" => $meta->synced_lyrics,
             "dominant"    => $this->coverArt->hexToRgb($album->dominant_color),
         ]);
     }
