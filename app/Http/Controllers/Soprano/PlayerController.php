@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MusicService, PlaylistService, PlaylistsService, PlayerService, PodcastService, RadioService, ReplayGainService, SearchService, StationService, TranscodeService};
+use App\Services\Soprano\{MixService, MusicService, PlaylistService, PlaylistsService, PlayerService, PodcastService, RadioService, ReplayGainService, SearchService, StationService, TranscodeService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -22,6 +22,7 @@ class PlayerController extends Controller
         private TranscodeService $transcode,
         private StationService $stations,
         private ReplayGainService $replaygain,
+        private MixService $mix,
     ) {}
 
     #[Get("/player", "player.index")]
@@ -83,6 +84,18 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks, source: "artist");
+        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        return $this->play($tracks[0]['hash']);
+    }
+
+    #[Get("/player/play/artist/{hash}/radio", "player.play-artist-radio")]
+    public function playArtistRadio(string $hash)
+    {
+        $tracks = $this->mix->build($hash);
+        if (empty($tracks)) {
+            return;
+        }
+        $this->playlist->setPlaylist($tracks, source: "artist-radio:$hash");
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[0]['hash']);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
+use App\Services\Soprano\MixService;
 use App\Services\Soprano\MusicService;
 use App\Services\Soprano\PlaylistsService;
 use App\Services\Soprano\RadioService;
@@ -22,6 +23,7 @@ class HomeController extends Controller
         private PodcastService $podcasts,
         private WrappedService $wrapped,
         private StationService $stations,
+        private MixService $mix,
     ) {}
 
     #[Get("/", "home.root")]
@@ -48,6 +50,16 @@ class HomeController extends Controller
         // feature backfill has analyzed something.
         return $this->render("home/stations.html.twig", [
             "stations" => $this->stations->available() ? $this->stations->stations() : [],
+        ]);
+    }
+
+    #[Get("/home/artist-radio", "home.artist-radio")]
+    public function artistRadio(): string
+    {
+        // Header lives in the fragment so the rail vanishes for a client
+        // with no listening history yet to seed from.
+        return $this->render("home/artist-radio.html.twig", [
+            "artists" => $this->mix->homeSeeds(),
         ]);
     }
 

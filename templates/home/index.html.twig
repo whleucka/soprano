@@ -24,6 +24,10 @@
        feature backfill has analyzed part of the library. #}
     <div id="stations" class="mb-4" hx-get="{{ uri("home.stations") }}" hx-trigger="load"></div>
 
+    {# Header lives inside the fragment so the rail vanishes until there's
+       listening history to seed artist radios from. #}
+    <div id="artist-radio" class="mb-4" hx-get="{{ uri("home.artist-radio") }}" hx-trigger="load, recentlyPlayed from:body"></div>
+
     <div class="d-inline-flex align-items-center gap-2">
       <h2 class="mb-0"><i class="bi bi-clock text-secondary pe-1"></i> Recently Played</h2>
       <span class="badge bg-dark ms-1">
