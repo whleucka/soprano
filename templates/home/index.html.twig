@@ -42,7 +42,7 @@
 
     {# Header lives inside the fragment so the rail vanishes until there's
        listening history to seed artist radios from. #}
-    <div id="artist-radio" class="mb-4" hx-get="{{ uri("home.artist-radio") }}" hx-trigger="load, recentlyPlayed from:body"></div>
+    <div id="artist-radio" class="mt-5" hx-get="{{ uri("home.artist-radio") }}" hx-trigger="load, recentlyPlayed from:body"></div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-stars text-warning pe-1"></i> Made For You</h2>
