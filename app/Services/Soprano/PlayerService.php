@@ -24,6 +24,10 @@ class PlayerService
             'cover'       => $state['cover']       ?? '/images/no-album-art.png',
             'src'         => $state['src']         ?? '#',
             'gain'        => $state['gain']        ?? 0,
+            // Client crossfade preference + whether a next track exists to fade
+            // into (auto-advance only) — read by player.js as data attributes.
+            'crossfade'   => $state['crossfade']   ?? false,
+            'has_next'    => $state['has_next']    ?? false,
         ];
     }
 }

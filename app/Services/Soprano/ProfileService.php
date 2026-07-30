@@ -132,7 +132,7 @@ class ProfileService
      * Current player defaults for the signed-in client, normalised so the
      * template always has usable values even on rows predating the columns.
      *
-     * @return array{shuffle:bool,repeat:string}
+     * @return array{shuffle:bool,repeat:string,crossfade:bool}
      */
     public function getSettings(): array
     {
@@ -143,8 +143,9 @@ class ProfileService
         }
 
         return [
-            'shuffle' => (bool) ($client->default_shuffle ?? false),
-            'repeat'  => $repeat,
+            'shuffle'   => (bool) ($client->default_shuffle ?? false),
+            'repeat'    => $repeat,
+            'crossfade' => (bool) ($client->crossfade ?? false),
         ];
     }
 
@@ -152,7 +153,7 @@ class ProfileService
      * Persist the client's player defaults and apply them to the live queue
      * so the change takes effect immediately.
      */
-    public function saveSettings(bool $shuffle, string $repeat): void
+    public function saveSettings(bool $shuffle, string $repeat, bool $crossfade): void
     {
         if (!in_array($repeat, PlaylistService::REPEAT_MODES, true)) {
             $repeat = 'off';
@@ -161,6 +162,7 @@ class ProfileService
         Client::find(client()->id)?->update([
             'default_shuffle' => $shuffle ? 1 : 0,
             'default_repeat'  => $repeat,
+            'crossfade'       => $crossfade ? 1 : 0,
         ]);
 
         container()->get(PlaylistService::class)->applyDefaults($shuffle, $repeat);

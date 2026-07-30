@@ -298,6 +298,10 @@ class PlayerController extends Controller
             'gain'        => $this->transcode->needsTranscode($track)
                 ? 0.0
                 : $this->replaygain->trackGainDb($track),
+            // Crossfade: the client's toggle, gated on there being a next track
+            // to fade into (so the final track ends cleanly with no crossfade).
+            'crossfade'   => (bool) client()->crossfade,
+            'has_next'    => $this->playlist->hasNextAuto(),
         ]);
         $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks, searchResults");
     }

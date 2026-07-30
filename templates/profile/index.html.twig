@@ -98,6 +98,14 @@
           <span class="settings-hint d-block">Start new queues with shuffle turned on.</span>
         </label>
       </div>
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="crossfade"
+               name="crossfade" value="1" {% if settings.crossfade %}checked{% endif %}>
+        <label class="form-check-label" for="crossfade">
+          Crossfade tracks
+          <span class="settings-hint d-block">Fade the end of each track into the next as your queue plays.</span>
+        </label>
+      </div>
       <div class="mb-3">
         <label class="form-label" for="default_repeat">Repeat by default</label>
         <select class="form-select" id="default_repeat" name="default_repeat">

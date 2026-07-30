@@ -39,11 +39,12 @@ class ProfileController extends Controller
     #[Post("/profile/settings", "profile.settings", ["max_requests" => 30, "decay_seconds" => 60])]
     public function settings(): string
     {
-        $data    = (array) request()->request->data();
-        $shuffle = !empty($data["default_shuffle"]);
-        $repeat  = (string) ($data["default_repeat"] ?? "off");
+        $data      = (array) request()->request->data();
+        $shuffle   = !empty($data["default_shuffle"]);
+        $repeat    = (string) ($data["default_repeat"] ?? "off");
+        $crossfade = !empty($data["crossfade"]);
 
-        $this->profile->saveSettings($shuffle, $repeat);
+        $this->profile->saveSettings($shuffle, $repeat, $crossfade);
         Flash::add("success", "Player settings saved.");
 
         return $this->index();

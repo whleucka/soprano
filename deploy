@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -e
+
+# Update cache
+echo "Clearing cache..."
+./bin/php composer clear-cache
+./echo cache:clear
+./echo route:cache
+
+# Restart PHP container
+echo "Restarting PHP..."
+docker compose -f docker-compose.yml -f docker-compose.prod.yml restart php
+
+echo "Done!"

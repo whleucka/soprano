@@ -5,6 +5,15 @@ var audio = document.getElementById("audio");
 var playBtn = document.getElementById("play");
 var isRadio = audio && audio.dataset.type === 'radio';
 
+// Crossfade overlap in seconds (tunable). Only used when the client opted in
+// (data-crossfade) and there is a next track to fade into (data-next).
+var CROSSFADE_SEC = 6;
+// Tracks shorter than this never crossfade — a fade needs real audio on both
+// sides of the overlap, and a <=CROSSFADE_SEC track would fade from its very
+// start. Must be > CROSSFADE_SEC.
+var CROSSFADE_MIN_TRACK = 2 * CROSSFADE_SEC;
+var crossfadeEnabled = !!(audio && audio.dataset.crossfade === '1');
+
 // Progress bar stuff
 function updateProgress() {
   // Radio streams are live (no fixed duration) and render a LIVE badge instead
@@ -109,6 +118,33 @@ function setupReplayGain() {
   try {
     if (!window.__audioCtx) window.__audioCtx = new AC();
     const ctx = window.__audioCtx;
+    const target = Math.pow(10, db / 20);
+
+    // Crossfade handoff: this is the incoming element and the outgoing one is
+    // still playing on window.__audioGraph. Give the incoming element its OWN
+    // (silent) chain rather than tearing the outgoing one down; the ramp starts
+    // when it begins playing (beginRampIfNeeded).
+    if (window.__crossfade && !window.__crossfade.torn) {
+      const xf = window.__crossfade;
+      if (!xf.inGraph && window.__audioGraph && window.__audioGraph.el === xf.outEl) {
+        const source = ctx.createMediaElementSource(audio);
+        const gain = ctx.createGain();
+        source.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.value = 0.0001; // start silent, ramp up on play
+        xf.inGraph = { el: audio, source: source, gain: gain };
+        xf.inTarget = target;
+        window.__audioGraph = xf.inGraph; // the incoming chain is now "current"
+        // Belt-and-suspenders: if the swap paused the outgoing element before we
+        // re-parented it, resume it (full gain still on its node) so it keeps
+        // sounding under the incoming track until beginRampIfNeeded fades it out.
+        if (xf.outEl && xf.outEl.paused) xf.outEl.play().catch(function () {});
+        return;
+      }
+      // Another swap landed mid-crossfade (e.g. a manual skip) — abort the fade
+      // and fall through to a clean single-chain rebuild for the new element.
+      abortCrossfade();
+    }
 
     // The old element is gone from the DOM after a swap — detach its nodes.
     if (window.__audioGraph && window.__audioGraph.el !== audio) {
@@ -125,10 +161,167 @@ function setupReplayGain() {
       window.__audioGraph = { el: audio, source: source, gain: gain };
     }
 
-    window.__audioGraph.gain.gain.value = Math.pow(10, db / 20);
+    window.__audioGraph.gain.gain.value = target;
   } catch (e) {
     console.warn('[player] WebAudio gain unavailable', e);
   }
+}
+
+// --- Crossfade -------------------------------------------------------------
+// When enabled, a track reaching its final CROSSFADE_SEC hands off to the next
+// one: we advance the queue early (the same next-track request the natural end
+// would send), keep the outgoing <audio> + its gain node alive through the
+// partial swap, build a second gain chain for the incoming element, and ramp
+// one down as the other comes up. Music tracks only. Crossfade state lives on
+// window.__crossfade so it survives the swap that re-runs this script.
+//
+// NOTE: this script re-executes in global scope on every player swap, so the
+// helpers here are function declarations reading the (reassigned) global
+// `audio` — there is only ever one current element; the fade partner is held
+// on window.__crossfade, never on a captured local.
+function maybeStartCrossfade() {
+  if (!crossfadeEnabled) return;
+  if (!audio || audio.dataset.type) return;   // music tracks only
+  if (audio.dataset.next !== '1') return;      // nothing to fade into
+  if (window.__crossfade) return;              // one already in flight
+  if (audio.paused) return;
+  const d = audio.duration;
+  if (!isFinite(d) || d < CROSSFADE_MIN_TRACK) return; // too short to fade
+  const remaining = d - audio.currentTime;
+  if (remaining > CROSSFADE_SEC || remaining <= 0) return;
+  startCrossfade();
+}
+
+function startCrossfade() {
+  const graph = window.__audioGraph;
+  // No WebAudio chain for this element (context blocked, etc.) — skip the fade
+  // and let the untouched onended advance the queue the ordinary way.
+  if (!window.__audioCtx || !graph || graph.el !== audio) return;
+
+  const outEl = audio;
+  window.__crossfade = {
+    outEl: outEl,
+    outGraph: graph,
+    inGraph: null,
+    inTarget: 1,
+    incomingStarted: false,
+    torn: false,
+    timer: null,
+  };
+  // Silence the outgoing element's UI/media handlers first: re-parenting it (and
+  // its natural end) fires pause/ended events, and those handlers write the
+  // *shared* progress bar / play button / mediaSession — which now belong to the
+  // incoming track, so leaving them bound greys the fading-in track's bar and
+  // flips its play button. We only keep an 'ended' hook to close the crossfade.
+  detachMediaHandlers(outEl);
+  // The outgoing element must not fire its own next-track when it truly ends —
+  // we're advancing now. Its real 'ended' just closes out the crossfade.
+  outEl.onended = function () { finishCrossfade(); };
+  // Keep the outgoing element audible THROUGH the swap. The swap replaces
+  // #player's contents, and removing a media element from the DOM pauses it —
+  // so re-parent it into <body> first. Moving it *within* the document keeps it
+  // playing (it retains src + currentTime). We leave its id: the incoming
+  // <audio> the swap inserts sits earlier in the tree, so getElementById
+  // ('audio') still resolves to the incoming element; we drop this one in
+  // teardown.
+  try { document.body.appendChild(outEl); } catch (_) { /* ignore */ }
+  // Advance + swap in the next track early (auto=1 so repeat mode applies).
+  htmx.ajax('GET', next_track_url + '?auto=1', { swap: 'none' });
+}
+
+function beginRampIfNeeded() {
+  const xf = window.__crossfade;
+  if (!xf || xf.torn || xf.incomingStarted) return;
+  if (!xf.inGraph || xf.inGraph.el !== audio) return; // only the incoming element ramps
+  const ctx = window.__audioCtx;
+  if (!ctx) return;
+  xf.incomingStarted = true;
+
+  // Fade over the outgoing track's ACTUAL remaining tail so it reaches zero
+  // right as it ends (absorbs swap latency); cap at CROSSFADE_SEC.
+  let remaining = CROSSFADE_SEC;
+  const o = xf.outEl;
+  if (o && isFinite(o.duration) && o.duration > 0) {
+    remaining = o.duration - o.currentTime;
+  }
+  const fadeDur = Math.max(0.1, Math.min(CROSSFADE_SEC, remaining));
+  const t0 = ctx.currentTime;
+
+  const inG = xf.inGraph.gain.gain;
+  inG.cancelScheduledValues(t0);
+  inG.setValueAtTime(Math.max(inG.value, 0.0001), t0);
+  inG.linearRampToValueAtTime(Math.max(xf.inTarget, 0.0001), t0 + fadeDur);
+
+  const outG = xf.outGraph.gain.gain;
+  outG.cancelScheduledValues(t0);
+  outG.setValueAtTime(Math.max(outG.value, 0.0001), t0);
+  outG.linearRampToValueAtTime(0.0001, t0 + fadeDur);
+
+  xf.timer = setTimeout(finishCrossfade, Math.ceil(fadeDur * 1000) + 100);
+}
+
+// Silence a soon-to-be-discarded element's media events before we pause it —
+// its onpause/onplaying handlers write the *shared* play button + mediaSession
+// state, which now belong to the incoming track. Leaving them bound would flip
+// the UI to "paused" mid-crossfade.
+function detachMediaHandlers(el) {
+  if (!el) return;
+  el.onended = null;
+  el.onerror = null;
+  el.onpause = null;
+  el.onplaying = null;
+  el.onloadedmetadata = null;
+  el.ontimeupdate = null;
+}
+
+// Idempotent: safe to call from the fade timer AND the outgoing 'ended' event.
+function finishCrossfade() {
+  const xf = window.__crossfade;
+  if (!xf || xf.torn) return;
+  xf.torn = true;
+  if (xf.timer) { clearTimeout(xf.timer); xf.timer = null; }
+
+  // Stop + release the outgoing element and detach its chain.
+  try {
+    if (xf.outEl) {
+      detachMediaHandlers(xf.outEl);
+      xf.outEl.pause();
+      xf.outEl.removeAttribute('src');
+      xf.outEl.load();
+      xf.outEl.remove(); // drop the <body>-parked outgoing element
+    }
+  } catch (_) { /* ignore */ }
+  try { xf.outGraph && xf.outGraph.source.disconnect(); } catch (_) { /* ignore */ }
+  try { xf.outGraph && xf.outGraph.gain.disconnect(); } catch (_) { /* ignore */ }
+
+  // Pin the incoming (now sole) track at its full ReplayGain — covers the case
+  // where the outgoing track ended before the ramp could start.
+  if (xf.inGraph && window.__audioCtx) {
+    try {
+      const g = xf.inGraph.gain.gain;
+      const now = window.__audioCtx.currentTime;
+      g.cancelScheduledValues(now);
+      g.setValueAtTime(Math.max(xf.inTarget || 1, 0.0001), now);
+    } catch (_) { /* ignore */ }
+  }
+  window.__crossfade = null;
+}
+
+// Tear down a fade in progress without a clean handoff (manual skip landed
+// mid-crossfade). Both chains are dropped; the caller rebuilds for the new
+// element.
+function abortCrossfade() {
+  const xf = window.__crossfade;
+  if (!xf) return;
+  if (xf.timer) { clearTimeout(xf.timer); xf.timer = null; }
+  try { if (xf.outEl) { detachMediaHandlers(xf.outEl); xf.outEl.pause(); xf.outEl.remove(); } } catch (_) { /* ignore */ }
+  try { xf.outGraph && xf.outGraph.source.disconnect(); } catch (_) { /* ignore */ }
+  try { xf.outGraph && xf.outGraph.gain.disconnect(); } catch (_) { /* ignore */ }
+  try { if (xf.inGraph && xf.inGraph.el) { detachMediaHandlers(xf.inGraph.el); xf.inGraph.el.pause(); } } catch (_) { /* ignore */ }
+  try { xf.inGraph && xf.inGraph.source.disconnect(); } catch (_) { /* ignore */ }
+  try { xf.inGraph && xf.inGraph.gain.disconnect(); } catch (_) { /* ignore */ }
+  window.__crossfade = null;
+  window.__audioGraph = null; // force a clean single-chain rebuild
 }
 
 // A media element routed through a suspended AudioContext plays silent, and
@@ -299,8 +492,14 @@ if (!window.__podcastReportHooked) {
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
   }
 
+  // Crossfade trigger rides on timeupdate (fires ~4×/s during playback and,
+  // unlike requestAnimationFrame, keeps firing in a backgrounded tab) so the
+  // fade starts on time even when the tab isn't focused.
+  audio.ontimeupdate = maybeStartCrossfade;
+
   audio.onplaying = function () {
     resumeAudioCtx();
+    beginRampIfNeeded();
     if (radioBadge) radioBadge.classList.add("active");
     if (progressBar) progressBar.classList.remove("disabled");
     playBtn.innerHTML = `<i class="bi bi-pause-circle-fill"></i>`;

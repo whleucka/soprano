@@ -243,6 +243,41 @@ class PlaylistService
     }
 
     /**
+     * Whether a natural end-of-track advance would land on another track —
+     * i.e. the crossfade should arm. Read-only mirror of the auto/forward
+     * branch of changePlaylistTrack(): it never moves the queue index.
+     */
+    public function hasNextAuto(): bool
+    {
+        $playlist = state()->playlist;
+        $tracks = $playlist["tracks"] ?? [];
+        $count = count($tracks);
+        $index = (int) ($playlist["index"] ?? 0);
+        $repeat = $playlist["repeat"] ?? "off";
+
+        if ($count === 0) return false;
+
+        // repeat-one replays the same track — a valid crossfade target.
+        if ($repeat === "one") return isset($tracks[$index]);
+
+        // A lone track only "advances" when repeat-all is on.
+        if ($count < 2) return $repeat === "all" && isset($tracks[$index]);
+
+        if (!empty($playlist["shuffle"])) {
+            $order = $this->shuffleOrder($playlist);
+            $pos = array_search($index, $order, true);
+            if ($pos === false) $pos = 0;
+            $new_pos = $pos + 1;
+            if ($repeat !== "all" && $new_pos >= $count) return false;
+            return isset($tracks[$order[($new_pos + $count) % $count]]);
+        }
+
+        $new_index = $index + 1;
+        if ($repeat !== "all" && $new_index >= $count) return false;
+        return isset($tracks[($new_index + $count) % $count]);
+    }
+
+    /**
      * Current shuffled order, rebuilt if the queue changed underneath it.
      */
     private function shuffleOrder(array $playlist): array
