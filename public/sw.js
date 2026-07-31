@@ -8,7 +8,7 @@
 //   - fonts/icons/images/covers: stale-while-revalidate — these rarely change, so
 //     serve from cache instantly and refresh in the background.
 
-const CACHE_VERSION = '2026-06-29a';
+const CACHE_VERSION = '2026-07-31';
 const STATIC_CACHE  = `soprano-static-${CACHE_VERSION}`;
 
 const STATIC_PATH    = /^\/(css|js|fonts|icons|images|covers)\//;
