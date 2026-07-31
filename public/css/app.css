@@ -501,6 +501,7 @@ input:-webkit-autofill:active {
   padding: 8px;
   width: 80px;
   height: 80px;
+  border-radius: 10px;
 }
 
 #player #info .title {
