@@ -33,8 +33,17 @@ class SearchService
         ];
     }
 
+    /**
+     * The cached rows carry a liked flag from whenever the search ran, so a
+     * like toggled afterwards would be dropped the next time the results are
+     * re-rendered (a play, for instance, retriggers searchResults). Re-read
+     * the liked state on the way out.
+     */
     public function getSearch(): array
     {
-        return state()->search;
+        $search = state()->search ?? [];
+        $search['tracks'] = $this->music->refreshLikedState($search['tracks'] ?? []);
+
+        return $search;
     }
 }

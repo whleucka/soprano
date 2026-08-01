@@ -475,6 +475,58 @@ class MusicService
         return $this->mapTrackRows($rows);
     }
 
+    /**
+     * Re-read the liked flag on a set of mapped track rows. Session-cached
+     * rows (search results, the queue) snapshot liked at query time, so a
+     * like toggled afterwards is lost the next time they're re-rendered.
+     *
+     * @param array<int,array<string,mixed>> $tracks
+     * @return array<int,array<string,mixed>>
+     */
+    public function refreshLikedState(array $tracks): array
+    {
+        if (!$tracks) {
+            return $tracks;
+        }
+
+        $liked = $this->likedHashes(array_column($tracks, 'hash'));
+        foreach ($tracks as $i => $track) {
+            $tracks[$i]['liked'] = isset($liked[$track['hash'] ?? null]) ? 1 : 0;
+        }
+
+        return $tracks;
+    }
+
+    /**
+     * Which of these track hashes the current client likes right now.
+     *
+     * @param string[] $hashes
+     * @return array<string,true>
+     */
+    public function likedHashes(array $hashes): array
+    {
+        $hashes = array_values(array_unique(array_filter($hashes)));
+        if (!$hashes) {
+            return [];
+        }
+
+        $placeholders = implode(",", array_fill(0, count($hashes), "?"));
+        $rows = db()->fetchAll(
+            "SELECT t.hash AS track_hash
+             FROM tracks t
+             JOIN track_likes tl ON tl.track_id = t.id AND tl.client_id = ?
+             WHERE t.hash IN ($placeholders)",
+            [client()->id, ...$hashes],
+        );
+
+        $liked = [];
+        foreach ($rows ?: [] as $row) {
+            $liked[$row['track_hash']] = true;
+        }
+
+        return $liked;
+    }
+
     public function artistTracks(string $artistHash): array
     {
         $rows = db()->fetchAll(
