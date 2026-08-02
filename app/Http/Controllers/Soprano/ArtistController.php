@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{PlayerService, MusicService};
+use App\Services\Soprano\{PlayerService, MusicService, PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -13,6 +13,7 @@ class ArtistController extends Controller
     public function __construct(
         private PlayerService $player,
         private MusicService $music,
+        private PlaylistService $playlist,
     ) {}
 
     #[Get("/artist/{hash}", "artist.index")]
@@ -46,6 +47,44 @@ class ArtistController extends Controller
         return $this->render("artist/actions.html.twig", [
             "artist_hash" => $artist->hash,
         ]);
+    }
+
+    /**
+     * The artist's collection heart: filled only once every track of theirs in
+     * the library is liked. Also reloads on single-track likes, so the top
+     * tracks list and this never disagree.
+     */
+    #[Get("/artist/{hash}/like", "artist.like")]
+    public function like(string $hash): string
+    {
+        $artist = $this->music->getArtistByHash($hash);
+        if (!$artist) {
+            return $this->pageNotFound();
+        }
+
+        return $this->render("components/like-btn.html.twig", [
+            "liked"    => $this->music->artistFullyLiked($hash),
+            "like_uri" => uri("artist.like-toggle", $hash),
+        ]);
+    }
+
+    #[Get("/artist/{hash}/like-toggle", "artist.like-toggle")]
+    public function likeToggle(string $hash): string
+    {
+        $artist = $this->music->getArtistByHash($hash);
+        if (!$artist) {
+            return $this->pageNotFound();
+        }
+
+        $tracks = $this->music->artistTracks($hash);
+        $liked  = $this->music->toggleTracksLike(array_column($tracks, "hash"));
+
+        if ($this->playlist->syncLiked($tracks, $liked)) {
+            $this->hxTrigger("playlistQueue, playlistActions");
+        }
+        $this->hxTrigger("topTracks, trackLike, recentlyLiked");
+
+        return $this->like($hash);
     }
 
     #[Get("/artist/{hash}/discography", "artist.discography")]

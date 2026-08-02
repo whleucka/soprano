@@ -149,6 +149,99 @@ class PlaylistService
     }
 
     /**
+     * Mirror a bulk like/unlike into the queue while it is the liked playlist:
+     * freshly liked tracks land at the end, unliked ones drop out. $tracks are
+     * feed rows (see MusicService). Returns true when the queue changed.
+     */
+    public function syncLiked(array $tracks, bool $liked): bool
+    {
+        if (!$this->isLikedQueue()) {
+            return false;
+        }
+
+        return $liked
+            ? $this->queueTracks($tracks)
+            : $this->removeTracks(array_column($tracks, "hash"));
+    }
+
+    /**
+     * Append every track that isn't queued yet to the end of the queue,
+     * extending any shuffle walk to cover them. Returns true when something
+     * was added.
+     */
+    public function queueTracks(array $tracks): bool
+    {
+        $playlist = state()->playlist;
+        $queue = $playlist["tracks"] ?? [];
+        $queued = array_flip(array_column($queue, "hash"));
+
+        $new = [];
+        foreach ($tracks as $track) {
+            $hash = $track["hash"] ?? null;
+            if (!$hash || isset($queued[$hash])) {
+                continue;
+            }
+            $queued[$hash] = true;
+            $new[] = $track;
+        }
+        if (!$new) {
+            return false;
+        }
+
+        $order = $playlist["order"] ?? null;
+        if (is_array($order)) {
+            for ($i = count($queue); $i < count($queue) + count($new); $i++) {
+                $order[] = $i;
+            }
+        }
+
+        state()->playlist = ["tracks" => [...$queue, ...$new], "order" => $order];
+        return true;
+    }
+
+    /**
+     * Drop every copy of the given hashes from the queue in one pass, keeping
+     * the index and any shuffle order pointing at the same tracks. Removing
+     * the playing track leaves the index on whatever slid into its slot.
+     * Returns true when something was removed.
+     */
+    public function removeTracks(array $hashes): bool
+    {
+        $playlist = state()->playlist;
+        $tracks = $playlist["tracks"] ?? [];
+        $drop = array_flip(array_filter($hashes));
+
+        $kept = [];
+        $moved = [];   // old position => new position (or the one sliding into it)
+        $removed = []; // old positions that are gone
+        foreach ($tracks as $i => $track) {
+            $moved[$i] = count($kept);
+            if (isset($drop[$track["hash"] ?? ""])) {
+                $removed[$i] = true;
+                continue;
+            }
+            $kept[] = $track;
+        }
+        if (!$removed) {
+            return false;
+        }
+
+        $index = (int) ($playlist["index"] ?? 0);
+        $index = max(0, min($moved[$index] ?? 0, count($kept) - 1));
+
+        $order = $playlist["order"] ?? null;
+        if (is_array($order)) {
+            $order = array_values(array_map(
+                fn($i) => $moved[$i] ?? 0,
+                array_filter($order, fn($i) => !isset($removed[$i])),
+            ));
+        }
+
+        state()->playlist = ["tracks" => $kept, "index" => $index, "order" => $order];
+        return true;
+    }
+
+    /**
      * Seed the session queue with a client's saved player defaults. Called
      * once per session (sign-in / remember-me restore) before any queue is
      * built, so it just sets the flags — the shuffle order is dealt later

@@ -50,6 +50,9 @@ class MusicService
          JOIN artists ar ON ar.id = t.track_artist_id
          LEFT JOIN track_meta tm ON tm.track_id = t.id";
 
+    /** Ids per statement when liking/unliking a whole collection at once. */
+    private const LIKE_CHUNK = 500;
+
     private const ALBUM_COLUMNS =
         "al.hash AS album_hash,
          al.title AS album,
@@ -213,6 +216,128 @@ class MusicService
             'client_id' => client()->id,
         ]);
         return true;
+    }
+
+    /**
+     * All-or-nothing like state for an album / an artist's whole catalogue:
+     * true only when every one of its tracks is liked (an empty collection
+     * never is). Counted in SQL — the hearts re-render on every single-track
+     * like, so they don't materialise the track rows to work it out.
+     */
+    public function albumFullyLiked(int $albumId): bool
+    {
+        return $this->fullyLiked("t.album_id = ?", [$albumId]);
+    }
+
+    public function artistFullyLiked(string $artistHash): bool
+    {
+        return $this->fullyLiked("ar.hash = ?", [$artistHash]);
+    }
+
+    /** Same joins as the track feeds, so the count covers exactly the tracks the toggle acts on. */
+    private function fullyLiked(string $where, array $params): bool
+    {
+        $row = db()->fetch(
+            "SELECT COUNT(DISTINCT t.id) AS total,
+                    COUNT(DISTINCT CASE WHEN EXISTS (SELECT 1 FROM track_likes tl
+                                                     WHERE tl.track_id = t.id AND tl.client_id = ?)
+                                        THEN t.id END) AS liked
+             FROM tracks t " . self::TRACK_JOINS . "
+             WHERE $where",
+            [client()->id, ...$params],
+        );
+
+        $total = (int) ($row['total'] ?? 0);
+
+        return $total > 0 && (int) ($row['liked'] ?? 0) >= $total;
+    }
+
+    /**
+     * Like every track in the selection, or unlike the lot when they already
+     * all are — the collection heart's toggle. A part-liked collection fills
+     * up first, so one more click is always what clears it.
+     *
+     * Returns the new liked state.
+     */
+    public function toggleTracksLike(array $hashes): bool
+    {
+        $ids = $this->trackIds($hashes);
+        if (!$ids) {
+            return false;
+        }
+
+        $liked = $this->countLikedIds($ids) < count($ids);
+        if ($liked) {
+            $this->insertLikes($ids);
+        } else {
+            $this->deleteLikes($ids);
+        }
+
+        return $liked;
+    }
+
+    /**
+     * Resolve track hashes to integer ids, deduped. Unknown hashes are dropped.
+     *
+     * @return int[]
+     */
+    private function trackIds(array $hashes): array
+    {
+        $hashes = array_values(array_unique(array_filter($hashes)));
+        if (!$hashes) {
+            return [];
+        }
+
+        $ph   = implode(",", array_fill(0, count($hashes), "?"));
+        $rows = db()->fetchAll("SELECT id FROM tracks WHERE hash IN ($ph)", $hashes);
+
+        return array_map(fn($row) => (int) $row['id'], $rows ?: []);
+    }
+
+    private function countLikedIds(array $ids): int
+    {
+        $liked = 0;
+        // Chunked so a 2,000-track artist doesn't build a statement with more
+        // placeholders than the driver will take.
+        foreach (array_chunk($ids, self::LIKE_CHUNK) as $chunk) {
+            $ph  = implode(",", array_fill(0, count($chunk), "?"));
+            $row = db()->fetch(
+                "SELECT COUNT(*) AS liked FROM track_likes
+                 WHERE client_id = ? AND track_id IN ($ph)",
+                [client()->id, ...$chunk],
+            );
+            $liked += (int) ($row['liked'] ?? 0);
+        }
+
+        return $liked;
+    }
+
+    /** Idempotent — the unique(track_id,client_id) index drops the re-likes. */
+    private function insertLikes(array $ids): void
+    {
+        foreach (array_chunk($ids, self::LIKE_CHUNK) as $chunk) {
+            $values = implode(",", array_fill(0, count($chunk), "(?,?)"));
+            $params = [];
+            foreach ($chunk as $id) {
+                $params[] = $id;
+                $params[] = client()->id;
+            }
+            db()->execute(
+                "INSERT IGNORE INTO track_likes (track_id, client_id) VALUES $values",
+                $params,
+            );
+        }
+    }
+
+    private function deleteLikes(array $ids): void
+    {
+        foreach (array_chunk($ids, self::LIKE_CHUNK) as $chunk) {
+            $ph = implode(",", array_fill(0, count($chunk), "?"));
+            db()->execute(
+                "DELETE FROM track_likes WHERE client_id = ? AND track_id IN ($ph)",
+                [client()->id, ...$chunk],
+            );
+        }
     }
 
     public function albumTracks(int $albumId): array

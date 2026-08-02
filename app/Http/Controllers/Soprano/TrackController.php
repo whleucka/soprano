@@ -71,7 +71,10 @@ class TrackController extends Controller
     {
         $liked = $this->music->toggleTrackLike($hash);
         $this->syncLikedQueue($hash, $liked);
-        $this->hxTrigger("like-$hash, recentlyLiked");
+        // trackLike is the "some track's like changed" signal the collection
+        // hearts (album, artist) refresh on — they're all-or-nothing, so a
+        // single track flipping can empty or fill them.
+        $this->hxTrigger("like-$hash, trackLike, recentlyLiked");
         return $this->like($hash);
     }
 

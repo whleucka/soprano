@@ -375,4 +375,103 @@ class PlaylistServiceTest extends TestCase
 
         $this->assertTrue($this->playlist->isLikedQueue());
     }
+
+    public function testSyncLikedIsANoopWhenQueueIsNotTheLikedPlaylist(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3));
+
+        $this->assertFalse($this->playlist->syncLiked($this->tracks(5), true));
+        $this->assertCount(3, $this->playlist->getPlaylist()["tracks"]);
+    }
+
+    public function testSyncLikedAppendsOnlyTracksNotAlreadyQueued(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(2), source: "liked");
+
+        // t0/t1 are already in the liked queue; t2/t3 are the new likes.
+        $this->assertTrue($this->playlist->syncLiked($this->tracks(4), true));
+
+        $hashes = array_column($this->playlist->getPlaylist()["tracks"], "hash");
+        $this->assertSame(["t0", "t1", "t2", "t3"], $hashes);
+    }
+
+    public function testSyncLikedAddingNothingNewReturnsFalse(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), source: "liked");
+
+        $this->assertFalse($this->playlist->syncLiked($this->tracks(3), true));
+    }
+
+    public function testSyncUnlikedDropsEveryUnlikedTrack(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(5), 4, source: "liked");
+
+        $this->assertTrue($this->playlist->syncLiked($this->tracks(3), false));
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame(["t3", "t4"], array_column($state["tracks"], "hash"));
+        // Index follows the playing track to its new slot.
+        $this->assertSame("t4", $state["tracks"][$state["index"]]["hash"]);
+    }
+
+    public function testSyncUnlikedRemovingPlayingTrackLandsOnWhatSlidIn(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(4), 1, source: "liked");
+
+        $this->assertTrue($this->playlist->syncLiked([["hash" => "t1"]], false));
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame(["t0", "t2", "t3"], array_column($state["tracks"], "hash"));
+        $this->assertSame("t2", $state["tracks"][$state["index"]]["hash"]);
+    }
+
+    public function testSyncUnlikedEverythingEmptiesTheQueue(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), 2, source: "liked");
+
+        $this->assertTrue($this->playlist->syncLiked($this->tracks(3), false));
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame([], $state["tracks"]);
+        $this->assertSame(0, $state["index"]);
+    }
+
+    public function testQueueTracksUnderShuffleExtendsTheWalk(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), 0, source: "liked");
+        $this->playlist->toggleShuffle();
+
+        $this->assertTrue($this->playlist->syncLiked($this->tracks(6), true));
+
+        // Every track — old and newly liked — is still visited exactly once.
+        $seen = ["t0"];
+        for ($i = 0; $i < 5; $i++) {
+            $seen[] = $this->playlist->changePlaylistTrack(true)["hash"];
+        }
+        $this->assertCount(6, array_unique($seen));
+    }
+
+    public function testRemoveTracksUnderShuffleKeepsOrderWalkingSurvivors(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(6), 0, source: "liked");
+        $this->playlist->toggleShuffle();
+
+        $this->assertTrue($this->playlist->syncLiked(
+            [["hash" => "t1"], ["hash" => "t3"], ["hash" => "t5"]],
+            false,
+        ));
+
+        $state = $this->playlist->getPlaylist();
+        $order = $state["order"];
+        $sorted = $order;
+        sort($sorted);
+        $this->assertSame(range(0, 2), $sorted);
+
+        $walked = [$state["tracks"][$state["index"]]["hash"]];
+        for ($i = 0; $i < 2; $i++) {
+            $walked[] = $this->playlist->changePlaylistTrack(true)["hash"];
+        }
+        sort($walked);
+        $this->assertSame(["t0", "t2", "t4"], $walked);
+    }
 }

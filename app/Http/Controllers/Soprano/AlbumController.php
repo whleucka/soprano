@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{CoverArtService, PlayerService, MusicService};
+use App\Services\Soprano\{CoverArtService, PlayerService, MusicService, PlaylistService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -14,6 +14,7 @@ class AlbumController extends Controller
         private PlayerService $player,
         private MusicService $music,
         private CoverArtService $coverArt,
+        private PlaylistService $playlist,
     ) {}
 
     #[Get("/album/{hash}", "album.index")]
@@ -49,6 +50,44 @@ class AlbumController extends Controller
         return $this->render("album/actions.html.twig", [
             "album_hash"  => $album->hash,
         ]);
+    }
+
+    /**
+     * The album's collection heart: filled only once every track on it is
+     * liked. Also reloads on single-track likes from the track list, so the
+     * two never disagree.
+     */
+    #[Get("/album/{hash}/like", "album.like")]
+    public function like(string $hash): string
+    {
+        $album = $this->music->getAlbumByHash($hash);
+        if (!$album) {
+            return $this->pageNotFound();
+        }
+
+        return $this->render("components/like-btn.html.twig", [
+            "liked"    => $this->music->albumFullyLiked((int) $album->id),
+            "like_uri" => uri("album.like-toggle", $hash),
+        ]);
+    }
+
+    #[Get("/album/{hash}/like-toggle", "album.like-toggle")]
+    public function likeToggle(string $hash): string
+    {
+        $album = $this->music->getAlbumByHash($hash);
+        if (!$album) {
+            return $this->pageNotFound();
+        }
+
+        $tracks = $this->music->albumTracks((int) $album->id);
+        $liked  = $this->music->toggleTracksLike(array_column($tracks, "hash"));
+
+        if ($this->playlist->syncLiked($tracks, $liked)) {
+            $this->hxTrigger("playlistQueue, playlistActions");
+        }
+        $this->hxTrigger("albumTracks, trackLike, recentlyLiked");
+
+        return $this->like($hash);
     }
 
     #[Get("/album/{hash}/tracks", "album.tracks")]
