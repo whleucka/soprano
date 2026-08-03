@@ -1,7 +1,7 @@
 <div class="browse p-2">
   {% if genres %}
     <h2 class="browse-heading"><i class="bi bi-grid-1x2-fill text-info pe-1"></i> Browse Genres</h2>
-    <div class="browse-grid" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-boost="true">
+    <div class="browse-grid" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-boost="true" hx-push-url="true" >
       {% for g in genres %}
         <a class="browse-tile" href="{{ uri('search.genre') }}?genre={{ g.genre|url_encode }}" style="--tile-color: {{ g.color ?? '#5b5b5b' }}">
           <span class="browse-tile-title truncate" title="{{ g.genre }}">{{ g.genre }}</span>
@@ -13,7 +13,7 @@
 
   {% if decades %}
     <h2 class="browse-heading mt-4"><i class="bi bi-calendar3 text-warning pe-1"></i> Browse Decades</h2>
-    <div class="browse-grid" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-boost="true">
+    <div class="browse-grid" hx-target="#view" hx-select="#view" hx-swap="outerHTML" hx-boost="true" hx-push-url="true" >
       {% for d in decades %}
         <a class="browse-tile" href="{{ uri('search.decade') }}?decade={{ d.decade }}" style="--tile-color: {{ d.color ?? '#5b5b5b' }}">
           <span class="browse-tile-title">{{ d.decade }}s</span>
