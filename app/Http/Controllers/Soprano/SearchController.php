@@ -16,15 +16,35 @@ class SearchController extends Controller
         private PlayerService $player,
     ) {}
 
+    /**
+     * The search results are session-backed, so every entry point has to
+     * resolve them from its own URL. Otherwise a browser back/forward lands on
+     * a URL that says one thing while the session still holds the last thing
+     * you clicked.
+     */
     #[Get("/search", "search.index")]
     public function index(): string
     {
-        $term = request()->get->get("term");
+        $term = trim((string) request()->get->get("term"));
 
-        if ($term && trim($term) !== '') {
+        if ($term !== '') {
             $this->search->setSearch($term);
-            $this->hxTrigger("loadTop, searchResults, searchActions");
+        } else {
+            // Bare /search is the empty search page: drop stale results so
+            // going back to it shows the browse grid, not the old results.
+            $this->search->clearSearch();
         }
+
+        return $this->view();
+    }
+
+    /**
+     * Shared tail for every entry point: repaint the search box, the results
+     * pane and the result actions from whatever state was just resolved.
+     */
+    private function view(): string
+    {
+        $this->hxTrigger("loadTop, searchResults, searchActions");
 
         return $this->render("search/index.html.twig", [
             "search" => $this->search->getSearch(),
@@ -48,39 +68,27 @@ class SearchController extends Controller
             default            => [],
         };
 
-        if ($tracks) {
-            $this->search->setSearchResults($tracks);
-            $this->hxTrigger("searchResults, searchActions");
-        }
-        return $this->index();
+        $this->search->setSearchResults($tracks);
+
+        return $this->view();
     }
 
     #[Get("/search/genre", "search.genre")]
     public function genre(): string
     {
         $genre = request()->get->get("genre");
-        if ($genre) {
-            $tracks = $this->music->tracksByGenre($genre);
-            if ($tracks) {
-                $this->search->setSearchResults($tracks);
-                $this->hxTrigger("searchResults, searchActions");
-            }
-        }
-        return $this->index();
+        $this->search->setSearchResults($genre ? $this->music->tracksByGenre($genre) : []);
+
+        return $this->view();
     }
 
     #[Get("/search/decade", "search.decade")]
     public function decade(): string
     {
         $decade = (int) request()->get->get("decade");
-        if ($decade) {
-            $tracks = $this->music->tracksByDecade($decade);
-            if ($tracks) {
-                $this->search->setSearchResults($tracks);
-                $this->hxTrigger("searchResults, searchActions");
-            }
-        }
-        return $this->index();
+        $this->search->setSearchResults($decade ? $this->music->tracksByDecade($decade) : []);
+
+        return $this->view();
     }
 
     #[Get("/search/browse", "search.browse")]
