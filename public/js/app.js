@@ -1,5 +1,13 @@
 if (window.htmx) {
   window.htmx.config.scrollIntoViewOnBoost = false;
+
+  // Every view here is painted from live server state — the session-backed
+  // search results, the player, likes, playlists. Restoring a DOM snapshot out
+  // of htmx's localStorage history cache shows whatever was on screen the last
+  // time you were on that URL, which is how back off a genre page came back
+  // with the genre's tracks still in it. Zero also makes htmx drop the cache
+  // key outright, so snapshots saved before this shipped can't come back.
+  window.htmx.config.historyCacheSize = 0;
 }
 
 if ('serviceWorker' in navigator) {

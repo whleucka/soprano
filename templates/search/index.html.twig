@@ -3,10 +3,7 @@
 {% block title %}Soprano - Search {% endblock %}
 
 {% block view %}
-{# The results themselves live in the session and are resolved from the URL on
-   every request, so a snapshot restored out of htmx's history cache would show
-   stale rows. Opt out and let back/forward re-hit the server. #}
-<section id="search" class="h-100 d-flex flex-column" hx-history="false">
+<section id="search" class="h-100 d-flex flex-column">
   <div class="hero d-flex flex-column justify-content-center p-3">
     <h1 class="title"><i class="bi bi-search pe-1"></i> Search</h1>
     <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2" hx-get="{{ uri("search.actions") }}" hx-trigger="load, searchActions from:body"></div>
