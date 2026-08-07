@@ -7,8 +7,9 @@ namespace App\Services\Soprano;
  * backfilled by TrackFeaturesService) crossed with per-client affinity:
  *
  *   station feature filter (BPM / danceability / loudness / key)
- *     × affinity (likes + recency-decayed plays, skips counted against)
- *     + a novelty knob (random jitter) so no two spins are identical
+ *     → weighted random sample, where affinity (likes + recency-decayed
+ *       plays, skips counted against) sets a track's odds of being drawn
+ *       rather than its rank, so no two spins are alike
  *
  * Feature thresholds are percentile-anchored, not fixed: {d75} resolves to
  * the library's 75th-percentile danceability, {l25} to its 25th-percentile
@@ -34,8 +35,14 @@ class StationService
      *  Party — danceability concentrates heavily in a few artists. */
     private const ARTIST_CAP = 5;
 
-    /** Weight of the random jitter against the affinity score (likes = 3). */
-    private const NOVELTY = 2.0;
+    /**
+     * Affinity is a sampling *weight*, not a sort key (see build()). BASE is
+     * the weight of a never-heard track, so a like (+3) makes a track 4x more
+     * likely to be drawn rather than guaranteeing it a slot. FLOOR keeps
+     * heavily-skipped tracks (negative affinity) rare instead of impossible.
+     */
+    private const WEIGHT_BASE = 1.0;
+    private const WEIGHT_FLOOR = 0.15;
 
     /** Half-life-ish horizon (days) for recency-decayed play scoring. */
     private const DECAY_DAYS = 90.0;
@@ -59,7 +66,7 @@ class StationService
             'name'  => 'Feel Good',
             'icon'  => 'bi-sun',
             'blurb' => 'Bright, bouncy, major-key',
-            'where' => "(tf.danceability >= {d60}
+            'where' => "(tf.danceability >= {d40} AND tf.danceability < {d75}
                          AND tf.key_scale = 'major'
                          AND (tf.bpm BETWEEN 100 AND 165 OR tf.bpm / 2 BETWEEN 100 AND 165)
                          AND tf.avg_loudness_db >= {l25})",
@@ -89,15 +96,69 @@ class StationService
                          AND tf.avg_loudness_db <= {l50}
                          AND tf.danceability < {d60})",
         ],
+        /**
+         * Full Throttle and Workout split the same loud-and-fast space by
+         * timbre, because "loud + fast + energetic" was one undifferentiated
+         * 3.4k-track pool that a Workout station would have sat 82% inside.
+         * zcr (zero-crossing rate) separates them: high = abrasive and
+         * distorted (guitars, cymbals), low = smooth and tonal (synths,
+         * bass-driven). Workout additionally wants a steady ride with no
+         * quiet passages to break stride, hence the dyn_complexity ceiling.
+         * The {z60} split keeps them disjoint by construction.
+         */
         'full-throttle' => [
             'name'  => 'Full Throttle',
             'icon'  => 'bi-lightning-charge',
-            'blurb' => 'Loud and fast',
+            'blurb' => 'Loud, fast and abrasive',
             'where' => '(tf.avg_loudness_db >= {l75}
                          AND tf.energy >= {e50}
-                         AND (tf.bpm >= 120 OR tf.bpm * 2 >= 150))',
+                         AND (tf.bpm >= 120 OR tf.bpm * 2 >= 150)
+                         AND tf.zcr >= {z60})',
+        ],
+        'workout' => [
+            'name'  => 'Workout',
+            'icon'  => 'bi-heart-pulse',
+            'blurb' => 'Driving and relentless',
+            'where' => '(tf.avg_loudness_db >= {l75}
+                         AND tf.energy >= {e50}
+                         AND (tf.bpm >= 120 OR tf.bpm * 2 >= 150)
+                         AND tf.zcr < {z60}
+                         AND tf.dyn_complexity < {dc40})',
+        ],
+
+        /**
+         * The one station that filters on listening history instead of audio
+         * features: tracks never played on this client, by artists already
+         * liked or played. 93% of the library has never been played, so a
+         * plain "unheard" filter would just be shuffle — pinning it to
+         * familiar artists is what makes it a recommendation. Orthogonal to
+         * every feature station above, so it can't duplicate them.
+         */
+        'deep-cuts' => [
+            'name'     => 'Deep Cuts',
+            'icon'     => 'bi-compass',
+            'blurb'    => "Never played, by artists you're into",
+            'where'    => '1',
+            'affinity' => self::UNHEARD_BY_FAMILIAR_ARTIST,
         ],
     ];
+
+    /**
+     * Extra build()-only predicate for 'deep-cuts'. References ps (the
+     * per-client play-score subquery, NULL-joined when the track has never
+     * been played) and takes two client-id params for the familiar-artist
+     * lookup. Can't live in 'where': that clause has to stand alone against
+     * track_features for report()/sample(), which run without a session.
+     */
+    private const UNHEARD_BY_FAMILIAR_ARTIST =
+        "ps.track_id IS NULL
+         AND t.track_artist_id IN (
+             SELECT t2.track_artist_id
+             FROM tracks t2
+             LEFT JOIN track_plays p2 ON p2.track_id = t2.id AND p2.client_id = ?
+             LEFT JOIN track_likes l2 ON l2.track_id = t2.id AND l2.client_id = ?
+             WHERE p2.id IS NOT NULL OR l2.id IS NOT NULL
+         )";
 
     /** Stations only exist once some of the library has been analyzed. */
     public function available(): bool
@@ -176,7 +237,31 @@ class StationService
 
         // Affinity: +3 for a like, plus per-play EXP decay over DECAY_DAYS
         // (skips count -2). NULL skipped (pre-tracking rows) counts as played.
+        //
+        // Affinity picks the odds, not the tracks. Sorting by affinity made a
+        // station deterministic: Feel Good had 42 tracks scoring above the
+        // jitter for 50 slots, so every spin dealt the same favourites and the
+        // ~2.3k never-heard tracks in a pool were unreachable. Instead each row
+        // draws an Exp(weight) race key (-LOG(U)/w, smallest wins), which
+        // samples without replacement proportional to weight — a favourite is
+        // merely likelier, and the long tail is always in play.
+        //
+        // 1 - RAND() lands in (0,1] so LOG() never sees 0.
+        //
         // Over-fetched 3x so the artist cap still fills a whole queue.
+        //
+        // 'affinity' stations (Deep Cuts) add a listening-history predicate on
+        // top of the feature filter; its params slot in right after the WHERE.
+        $where  = self::resolveWhere($station['where'], $thresholds);
+        $params = [client()->id, self::DECAY_DAYS, client()->id, client()->id];
+        if (isset($station['affinity'])) {
+            $where   .= ' AND ' . $station['affinity'];
+            $params[] = client()->id;
+            $params[] = client()->id;
+        }
+        $params[] = self::WEIGHT_FLOOR;
+        $params[] = self::WEIGHT_BASE;
+
         $rows = db()->fetchAll(
             "SELECT " . MusicService::TRACK_COLUMNS . ", " . MusicService::LIKED_COLUMN . "
              FROM tracks t
@@ -191,12 +276,13 @@ class StationService
                  GROUP BY track_id
              ) ps ON ps.track_id = t.id
              LEFT JOIN track_likes tl2 ON tl2.track_id = t.id AND tl2.client_id = ?
-             WHERE " . self::resolveWhere($station['where'], $thresholds) . "
-             ORDER BY (IFNULL(ps.play_score, 0)
-                       + IF(tl2.id IS NULL, 0, 3)
-                       + RAND() * ?) DESC
+             WHERE $where
+             ORDER BY -LOG(1 - RAND())
+                      / GREATEST(?, IFNULL(ps.play_score, 0)
+                                    + IF(tl2.id IS NULL, 0, 3)
+                                    + ?) ASC
              LIMIT " . (self::SIZE * 3),
-            [client()->id, self::DECAY_DAYS, client()->id, client()->id, self::NOVELTY],
+            $params,
         );
 
         $queue  = [];
@@ -225,7 +311,8 @@ class StationService
      *
      * @return object{total:int,analyzed:int,errors:int,
      *               thresholds:?array<string,string>,
-     *               stations:array<string,array{name:string,pool:int,where:string,hours:?array{0:int,1:int}}>}
+     *               stations:array<string,array{name:string,pool:int,where:string,
+     *                                           hours:?array{0:int,1:int},affinity:bool}>}
      */
     public function report(): object
     {
@@ -254,6 +341,11 @@ class StationService
                 'pool'  => $pool,
                 'where' => $where,
                 'hours' => $s['hours'] ?? null,
+                // Pool is client-independent only for feature stations. An
+                // affinity station's real pool depends on listening history,
+                // which report() can't see (it runs without a session), so
+                // its count is an upper bound the caller should flag.
+                'affinity' => isset($s['affinity']),
             ];
         }
 
@@ -306,7 +398,8 @@ class StationService
 
     /**
      * Library-relative feature thresholds, one window-function query:
-     * d* = danceability percentiles, l* = avg_loudness_db, e* = energy.
+     * d* = danceability percentiles, l* = avg_loudness_db, e* = energy,
+     * z* = zcr (timbre), dc* = dyn_complexity.
      * Null before any track has been analyzed. Values are formatted as
      * locale-safe SQL numeric literals keyed by their {token}.
      *
@@ -323,7 +416,9 @@ class StationService
                 PERCENTILE_CONT(0.40) WITHIN GROUP (ORDER BY avg_loudness_db) OVER () AS l40,
                 PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY avg_loudness_db) OVER () AS l50,
                 PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY avg_loudness_db) OVER () AS l75,
-                PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY energy) OVER () AS e50
+                PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY energy) OVER () AS e50,
+                PERCENTILE_CONT(0.60) WITHIN GROUP (ORDER BY zcr) OVER () AS z60,
+                PERCENTILE_CONT(0.40) WITHIN GROUP (ORDER BY dyn_complexity) OVER () AS dc40
              FROM track_features WHERE error IS NULL",
         );
         if (!$row) {
@@ -332,7 +427,9 @@ class StationService
 
         $thresholds = [];
         foreach ($row as $key => $value) {
-            $thresholds['{' . $key . '}'] = sprintf('%.4F', (float) $value);
+            // 6dp, not 4: zcr values cluster in a ~0.03 band, so 4dp would
+            // round distinct tracks onto the split point.
+            $thresholds['{' . $key . '}'] = sprintf('%.6F', (float) $value);
         }
         return $thresholds;
     }

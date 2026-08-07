@@ -54,15 +54,23 @@ class StationsCommand extends Command
         $output->writeln('<info>Station pools</info>');
         $pools = new Table($output);
         $pools->setHeaders(['station', 'pool', '% of analyzed', 'hours']);
+        $anyAffinity = false;
         foreach ($report->stations as $s) {
+            $anyAffinity = $anyAffinity || $s['affinity'];
             $pools->addRow([
-                $s['name'],
+                $s['name'] . ($s['affinity'] ? ' *' : ''),
                 $s['pool'],
                 sprintf('%.1f%%', $s['pool'] / $report->analyzed * 100),
                 $s['hours'] ? sprintf('%02d:00–%02d:00', $s['hours'][0], $s['hours'][1]) : '—',
             ]);
         }
         $pools->render();
+        if ($anyAffinity) {
+            $output->writeln(
+                '<comment>* filters on listening history too — the real pool is'
+                . ' per-client and smaller than shown.</comment>',
+            );
+        }
 
         $sample = max(0, (int) $input->getOption('sample'));
         if ($sample > 0) {

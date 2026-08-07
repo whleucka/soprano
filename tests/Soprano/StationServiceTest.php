@@ -17,10 +17,11 @@ class StationServiceTest extends TestCase
     public function testEveryStationWhereTokenHasAKnownPercentile(): void
     {
         // Tokens the thresholds() query produces — keep in sync with it.
-        $known = ['{d40}', '{d60}', '{d75}', '{l25}', '{l40}', '{l50}', '{l75}', '{e50}'];
+        $known = ['{d40}', '{d60}', '{d75}', '{l25}', '{l40}', '{l50}', '{l75}',
+                  '{e50}', '{z60}', '{dc40}'];
 
         foreach (StationService::STATIONS as $slug => $station) {
-            preg_match_all('/\{[a-z]\d{2}\}/', $station['where'], $m);
+            preg_match_all('/\{[a-z]+\d{2}\}/', $station['where'], $m);
             foreach ($m[0] as $token) {
                 $this->assertContains($token, $known, "$slug uses unresolved token $token");
             }
@@ -33,6 +34,7 @@ class StationServiceTest extends TestCase
             '{d40}' => '1.1040', '{d60}' => '1.1708', '{d75}' => '1.2633',
             '{l25}' => '-18.4500', '{l40}' => '-16.9860', '{l50}' => '-16.1150',
             '{l75}' => '-14.1325', '{e50}' => '0.0482',
+            '{z60}' => '0.0716', '{dc40}' => '3.0410',
         ];
 
         foreach (StationService::STATIONS as $slug => $station) {
