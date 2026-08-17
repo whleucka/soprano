@@ -86,6 +86,14 @@ class PlaylistController extends Controller
         $this->queueTrack($hash, false);
     }
 
+    #[Get("/playlist/queue-remove/{hash}", "playlist.queue-remove")]
+    public function queueRemove(string $hash): void
+    {
+        if ($this->playlist->removeTrack($hash)) {
+            $this->hxTrigger("playlistQueue, playlistActions");
+        }
+    }
+
     private function queueTrack(string $hash, bool $next): void
     {
         $track = $this->music->trackRow($hash);

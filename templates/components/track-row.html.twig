@@ -6,7 +6,8 @@
     </div>
   {% endblock %}
   <div class="d-flex align-items-center flex-grow-1 truncate"
-       hx-get="{{ play_uri }}" hx-swap="none">
+       hx-get="{{ play_uri }}" hx-swap="none"
+       {% if row_before_request|default(null) %}hx-on::before-request="{{ row_before_request }}"{% endif %}>
     {% block leading %}{% endblock %}
     <div class="d-flex flex-column flex-grow-1 truncate">
       <span title="{{ track.title }}" class="title truncate">{{ track.title }}</span>
@@ -24,16 +25,17 @@
       {% endblock %}
     </button>
     <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ ddid }}"
-        hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML"
-        {% if dropdown_before_request|default(null) %}hx-on::before-request="{{ dropdown_before_request }}"{% endif %}>
+        hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
       {% block menu %}
         <li><a class="dropdown-item" href="{{ uri('track.index', [track.hash]) }}"><i class="bi bi-music-note pe-1"></i> {{ track.title }}</a></li>
         <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></li>
         <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ track.album }}</a></li>
       {% endblock %}
       <li><hr class="dropdown-divider"></li>
-      <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('playlist.queue-next', [track.hash]) }}" hx-swap="none"><i class="bi bi-arrow-return-right pe-1"></i> Play next</a></li>
-      <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('playlist.queue-last', [track.hash]) }}" hx-swap="none"><i class="bi bi-plus-square pe-1"></i> Add to queue</a></li>
+      {% block queue_actions %}
+        <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('playlist.queue-next', [track.hash]) }}" hx-swap="none"><i class="bi bi-arrow-return-right pe-1"></i> Play next</a></li>
+        <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('playlist.queue-last', [track.hash]) }}" hx-swap="none"><i class="bi bi-plus-square pe-1"></i> Add to queue</a></li>
+      {% endblock %}
       <li><a class="dropdown-item" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modal"
              hx-get="{{ uri('playlists.modal') }}?src=track&ref={{ track.hash }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-music-note-list pe-1"></i> Add to playlist</a></li>
     </ul>

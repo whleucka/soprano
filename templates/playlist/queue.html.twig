@@ -6,10 +6,13 @@
       dom_id: track.hash,
       active: current.hash == track.hash,
       dropdown_suffix: 'queue-dropdown',
-      dropdown_before_request: 'hidePlaylist()',
+      row_before_request: 'hidePlaylist()',
     } %}
       {% block leading %}
         <img title="{{ track.album }}" class="cover me-2" src="{{ track.cover }}" loading="lazy"/>
+      {% endblock %}
+      {% block queue_actions %}
+        <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('playlist.queue-remove', [track.hash]) }}" hx-swap="none"><i class="bi bi-x-lg pe-1"></i> Remove from queue</a></li>
       {% endblock %}
     {% endembed %}
   {% endfor %}
