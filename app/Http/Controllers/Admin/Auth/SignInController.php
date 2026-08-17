@@ -29,7 +29,7 @@ class SignInController extends AuthController
             "password" => ["required"],
         ]);
         if ($valid) {
-            $success = $this->service->signIn($valid->email, $valid->password);
+            $success = $this->service->signIn(trim($valid->email), $valid->password);
             if ($success) {
                 $path = config("security.authenticated_route");
                 return redirect($path)->withFlash("success", "Welcome back, " . user()->fullName() . ". You are now signed in");

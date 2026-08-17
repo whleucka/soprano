@@ -36,7 +36,7 @@ class RegisterController extends AuthController
             "password_match" => ["required", "match:password"],
         ]);
         if ($valid) {
-            $success = $this->service->register($valid->first_name, $valid->surname, $valid->email, $valid->password);
+            $success = $this->service->register(trim($valid->first_name), trim($valid->surname), trim($valid->email), $valid->password);
             if ($success) {
                 $path = config("security.authenticated_route");
                 return redirect($path)->withFlash("success", "Welcome, " . user()->fullName() . "! You are now signed in");
