@@ -6,7 +6,7 @@
       dom_id: track.hash,
       active: current.hash == track.hash,
       dropdown_suffix: 'queue-dropdown',
-      row_before_request: 'hidePlaylist()',
+      link_before_request: 'hidePlaylist()',
     } %}
       {% block leading %}
         <img title="{{ track.album }}" class="cover me-2" src="{{ track.cover }}" loading="lazy"/>
