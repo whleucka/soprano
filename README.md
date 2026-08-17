@@ -9,8 +9,9 @@ Self-hosted music server with a web player. Music, radio, and podcasts.
 - Stream your own music library (FLAC, MP3, and more, with Opus transcoding)
 - Search across tracks, albums, and artists
 - Playlists, liked tracks, and play queue with repeat modes
-- Generated playlists built from your listening history
-- Internet radio stations
+- Auto-generated playlists built from audio analysis (Essentia) and listening history
+- Artist radio and curated internet radio stations (skip-aware, tunable station pools)
+- Crossfade between tracks and replay gain volume normalization
 - Podcasts with saved progress and continue listening
 - Synced lyrics via LRCLIB
 - Cover art and artist images via MusicBrainz and Wikidata (no API keys)
@@ -67,6 +68,8 @@ Commands run inside the php container via `./bin/php`:
 ./bin/php bin/console soprano:artist-images  # backfill artist images
 ./bin/php bin/console soprano:transcode      # warm the Opus transcode cache
 ./bin/php bin/console soprano:duplicates     # find and remove duplicate tracks
+./bin/php bin/console soprano:trash          # list or purge files trashed by soprano:duplicates
+./bin/php bin/console soprano:stations       # report station pool sizes and percentile thresholds
 ./bin/php bin/console migrate:run            # run pending migrations
 ```
 
