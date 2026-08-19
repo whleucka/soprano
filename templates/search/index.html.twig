@@ -10,9 +10,11 @@
   </div>
   <div class="tracks scrollable" hx-get="{{ uri('search.results') }}" hx-trigger="load, searchResults from:body">
     {# Only the track-result path is slow enough to need a placeholder, and only
-       it renders rows. With no active term the load resolves to the browse grid,
-       so we leave that empty rather than flash mismatched track-row skeletons. #}
-    {% if search.term is defined and search.term %}{% include 'components/skeleton-rows.html.twig' with { cover: true } %}{% endif %}
+       it renders rows. Genre/decade/feed entry points set results with no term,
+       so key off the rows themselves; with nothing to render the load resolves
+       to the browse grid and we leave it empty rather than flash mismatched
+       track-row skeletons. #}
+    {% if search.term|default('') or search.tracks|default([]) %}{% include 'components/skeleton-rows.html.twig' with { cover: true } %}{% endif %}
   </div>
 </section>
 {% endblock %}
