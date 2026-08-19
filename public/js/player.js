@@ -26,6 +26,41 @@ function updateProgress() {
   requestAnimationFrame(updateProgress);
 }
 
+// Volume (mobile control). The player partial is swapped on every track
+// change, so the level lives in localStorage and gets re-applied to each new
+// <audio> element rather than resetting to full on every skip.
+var volumeSlider = document.getElementById('volume-slider');
+var muteBtn = document.getElementById('mute');
+
+function applyVolume(v, persist) {
+  v = Math.min(1, Math.max(0, isFinite(v) ? v : 1));
+  if (audio) audio.volume = v;
+  if (volumeSlider) {
+    volumeSlider.value = Math.round(v * 100);
+    volumeSlider.style.setProperty('--vol', Math.round(v * 100) + '%');
+  }
+  if (muteBtn) {
+    const icon = v === 0 ? 'bi-volume-mute-fill'
+      : v < 0.5 ? 'bi-volume-down-fill'
+      : 'bi-volume-up-fill';
+    muteBtn.innerHTML = '<i class="bi ' + icon + '"></i>';
+  }
+  if (persist) {
+    localStorage.setItem('soprano.volume', v);
+    // Remember the last audible level so unmuting restores it.
+    if (v > 0) localStorage.setItem('soprano.volume.last', v);
+  }
+}
+
+function toggleMute() {
+  const cur = audio ? audio.volume : 1;
+  if (cur > 0) {
+    applyVolume(0, true);
+  } else {
+    applyVolume(parseFloat(localStorage.getItem('soprano.volume.last') || '1'), true);
+  }
+}
+
 // Player controls
 function play() {
   if (audio.paused) {
@@ -541,6 +576,8 @@ if (!window.__podcastReportHooked) {
     teardownRadio();
     setupReplayGain();
   }
+
+  applyVolume(parseFloat(localStorage.getItem('soprano.volume') || '1'), false);
 
   requestAnimationFrame(updateProgress);
 })();

@@ -548,6 +548,112 @@ input:-webkit-autofill:active {
   font-size: 1.5rem;
 }
 
+/* Volume — mobile only. It fills the strip the progress bar used to sit in
+   (the bar moves to its own row above the controls, see the breakpoint below),
+   so the transport buttons stop crowding a bar you can barely aim at. */
+#player #volume {
+  min-width: 0;
+}
+
+#player #volume .btn {
+  font-size: 1.3rem;
+}
+
+#player #volume input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 8px;
+  margin-left: 0.6rem;
+  border-radius: 999px;
+  outline: none;
+  /* Filled portion is the Tokyo Night blue->purple gradient sized to --vol
+     (set by applyVolume in player.js); the track shows through behind it. */
+  background:
+    linear-gradient(90deg, var(--tn-blue) 0%, var(--tn-purple) 100%)
+      no-repeat left center / var(--vol, 100%) 100%,
+    var(--surface-hover);
+}
+
+#player #volume input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+}
+
+#player #volume input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* Stacked player layout (below xl): give the progress bar its own full-width
+   row above the controls instead of squeezing it between the transport buttons
+   and the volume slider, where it shrinks to a stub. */
+@media (max-width: 1199.98px) {
+  #player {
+    flex-wrap: wrap;
+    align-content: center;
+    height: 100px;
+    min-height: 100px;
+    row-gap: 4px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  #player #playback {
+    order: -1;
+    flex: 0 0 100%;
+  }
+
+  #player #playback .progress {
+    height: 10px;
+  }
+
+  /* Zero flex-basis: the slider's intrinsic width would otherwise push the
+     volume block onto a third (clipped) row instead of sharing row two. */
+  #player #volume {
+    flex: 1 1 0;
+  }
+
+  #player #controls {
+    flex: 0 0 auto;
+  }
+
+  /* Radio has no seek bar, and the LIVE badge doesn't earn its space on a
+     narrow bar — drop it here (it stays on desktop) so the volume slider fills
+     the strip the progress bar would occupy, and the player stays one row.
+     The badge element is still in the DOM, so :has() still spots a radio
+     player. */
+  #player:has(.radio-badge) {
+    flex-wrap: nowrap;
+    height: 75px;
+    min-height: 75px;
+  }
+
+  #player:has(.radio-badge) #playback {
+    display: none !important;
+  }
+}
+
+/* Desktop: the volume sits to the right of the progress bar (DOM order puts it
+   before #playback for the stacked layout, so re-order it here). */
+@media (min-width: 1200px) {
+  #player #volume {
+    order: 1;
+    flex: 1 1 150px;
+    max-width: 200px;
+    padding-right: 1rem !important;
+  }
+}
+
 /**
 * Hero
 */

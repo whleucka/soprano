@@ -13,7 +13,7 @@ var player_track = {
   cover:  {{ player.cover|json_encode|raw }},
 };
 </script>
-<script src="/js/player.js?v=20260730"></script>
+<script src="/js/player.js?v=20260819"></script>
 {% endblock %}
 
 {% if player.type == 'radio' %}
@@ -58,6 +58,10 @@ var player_track = {
   <button id="prev" onclick="prev()" hx-swap="none" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-start-circle"></i></button>
   <button id="play" onclick="play()" class="btn border-0 shadow-none" {% if player.src == '#' %}disabled{% endif %}><i class="bi bi-play-circle-fill"></i></button>
   <button id="next" onclick="next()" class="btn border-0 shadow-none" {% if not playlist.tracks %}disabled{% endif %}><i class="bi bi-skip-end-circle"></i></button>
+</div>
+<div id="volume" class="d-flex align-items-center px-2">
+  <button id="mute" type="button" onclick="toggleMute()" class="btn border-0 shadow-none p-0" aria-label="Mute"><i class="bi bi-volume-up-fill"></i></button>
+  <input id="volume-slider" type="range" min="0" max="100" step="1" value="100" aria-label="Volume" oninput="applyVolume(this.value / 100, true)">
 </div>
 <div id="playback" class="d-flex justify-content-center align-items-center flex-grow-1 px-2">
   {% if player.type == 'radio' %}
