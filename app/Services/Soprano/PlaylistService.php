@@ -102,10 +102,27 @@ class PlaylistService
         return true;
     }
 
+    /**
+     * Jump the queue to a track the user picked (a queue row click). With
+     * shuffle on this re-deals the order anchored at the new track: the
+     * stored walk knows nothing about the jump, so keeping it would resume
+     * from a stale position — replaying tracks, skipping others, and (when
+     * the picked track happened to sit last in the order) ending playback
+     * on the next track end with most of the queue unplayed.
+     *
+     * Auto advances walk the order themselves and must not re-deal it, so
+     * changePlaylistTrack() writes the index directly instead.
+     */
     public function setPlaylistIndex(int $index = 0)
     {
+        $playlist = state()->playlist;
+        $tracks = $playlist["tracks"] ?? [];
+
         state()->playlist = [
             "index" => $index,
+            "order" => !empty($playlist["shuffle"]) && !empty($tracks)
+                ? $this->buildOrder(count($tracks), $index)
+                : ($playlist["order"] ?? null),
         ];
     }
 
@@ -330,7 +347,8 @@ class PlaylistService
 
         if (!isset($tracks[$new_index])) return false;
 
-        $this->setPlaylistIndex($new_index);
+        // Straight index write: the shuffle order already covers this move.
+        state()->playlist = ["index" => $new_index];
 
         return $tracks[$new_index];
     }

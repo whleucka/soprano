@@ -474,4 +474,42 @@ class PlaylistServiceTest extends TestCase
         sort($walked);
         $this->assertSame(["t0", "t2", "t4"], $walked);
     }
+
+    /**
+     * Regression: a queue-row click sets the index outside the shuffle walk.
+     * Keeping the stale order meant the walk resumed from wherever that track
+     * sat in it — and if it sat last, the next natural end stopped playback
+     * with most of the queue unplayed.
+     */
+    public function testJumpingToTrackLastInShuffleOrderKeepsPlaying(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(8));
+        state()->playlist = ["shuffle" => true, "repeat" => "off"];
+        // Force the order to be dealt, then jump to its final track.
+        $this->playlist->changePlaylistTrack(true, true);
+        $order = $this->playlist->getPlaylist()["order"];
+        $this->playlist->setPlaylistIndex($order[count($order) - 1]);
+
+        $this->assertTrue($this->playlist->hasNextAuto());
+
+        $walked = [$this->playlist->getPlaylist()["index"]];
+        while (($track = $this->playlist->changePlaylistTrack(true, true)) !== false) {
+            $walked[] = $this->playlist->getPlaylist()["index"];
+            $this->assertNotEmpty($track["hash"]);
+        }
+
+        // The jump re-deals the walk, so every track still plays exactly once.
+        sort($walked);
+        $this->assertSame(range(0, 7), $walked);
+    }
+
+    public function testJumpingWithShuffleOffLeavesOrderAlone(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(4));
+        $this->playlist->setPlaylistIndex(2);
+
+        $this->assertNull($this->playlist->getPlaylist()["order"]);
+        $this->assertSame("t3", $this->playlist->changePlaylistTrack(true, true)["hash"]);
+        $this->assertFalse($this->playlist->changePlaylistTrack(true, true));
+    }
 }
