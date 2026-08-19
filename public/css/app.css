@@ -355,14 +355,14 @@ input:-webkit-autofill:active {
   font-family: var(--font-display);
   font-weight: 800;
   color: var(--text-soft);
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   letter-spacing: -0.01em;
 }
 #playlist #now-playing .album {
   font-family: var(--font-display);
   font-weight: 800;
   color: var(--text-soft);
-  font-size: 1.1rem;
+  font-size: 1.0rem;
   letter-spacing: -0.01em;
 }
 
