@@ -56,14 +56,11 @@
     {% endif %}
 
     <h2 class="mb-2"><i class="bi bi-collection text-info pe-1"></i> My Podcasts</h2>
-    <div class="card-grid">
-      {% if liked %}
-        {% for p in liked %}
-          {% include 'components/podcast-card.html.twig' with { p: p } %}
-        {% endfor %}
-      {% else %}
-        <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> You haven't liked any podcasts yet — search above to find some</p>
-      {% endif %}
+    <div class="card-grid" id="podcast-liked"
+         hx-get="{{ uri('podcasts.liked') }}"
+         hx-trigger="podcastLikes from:body"
+         hx-swap="innerHTML">
+      {% include 'podcasts/liked.html.twig' with { liked: liked } %}
     </div>
   </div>
 </section>

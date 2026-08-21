@@ -76,6 +76,14 @@ class PodcastsController extends Controller
         ]);
     }
 
+    #[Get("/podcasts/liked", "podcasts.liked")]
+    public function liked(): string
+    {
+        return $this->render("podcasts/liked.html.twig", [
+            "liked" => $this->podcasts->getLikedPodcasts(),
+        ]);
+    }
+
     #[Get("/podcasts/{hash}", "podcasts.show")]
     public function show(string $hash): string
     {
