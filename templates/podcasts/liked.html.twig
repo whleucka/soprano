@@ -1,0 +1,7 @@
+{% if liked %}
+  {% for p in liked %}
+    {% include 'components/podcast-card.html.twig' with { p: p } %}
+  {% endfor %}
+{% else %}
+  <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> You haven't liked any podcasts yet — search above to find some</p>
+{% endif %}
