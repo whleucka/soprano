@@ -137,31 +137,30 @@ class PlayerController extends Controller
     #[Get("/player/play/collection/{hash}", "player.play-collection")]
     public function playCollection(string $hash)
     {
-        $playlist = $this->playlists->getPlaylistByHash($hash);
-        if (!$playlist) {
-            return;
-        }
-        $tracks = $this->music->playlistTracks((int) $playlist->id);
-        if (empty($tracks)) {
-            return;
-        }
-        $this->playlist->setPlaylist($tracks, source: "playlist:$hash");
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
-        return $this->play($tracks[0]['hash']);
+        return $this->playCollectionTrack($hash, 0);
     }
 
     #[Get("/player/play/collection/{hash}/track/{index}", "player.play-collection-track")]
     public function playCollectionTrack(string $hash, int $index)
     {
-        $playlist = $this->playlists->getPlaylistByHash($hash);
-        if (!$playlist) {
-            return;
+        // The virtual "Liked" playlist has no playlists row — it queues with
+        // source "liked" so like/unlike keeps mirroring into the queue.
+        if ($hash === PlaylistsService::LIKED_HASH) {
+            $tracks = $this->music->likedTracks();
+            $source = "liked";
+        } else {
+            $playlist = $this->playlists->getPlaylistByHash($hash);
+            if (!$playlist) {
+                return;
+            }
+            $tracks = $this->music->playlistTracks((int) $playlist->id);
+            $source = "playlist:$hash";
         }
-        $tracks = $this->music->playlistTracks((int) $playlist->id);
+
         if (empty($tracks[$index])) {
             return;
         }
-        $this->playlist->setPlaylist($tracks, $index, source: "playlist:$hash");
+        $this->playlist->setPlaylist($tracks, $index, source: $source);
         $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
         return $this->play($tracks[$index]['hash']);
     }

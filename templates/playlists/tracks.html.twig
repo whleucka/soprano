@@ -10,7 +10,11 @@
         <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></li>
         <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ track.album }}</a></li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item text-danger" hx-get="{{ uri('playlists.remove-track', [hash, track.hash]) }}" hx-swap="none"><i class="bi bi-trash3 pe-1"></i> Remove from playlist</a></li>
+        {% if is_liked|default(false) %}
+          <li><a class="dropdown-item text-danger" hx-get="{{ uri('track.like-toggle', [track.hash]) }}" hx-swap="none"><i class="bi bi-heartbreak pe-1"></i> Remove from Liked</a></li>
+        {% else %}
+          <li><a class="dropdown-item text-danger" hx-get="{{ uri('playlists.remove-track', [hash, track.hash]) }}" hx-swap="none"><i class="bi bi-trash3 pe-1"></i> Remove from playlist</a></li>
+        {% endif %}
       {% endblock %}
     {% endembed %}
   {% endfor %}

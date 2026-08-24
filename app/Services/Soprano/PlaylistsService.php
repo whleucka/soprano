@@ -16,6 +16,13 @@ use App\Models\Playlist;
 class PlaylistsService
 {
     /**
+     * Reserved hash for the virtual "Liked" playlist. It has no `playlists`
+     * row — it is track_likes rendered through the playlist views — so every
+     * playlist route special-cases it before hitting the database.
+     */
+    public const LIKED_HASH = 'liked';
+
+    /**
      * Current client's user-created playlists, most-recently-touched first,
      * each with a track_count and a cover (the album art of the first track
      * added, or the default placeholder when empty). Drives the sidebar and
@@ -43,7 +50,41 @@ class PlaylistsService
             [client()->id],
         );
 
-        return array_map(fn($row) => $this->mapPlaylistRow($row), $rows);
+        return [
+            $this->likedPlaylist(),
+            ...array_map(fn($row) => $this->mapPlaylistRow($row), $rows),
+        ];
+    }
+
+    /**
+     * The virtual "Liked" playlist row, shaped like any other playlist so the
+     * sidebar and the index grid can render it without knowing it's special.
+     * Its cover is the most recently liked track's album art.
+     *
+     * @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string}
+     */
+    public function likedPlaylist(): array
+    {
+        $row = db()->fetch(
+            "SELECT COUNT(*) AS track_count,
+                    (SELECT al.cover
+                       FROM track_likes tl2
+                       JOIN tracks t ON t.id = tl2.track_id
+                       JOIN albums al ON al.id = t.album_id
+                       WHERE tl2.client_id = ?
+                       ORDER BY tl2.id DESC
+                       LIMIT 1) AS cover
+             FROM track_likes tl
+             WHERE tl.client_id = ?",
+            [client()->id, client()->id],
+        );
+
+        return $this->mapPlaylistRow([
+            'hash'        => self::LIKED_HASH,
+            'name'        => 'Liked',
+            'track_count' => $row['track_count'] ?? 0,
+            'cover'       => $row['cover'] ?? null,
+        ]);
     }
 
     /**

@@ -39,6 +39,20 @@ class PlaylistsController extends Controller
     #[Get("/playlists/{hash}", "playlists.show")]
     public function show(string $hash): string
     {
+        if ($this->isLiked($hash)) {
+            $tracks = $this->music->likedTracks();
+            $first  = $tracks[0] ?? null;
+
+            return $this->render("playlists/show.html.twig", [
+                "hash"     => PlaylistsService::LIKED_HASH,
+                "name"     => "Liked",
+                "is_liked" => true,
+                "count"    => count($tracks),
+                "cover"    => $first['cover'] ?? '/images/no-album-art.png',
+                "dominant" => $this->coverArt->hexToRgb($first['dominant_color'] ?? null),
+            ]);
+        }
+
         $playlist = $this->playlists->getPlaylistByHash($hash);
         if (!$playlist) {
             return $this->pageNotFound();
@@ -59,6 +73,14 @@ class PlaylistsController extends Controller
     #[Get("/playlists/{hash}/actions", "playlists.actions")]
     public function actions(string $hash): string
     {
+        if ($this->isLiked($hash)) {
+            return $this->render("playlists/actions.html.twig", [
+                "hash"     => PlaylistsService::LIKED_HASH,
+                "name"     => "Liked",
+                "is_liked" => true,
+            ]);
+        }
+
         $playlist = $this->playlists->getPlaylistByHash($hash);
         if (!$playlist) {
             return $this->pageNotFound();
@@ -73,6 +95,15 @@ class PlaylistsController extends Controller
     #[Get("/playlists/{hash}/tracks", "playlists.tracks")]
     public function tracks(string $hash): string
     {
+        if ($this->isLiked($hash)) {
+            return $this->render("playlists/tracks.html.twig", [
+                "hash"     => PlaylistsService::LIKED_HASH,
+                "is_liked" => true,
+                "player"   => state()->player,
+                "tracks"   => $this->music->likedTracks(),
+            ]);
+        }
+
         $playlist = $this->playlists->getPlaylistByHash($hash);
         if (!$playlist) {
             return $this->pageNotFound();
@@ -139,6 +170,12 @@ class PlaylistsController extends Controller
             "select" => "#view",
             "swap"   => "outerHTML",
         ]));
+    }
+
+    /** The virtual "Liked" playlist is track_likes wearing a playlist's clothes. */
+    private function isLiked(string $hash): bool
+    {
+        return $hash === PlaylistsService::LIKED_HASH;
     }
 
     private function renderModal(?string $src, ?string $ref): string
