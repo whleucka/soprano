@@ -14,7 +14,7 @@ var player_track = {
   cover:  {{ player.cover|json_encode|raw }},
 };
 </script>
-<script src="/js/player.js?v=20260826b"></script>
+<script src="/js/player.js?v=20260826c"></script>
 {% endblock %}
 
 {% if player.type == 'radio' %}
@@ -76,7 +76,7 @@ var player_track = {
 {% if player.type == 'radio' %}
 <audio data-hash="{{ player.hash }}" id="audio" data-type="radio" data-src="{{ player.src }}"></audio>
 {% elseif player.type == 'podcast' %}
-<audio data-hash="{{ player.hash }}" id="audio" data-type="podcast" data-episode="{{ player.episode_id }}" data-resume="{{ player.resume_ms|default(0) }}" src="{{ player.src }}"></audio>
+<audio data-hash="{{ player.hash }}" id="audio" data-type="podcast" data-episode="{{ player.episode_id }}" data-resume="{{ player.resume_ms|default(0) }}" preload="auto" src="{{ player.src }}"></audio>
 {% else %}
-<audio data-hash="{{ player.hash }}" id="audio" data-gain="{{ player.gain|default(0) }}" data-crossfade="{{ player.crossfade ? 1 : 0 }}" data-next="{{ player.has_next ? 1 : 0 }}" src="{{ player.src }}"></audio>
+<audio data-hash="{{ player.hash }}" id="audio" data-gain="{{ player.gain|default(0) }}" data-crossfade="{{ player.crossfade ? 1 : 0 }}" data-next="{{ player.has_next ? 1 : 0 }}" preload="auto" src="{{ player.src }}"></audio>
 {% endif %}

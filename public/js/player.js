@@ -579,17 +579,28 @@ if (!window.__plogHooked) {
   window.__plogUser = 0;
   window.__plogTouch = function () { window.__plogUser = Date.now(); };
 
-  window.__plog = function (event, note) {
+  // `el` names the element the event came from. It matters during a crossfade:
+  // the outgoing element keeps id="audio" (see startCrossfade), so reading the
+  // state off getElementById('audio') would describe the *incoming* track —
+  // which is how a fade produced lines like `ended ... "paused":0`, an
+  // impossible state that made every crossfade look like a track dying 5s in.
+  window.__plog = function (event, note, el) {
     if (typeof client_log_url === 'undefined') return;
     if (plogSent >= PLOG_MAX_EVENTS) return;
 
+    var a = el || document.getElementById('audio');
+    var offscreen = !!(el && el !== document.getElementById('audio'));
+
+    // Dedup per (event, element role): during a handoff the outgoing element
+    // ends within the same tick as the incoming one starts, and collapsing the
+    // two together would drop exactly the line that explains the handoff.
+    var key = event + (offscreen ? ':off' : '');
     var now = Date.now();
-    if (plogLast[event] && now - plogLast[event] < PLOG_MIN_GAP_MS) return;
-    plogLast[event] = now;
+    if (plogLast[key] && now - plogLast[key] < PLOG_MIN_GAP_MS) return;
+    plogLast[key] = now;
     plogSent++;
 
     var p = new URLSearchParams({ e: event });
-    var a = document.getElementById('audio');
     if (a) {
       if (a.dataset.hash) p.set('h', a.dataset.hash);
       if (a.dataset.type) p.set('ty', a.dataset.type);
@@ -622,9 +633,12 @@ if (!window.__plogHooked) {
     document.addEventListener(type, function (ev) {
       var el = ev.target;
       if (!el || el.tagName !== 'AUDIO') return;
-      // The crossfade's outgoing element pauses by design every handoff;
-      // logging it would bury the pauses we actually care about.
-      window.__plog(type, el.id === 'audio' ? null : 'offscreen-el');
+      // The crossfade's outgoing element pauses/ends by design every handoff.
+      // It can't be told apart by id — it keeps id="audio" — so compare against
+      // whatever getElementById resolves to now: after the swap that's the
+      // incoming element, and anything else is the one fading out.
+      var offscreen = el !== document.getElementById('audio');
+      window.__plog(type, offscreen ? 'offscreen-el' : null, el);
     }, true);
   });
 
@@ -661,13 +675,143 @@ if (!window.__plogHooked) {
       plogLastCtx = window.__audioCtx.state;
     }
 
-    if (a.paused) { plogLastPos = null; return; }
+    if (a.paused) {
+      plogLastPos = null;
+      // Finished but still sitting there: the advance never happened. Recover
+      // here rather than waiting for the listener to pick the phone up.
+      if (window.__advanceIfIdle) window.__advanceIfIdle();
+      return;
+    }
     var pos = a.currentTime;
     if (plogLastPos !== null && Math.abs(pos - plogLastPos) < 0.05) {
       window.__plog('stall-detected');
     }
     plogLastPos = pos;
   }, 5000);
+}
+
+// --- End-of-track advance, with recovery -----------------------------------
+// The queue used to move on exactly one way: 'ended' fires, its next-track
+// request lands, the swap brings in the next track. On a backgrounded phone
+// either half can go missing — the event never reaches a page the OS froze at
+// that instant, or the request dies with the radio asleep — and nothing
+// retried, nothing noticed on the way back. The player just sat at
+// currentTime == duration, paused, with a full buffer and no error, until
+// someone looked at it.
+//
+// So every advance goes through requestAdvance(), which watches for the swap
+// it asked for and re-fires if it never came, and three separate places ask
+// whether we're sitting on a finished track: the 'ended' handler, the 5s
+// diagnostics tick, and coming back to the foreground.
+//
+// Hooked once on window and reads the live DOM — HTMX swaps the player partial
+// out from under every captured reference.
+if (!window.__advanceHooked) {
+  window.__advanceHooked = true;
+
+  var ADVANCE_RETRY_MS  = 4000;  // how long one next-track request gets to land
+  var ADVANCE_MAX_TRIES = 3;     // then stop, rather than hammer a server that
+                                 // is plainly not going to answer
+
+  var advance = { el: null, tries: 0, timer: null, inflight: false, waited: false };
+
+  function advanceReset() {
+    if (advance.timer) { clearTimeout(advance.timer); advance.timer = null; }
+    advance.el = null;
+    advance.tries = 0;
+    advance.inflight = false;
+    advance.waited = false;
+  }
+
+  // Did the advance we asked for actually happen?
+  function advanceCheck() {
+    advance.timer = null;
+    // Element identity, not the hash: repeat-one legitimately swaps the same
+    // hash back in, and comparing hashes would read that as a failure and
+    // advance a second time.
+    if (document.getElementById('audio') !== advance.el) { advanceReset(); return; }
+    if (!window.__advanceStuck()) { advanceReset(); return; }
+    if (advance.inflight && !advance.waited) {
+      // The request hasn't come back yet — a slow phone, not a lost one. Give
+      // it a second window rather than sending a duplicate, which would land
+      // two advances and skip a track.
+      advance.waited = true;
+      advance.timer = setTimeout(advanceCheck, ADVANCE_RETRY_MS);
+      return;
+    }
+    // Either it came back with nothing, or it never came back at all. Both are
+    // the failure this exists for.
+    window.__requestAdvance('no-response');
+  }
+
+  // Is the current element a finished track that the queue never left?
+  //
+  // Keyed on the element's own `ended` property, not on the event: the property
+  // stays true even when the event that should have fired was dropped, which is
+  // the failure this whole block exists for. It also can't fire for someone who
+  // deliberately paused a second before the end, which an
+  // "is currentTime near duration" test would.
+  window.__advanceStuck = function () {
+    var a = document.getElementById('audio');
+    if (!a || a.dataset.type) return false;   // music tracks only
+    if (window.__crossfade) return false;     // that handoff has its own watchdog
+    if (a.dataset.next !== '1') return false; // nothing to advance to: a real stop
+    if (a.error) return false;                // a broken source, not a lost advance
+    return a.ended === true;
+  };
+
+  // fresh=true restarts the attempt budget — used when the listener comes back
+  // to the tab, which is a new chance worth spending retries on even if the
+  // earlier ones were used up while the phone was asleep.
+  window.__requestAdvance = function (reason, fresh) {
+    var a = document.getElementById('audio');
+    if (!a) return;
+    // A different element than the one we were retrying for means a swap
+    // already landed; this is a new advance and gets its own budget.
+    if (fresh || advance.el !== a) advanceReset();
+    if (advance.tries >= ADVANCE_MAX_TRIES) return;
+    advance.el = a;
+    advance.tries++;
+    advance.inflight = true;
+    advance.waited = false;
+
+    if (advance.tries > 1 && window.__plog) window.__plog('advance-retry', reason);
+
+    try {
+      // auto=1: still a natural end-of-track advance, so repeat mode applies.
+      var req = htmx.ajax('GET', next_track_url + '?auto=1', { swap: 'none' });
+      if (req && req.then) {
+        req.then(function () { advance.inflight = false; },
+                 function () { advance.inflight = false; });
+      } else {
+        advance.inflight = false;
+      }
+    } catch (_) {
+      advance.inflight = false; // never left — advanceCheck retries straight away
+    }
+
+    if (advance.timer) clearTimeout(advance.timer);
+    advance.timer = setTimeout(advanceCheck, ADVANCE_RETRY_MS);
+  };
+
+  // Entry point for the 5s diagnostics tick. Only starts something when nothing
+  // is already being watched, so a merely slow advance isn't raced into sending
+  // a second request and burning the retry budget on a queue that was fine.
+  window.__advanceIfIdle = function () {
+    if (advance.timer || advance.inflight) return;
+    if (!window.__advanceStuck()) return;
+    window.__requestAdvance('stuck');
+  };
+
+  // Coming back to the tab. If it stopped while we were away, start it moving
+  // again before the listener has to.
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    if (advance.inflight) return;  // one is already out there; don't duplicate it
+    if (!window.__advanceStuck()) return;
+    if (window.__plog) window.__plog('advance-recovered');
+    window.__requestAdvance('visible', true);
+  });
 }
 
 // Podcast resume: report the playhead so the server can save a resume point.
@@ -769,9 +913,16 @@ if (!window.__podcastReportHooked) {
       window.__podcastReport(false);
       return;
     }
-    // auto=1 tells the server this is a natural end-of-track advance, so the
-    // repeat mode applies (repeat-one replays, repeat-off stops at queue end).
-    htmx.ajax('GET', next_track_url + '?auto=1', {swap: 'none'});
+    // Goes through requestAdvance rather than firing the request directly, so
+    // a next-track that never comes back gets retried instead of ending the
+    // listening session. auto=1 (set there) keeps repeat mode applying. The
+    // fallback matters: this is the one path that must never depend on the
+    // recovery block having initialised.
+    if (window.__requestAdvance) {
+      window.__requestAdvance('ended');
+    } else {
+      htmx.ajax('GET', next_track_url + '?auto=1', {swap: 'none'});
+    }
   }
 
   audio.onerror = function () {
@@ -792,6 +943,31 @@ if (!window.__podcastReportHooked) {
   }
 
   applyVolume(parseFloat(localStorage.getItem('soprano.volume') || '1'), false);
+
+  // Start the new track here rather than waiting on loadedmetadata. A hidden
+  // tab (screen off, browser backgrounded) can defer loading the source for as
+  // long as it stays hidden, and with play() living only in onloadedmetadata
+  // that deferred playback too — a swap that landed at 13:07:27 made no sound
+  // until the phone was picked up 16s later. play() kicks the load off itself.
+  // Skipped where something has to happen first: radio builds its own stream,
+  // and a podcast seeks to its saved resume point before starting.
+  if (!isRadio && !audio.dataset.type && audio.src && !audio.src.endsWith('#')) {
+    audio.play().catch(function () {
+      // Not fatal on its own — onloadedmetadata tries again and reports it
+      // there (autoplay-blocked) if the browser really did refuse.
+    });
+  }
+
+  // Did it ever actually start? A track that swaps in and then just sits there
+  // is the other shape "it just stopped" takes, and nothing else here reports
+  // it. currentTime still 0 rules out someone simply pausing after a listen.
+  if (!isRadio) {
+    setTimeout(function () {
+      var a = document.getElementById('audio');
+      if (a !== audio || !a.paused || a.currentTime > 0) return;
+      if (window.__plog) window.__plog('start-stalled', 'rs' + a.readyState, a);
+    }, 6000);
+  }
 
   requestAnimationFrame(updateProgress);
 })();

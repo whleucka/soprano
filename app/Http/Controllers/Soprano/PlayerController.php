@@ -27,7 +27,21 @@ class PlayerController extends Controller
         'devicechange', 'ctxstate',
         // Reported by our own code rather than the browser.
         'stall-detected', 'crossfade-stalled', 'autoplay-blocked',
+        // Queue-advance recovery: a next-track request that had to be re-sent,
+        // a finished track found still sitting there when the tab came back,
+        // and a track that swapped in but never started.
+        'advance-retry', 'advance-recovered', 'start-stalled',
     ];
+
+    /** Session key holding the last auto advance, for retry de-duplication. */
+    private const LAST_AUTO_ADVANCE = 'player.last_auto_advance';
+
+    /**
+     * How long the same outgoing track re-requesting an auto advance counts as
+     * a duplicate. Comfortably longer than a swap round trip, and short enough
+     * that repeat-one on a very short track still advances on its own.
+     */
+    private const ADVANCE_DEDUP_SECONDS = 8;
 
     public function __construct(
         private PlayerService $player,
@@ -58,6 +72,33 @@ class PlayerController extends Controller
         // auto=1 marks a natural end-of-track advance, which is where the
         // repeat mode applies (replay on 'one', stop at queue end on 'off').
         $auto = (bool) request()->get->get("auto");
+        $cur  = (string) (request()->get->get("cur") ?? '');
+
+        // Idempotency for advance retries. player.js re-sends an auto advance
+        // when the first one leaves no trace (a phone that slept through the
+        // response, a swap that never landed), and a crossfade handoff that
+        // recovers late can produce a second one too. Advancing twice silently
+        // skips a track. `cur` names the track being left, so the same one
+        // arriving again within a few seconds is a duplicate rather than a new
+        // end-of-track: re-render the player instead, which resyncs the client
+        // onto whatever is actually current — the recovery it was asking for.
+        //
+        // Keyed on time, deliberately not on queue position: a queue edited
+        // under a playing track (removeTrack leaves the index on whatever slid
+        // into the slot) would make a position check suppress a *real* advance
+        // and stop playback outright. Manual next/prev carry no auto=1 and are
+        // untouched.
+        if ($auto && $cur !== '') {
+            $last = session()->get(self::LAST_AUTO_ADVANCE);
+            if (is_array($last)
+                && ($last['hash'] ?? null) === $cur
+                && (time() - (int) ($last['at'] ?? 0)) < self::ADVANCE_DEDUP_SECONDS) {
+                $this->hxTrigger("loadPlayer, nowPlaying");
+                return;
+            }
+            session()->set(self::LAST_AUTO_ADVANCE, ['hash' => $cur, 'at' => time()]);
+        }
+
         $next = $this->playlist->changePlaylistTrack(true, $auto);
         if ($next) {
             $this->hxTrigger("nowPlaying");
