@@ -46,6 +46,7 @@ class PlayerController extends Controller
             return $this->play($next['hash']);
         }
         // Queue ended with no advance (repeat off) — still close out the play.
+        $this->logStalledAdvance($auto);
         $this->finalizeOutgoingPlay();
     }
 
@@ -269,6 +270,14 @@ class PlayerController extends Controller
     {
         $track = $this->music->getTrack($hash);
         if (!$track) {
+            // The other way playback dies quietly: an advance already moved
+            // the queue index, but no player swaps in because the library no
+            // longer has this hash.
+            logger()->channel('soprano')->warning('Play requested for unknown track', [
+                'hash'   => $hash,
+                'source' => $this->playlist->getSource(),
+                'client' => client()?->id,
+            ]);
             return;
         }
 
@@ -279,9 +288,18 @@ class PlayerController extends Controller
 
         $this->finalizeOutgoingPlay();
         // One-off plays (track row, search result, wrapped) tag themselves
-        // with ?src= since they don't touch the queue; queue-driven plays
-        // inherit the queue's source.
-        $source = ((string) request()->get->get("src")) ?: $this->playlist->getSource();
+        // with ?src= since they don't come from the queue; queue-driven
+        // plays inherit the queue's source.
+        $one_off = (string) (request()->get->get("src") ?? '');
+        $source  = $one_off ?: $this->playlist->getSource();
+        // A one-off still has to become the queue's current track: the
+        // advance at the end of it reads the queue, so leaving the queue
+        // pointing elsewhere either stops playback (empty queue) or jumps
+        // to something unrelated (stale index).
+        if ($one_off !== '' && ($row = $this->music->trackRow($hash))) {
+            $this->playlist->setCurrentTrack($row);
+            $this->hxTrigger("playlistQueue, playlistActions");
+        }
         $this->music->trackPlay($track->id, $source);
         $this->player->setPlayer([
             'hash'        => $track->hash,
@@ -330,6 +348,40 @@ class PlayerController extends Controller
         // Fired by player.js on pagehide (fetch keepalive) so a play that
         // never reaches another track-change request still gets closed out.
         $this->finalizeOutgoingPlay();
+    }
+
+    /**
+     * Diagnostic for "playback just stopped when it shouldn't have". With
+     * repeat on, an auto advance always has somewhere to go, so a refusal
+     * means the queue itself is gone by the time the request lands — dump
+     * its whole shape (plus the outgoing track, which says whether this is
+     * even the queue that was playing) so one repro identifies the cause.
+     */
+    private function logStalledAdvance(bool $auto): void
+    {
+        $playlist = $this->playlist->getPlaylist();
+        $tracks   = $playlist["tracks"] ?? [];
+        $index    = (int) ($playlist["index"] ?? 0);
+        $order    = $playlist["order"] ?? null;
+        $cur      = (string) (request()->get->get("cur") ?? '');
+        $pos      = is_array($order) ? array_search($index, $order, true) : null;
+
+        logger()->channel('soprano')->warning('Queue advance returned no track', [
+            'auto'         => $auto,
+            'count'        => count($tracks),
+            'index'        => $index,
+            'shuffle'      => (bool) ($playlist["shuffle"] ?? false),
+            'repeat'       => $playlist["repeat"] ?? null,
+            'source'       => $playlist["source"] ?? null,
+            'order_count'  => is_array($order) ? count($order) : null,
+            'order_pos'    => $pos === false ? 'not-in-order' : $pos,
+            'index_hash'   => $tracks[$index]["hash"] ?? null,
+            'outgoing'     => $cur !== '' ? $cur : null,
+            // A queue that doesn't contain the track that just finished is a
+            // different (stale or clobbered) queue than the one being played.
+            'outgoing_queued' => $cur !== '' ? $this->playlist->hasTrack($cur) : null,
+            'client'       => client()?->id,
+        ]);
     }
 
     /**

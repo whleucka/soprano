@@ -127,6 +127,52 @@ class PlaylistService
     }
 
     /**
+     * Point the queue at a track played from outside it — a search result, a
+     * track page, an artist's top tracks, Wrapped. Those plays only swapped
+     * the player, so the track that finished had no successor of its own:
+     * with an empty queue playback stopped dead at the end of it (an empty
+     * queue refuses to advance before the repeat mode gets a say, so shuffle
+     * and repeat looked broken), and with a queue left over from something
+     * else the next track came from a stale index — unrelated to what the
+     * user had just picked.
+     *
+     * An empty queue becomes just this track; a track already queued is
+     * jumped to; anything else is spliced in right after the current track
+     * and becomes current, so the queue keeps everything it had and prev
+     * still walks back into it.
+     */
+    public function setCurrentTrack(array $track): void
+    {
+        $hash = $track["hash"] ?? null;
+        if (!$hash) {
+            return;
+        }
+
+        $playlist = state()->playlist;
+        $tracks = $playlist["tracks"] ?? [];
+        $index = (int) ($playlist["index"] ?? 0);
+
+        // Already the queue's current track — a queue-driven play.
+        if (($tracks[$index]["hash"] ?? null) === $hash) {
+            return;
+        }
+
+        if (empty($tracks)) {
+            $this->setPlaylist([$track]);
+            return;
+        }
+
+        $pos = array_search($hash, array_column($tracks, "hash"), true);
+        if ($pos !== false) {
+            $this->setPlaylistIndex((int) $pos);
+            return;
+        }
+
+        $this->queueTrack($track, next: true);
+        $this->setPlaylistIndex($index + 1);
+    }
+
+    /**
      * Splice a track into the queue right after the current one ("play
      * next") or at the end ("add to queue"), keeping any shuffle order
      * walking the same tracks it was.

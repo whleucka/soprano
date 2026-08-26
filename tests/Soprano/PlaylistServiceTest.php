@@ -512,4 +512,85 @@ class PlaylistServiceTest extends TestCase
         $this->assertSame("t3", $this->playlist->changePlaylistTrack(true, true)["hash"]);
         $this->assertFalse($this->playlist->changePlaylistTrack(true, true));
     }
+
+    /**
+     * Regression: a one-off play (search result, track page, wrapped) only
+     * swapped the player. With nothing queued, the end of that track had
+     * nowhere to go — an empty queue refuses to advance before the repeat
+     * mode gets a say, so playback stopped with shuffle and repeat both on.
+     */
+    public function testOneOffPlayIntoEmptyQueueKeepsRepeatWorking(): void
+    {
+        $this->playlist->applyDefaults(true, "all");
+        $this->assertFalse($this->playlist->changePlaylistTrack(true, auto: true));
+
+        $this->playlist->setCurrentTrack(["hash" => "x1"]);
+
+        $this->assertSame(["x1"], array_column($this->playlist->getPlaylist()["tracks"], "hash"));
+        $this->assertTrue($this->playlist->hasNextAuto());
+        $this->assertSame("x1", $this->playlist->changePlaylistTrack(true, auto: true)["hash"]);
+    }
+
+    public function testOneOffPlayWithRepeatOffStillEndsAfterTheTrack(): void
+    {
+        $this->playlist->setCurrentTrack(["hash" => "x1"]);
+
+        $this->assertFalse($this->playlist->hasNextAuto());
+        $this->assertFalse($this->playlist->changePlaylistTrack(true, auto: true));
+    }
+
+    /**
+     * A one-off played over an existing queue lands right after the current
+     * track instead of leaving the index pointing somewhere unrelated, so
+     * next continues the queue and prev walks back into it.
+     */
+    public function testOneOffPlaySplicesIntoAnExistingQueue(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), 1);
+
+        $this->playlist->setCurrentTrack(["hash" => "x1"]);
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame(["t0", "t1", "x1", "t2"], array_column($state["tracks"], "hash"));
+        $this->assertSame(2, $state["index"]);
+        $this->assertSame("t2", $this->playlist->changePlaylistTrack(true, auto: true)["hash"]);
+    }
+
+    public function testOneOffPlayOfAQueuedTrackJumpsInsteadOfDuplicating(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(3), 0);
+
+        $this->playlist->setCurrentTrack(["hash" => "t2"]);
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertSame(["t0", "t1", "t2"], array_column($state["tracks"], "hash"));
+        $this->assertSame(2, $state["index"]);
+    }
+
+    public function testOneOffPlayOfTheCurrentTrackChangesNothing(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(2), 1);
+
+        $this->playlist->setCurrentTrack(["hash" => "t1"]);
+
+        $state = $this->playlist->getPlaylist();
+        $this->assertCount(2, $state["tracks"]);
+        $this->assertSame(1, $state["index"]);
+    }
+
+    public function testOneOffPlayKeepsTheShuffleWalkValid(): void
+    {
+        $this->playlist->setPlaylist($this->tracks(4), 2);
+        $this->playlist->toggleShuffle();
+
+        $this->playlist->setCurrentTrack(["hash" => "x1"]);
+
+        $state = $this->playlist->getPlaylist();
+        $order = $state["order"];
+        $sorted = $order;
+        sort($sorted);
+        $this->assertSame(range(0, count($state["tracks"]) - 1), $sorted);
+        // The walk re-deals anchored on what is now playing.
+        $this->assertSame($state["index"], $order[0]);
+    }
 }

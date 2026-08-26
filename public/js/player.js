@@ -12,6 +12,10 @@ var CROSSFADE_SEC = 6;
 // sides of the overlap, and a <=CROSSFADE_SEC track would fade from its very
 // start. Must be > CROSSFADE_SEC.
 var CROSSFADE_MIN_TRACK = 2 * CROSSFADE_SEC;
+// How long the early handoff gets to produce an incoming element before we
+// give up on it (recoverStalledCrossfade). Must leave the outgoing track
+// enough of its tail to advance the ordinary way instead.
+var CROSSFADE_STALL_MS = 3000;
 var crossfadeEnabled = !!(audio && audio.dataset.crossfade === '1');
 
 // Progress bar stuff
@@ -234,7 +238,7 @@ function startCrossfade() {
   if (!window.__audioCtx || !graph || graph.el !== audio) return;
 
   const outEl = audio;
-  window.__crossfade = {
+  const xf = window.__crossfade = {
     outEl: outEl,
     outGraph: graph,
     inGraph: null,
@@ -242,7 +246,11 @@ function startCrossfade() {
     incomingStarted: false,
     torn: false,
     timer: null,
+    watchdog: null,
   };
+  // This element has handed off — it must never arm a second fade, including
+  // after a stalled handoff hands its timeupdate handler back.
+  outEl.dataset.next = '0';
   // Silence the outgoing element's UI/media handlers first: re-parenting it (and
   // its natural end) fires pause/ended events, and those handlers write the
   // *shared* progress bar / play button / mediaSession — which now belong to the
@@ -262,6 +270,48 @@ function startCrossfade() {
   try { document.body.appendChild(outEl); } catch (_) { /* ignore */ }
   // Advance + swap in the next track early (auto=1 so repeat mode applies).
   htmx.ajax('GET', next_track_url + '?auto=1', { swap: 'none' });
+  // The handoff is now the ONLY thing that can advance the queue — arm a
+  // watchdog in case it never lands. Recover with at least a second of the
+  // outgoing track left, so its natural end still has something to fire.
+  let grace = CROSSFADE_STALL_MS;
+  if (isFinite(outEl.duration) && outEl.duration > 0) {
+    grace = Math.min(grace, (outEl.duration - outEl.currentTime - 1) * 1000);
+  }
+  xf.watchdog = setTimeout(function () { recoverStalledCrossfade(xf); }, Math.max(500, grace));
+}
+
+// Whether the incoming half of a crossfade actually showed up — either it got
+// its own gain chain, or a swap replaced the current element with a new one.
+function crossfadePartnerArrived(xf) {
+  if (xf.inGraph) return true;
+  const cur = document.getElementById('audio');
+  return !!cur && cur !== xf.outEl;
+}
+
+// The early handoff produced no incoming track (the request errored, the
+// connection dropped, or the server had nothing to give). Without this the
+// outgoing element just runs out and stops for good: startCrossfade silenced
+// its handlers for a partner that never came, so nothing is left to advance
+// the queue. Hand them back and let its real end do the ordinary advance.
+function recoverStalledCrossfade(xf) {
+  if (!xf || xf.torn || window.__crossfade !== xf) return;
+  xf.watchdog = null;
+  if (crossfadePartnerArrived(xf)) return;
+
+  console.warn('[player] crossfade handoff stalled — falling back to a plain advance');
+  xf.torn = true;
+  if (xf.timer) { clearTimeout(xf.timer); xf.timer = null; }
+  window.__crossfade = null;
+
+  const el = xf.outEl;
+  if (!el) return;
+  reattachMediaHandlers(el);
+  // Put it back where a swap looks for it: a response that lands late must
+  // replace this element, not leave it playing under the new one.
+  const host = document.getElementById('player');
+  if (host && el.parentNode !== host) {
+    try { host.appendChild(el); } catch (_) { /* ignore */ }
+  }
 }
 
 function beginRampIfNeeded() {
@@ -301,6 +351,19 @@ function beginRampIfNeeded() {
 // the UI to "paused" mid-crossfade.
 function detachMediaHandlers(el) {
   if (!el) return;
+  // Keep the originals on the element: a handoff that never lands gives them
+  // back (recoverStalledCrossfade) so the element can finish on its own. Only
+  // the first detach saves — later ones would just store the nulls.
+  if (!el.__handlers) {
+    el.__handlers = {
+      onended: el.onended,
+      onerror: el.onerror,
+      onpause: el.onpause,
+      onplaying: el.onplaying,
+      onloadedmetadata: el.onloadedmetadata,
+      ontimeupdate: el.ontimeupdate,
+    };
+  }
   el.onended = null;
   el.onerror = null;
   el.onpause = null;
@@ -309,12 +372,26 @@ function detachMediaHandlers(el) {
   el.ontimeupdate = null;
 }
 
+// Give a silenced element its media events back — it owns the shared UI again.
+function reattachMediaHandlers(el) {
+  if (!el || !el.__handlers) return;
+  const h = el.__handlers;
+  el.__handlers = null;
+  el.onended = h.onended;
+  el.onerror = h.onerror;
+  el.onpause = h.onpause;
+  el.onplaying = h.onplaying;
+  el.onloadedmetadata = h.onloadedmetadata;
+  el.ontimeupdate = h.ontimeupdate;
+}
+
 // Idempotent: safe to call from the fade timer AND the outgoing 'ended' event.
 function finishCrossfade() {
   const xf = window.__crossfade;
   if (!xf || xf.torn) return;
   xf.torn = true;
   if (xf.timer) { clearTimeout(xf.timer); xf.timer = null; }
+  if (xf.watchdog) { clearTimeout(xf.watchdog); xf.watchdog = null; }
 
   // Stop + release the outgoing element and detach its chain.
   try {
@@ -349,6 +426,7 @@ function abortCrossfade() {
   const xf = window.__crossfade;
   if (!xf) return;
   if (xf.timer) { clearTimeout(xf.timer); xf.timer = null; }
+  if (xf.watchdog) { clearTimeout(xf.watchdog); xf.watchdog = null; }
   try { if (xf.outEl) { detachMediaHandlers(xf.outEl); xf.outEl.pause(); xf.outEl.remove(); } } catch (_) { /* ignore */ }
   try { xf.outGraph && xf.outGraph.source.disconnect(); } catch (_) { /* ignore */ }
   try { xf.outGraph && xf.outGraph.gain.disconnect(); } catch (_) { /* ignore */ }
