@@ -67,10 +67,15 @@ class ProfileService
         return (int) ($row['c'] ?? 0);
     }
 
+    /**
+     * Only playlists the client made themselves. Generated mixes carry a
+     * `slot` and live on the home rail, so counting them here inflates the
+     * total past what the playlists page shows.
+     */
     private function playlistCount(): int
     {
         $row = db()->fetch(
-            "SELECT COUNT(*) AS c FROM playlists WHERE client_id = ?",
+            "SELECT COUNT(*) AS c FROM playlists WHERE client_id = ? AND slot IS NULL",
             [client()->id],
         );
         return (int) ($row['c'] ?? 0);

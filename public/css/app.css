@@ -330,6 +330,27 @@ input:-webkit-autofill:active {
   object-fit: cover;
   object-position: center;
 }
+
+/* The virtual playlists (Liked, Random) wear an icon instead of cover art.
+   Size containment turns the tile into its own query container, so the glyph
+   scales with whatever size the .cover rules picked — 100/180px cards, the
+   3-up aspect-ratio grid on mobile, or the 80/140px hero. */
+.cover-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--text-soft);
+  container-type: size;
+}
+.cover-icon i {
+  font-size: 2.5rem; /* fallback where container units are unsupported */
+  font-size: 40cqmin;
+  line-height: 1;
+}
+.cover-icon .bi-heart-fill {
+  color: var(--accent);
+}
 #playlist {
   width: 100%;
   min-width: 100%;

@@ -5,5 +5,3 @@
   <button id="playlist-repeat" title="Repeat: {{ repeat }}" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.repeat") }}"><i class="bi {{ repeat == 'one' ? 'bi-repeat-1' : 'bi-repeat' }} {% if repeat != 'off' %}text-success{% endif %}"></i></button>
   <button id="playlist-clear" title="Clear" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash text-danger"></i></button>
 {% endif %}
-<button id="playlist-random" title="Random playlist" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.random") }}"><i class="bi bi-dice-6-fill"></i></button>
-<button id="playlist-liked" title="Liked tracks" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.liked") }}"><i class="bi bi-heart-fill text-heart"></i></button>

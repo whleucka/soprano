@@ -573,14 +573,25 @@ class MusicService
         return $this->mapTrackRows($rows);
     }
 
-    public function randomTracks($limit = 2500): array
+    /**
+     * A shuffle of the whole library. Pass a seed to pin the ordering — the
+     * virtual "Random" playlist renders its rows and plays them in separate
+     * requests, so an unseeded RAND() would deal a different hand each time.
+     */
+    public function randomTracks(?int $seed = null, int $limit = 2500): array
     {
+        $params = [client()->id];
+        if ($seed !== null) {
+            $params[] = $seed;
+        }
+        $params[] = $limit;
+
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
              FROM tracks t " . self::TRACK_JOINS . "
-             ORDER BY RAND()
+             ORDER BY RAND(" . ($seed === null ? "" : "?") . ")
              LIMIT ?",
-            [client()->id, $limit],
+            $params,
         );
 
         return $this->mapTrackRows($rows);

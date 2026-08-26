@@ -13,6 +13,9 @@ class Soprano
             'term' => '',
             'tracks' => []
         ],
+        'random' => [
+            'seed' => null
+        ],
         'playlist' => [
             'tracks' => [],
             'index' => 0,
@@ -41,7 +44,7 @@ class Soprano
 
     private function hydrate()
     { 
-        foreach (['search', 'playlist', 'player'] as $key) {
+        foreach (['search', 'random', 'playlist', 'player'] as $key) {
             $data = session()->get($key);
             if (!empty($data)) {
                 // Merge over defaults so sessions from before a key existed

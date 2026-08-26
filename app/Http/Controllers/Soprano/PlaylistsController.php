@@ -39,17 +39,21 @@ class PlaylistsController extends Controller
     #[Get("/playlists/{hash}", "playlists.show")]
     public function show(string $hash): string
     {
-        if ($this->isLiked($hash)) {
-            $tracks = $this->music->likedTracks();
-            $first  = $tracks[0] ?? null;
+        if ($virtual = $this->virtualPlaylist($hash)) {
+            // Opening the page deals a fresh hand; the seed then holds still
+            // so the rows rendered below are the ones a click plays.
+            if ($this->isRandom($hash)) {
+                $this->playlists->rerollRandomSeed();
+            }
 
             return $this->render("playlists/show.html.twig", [
-                "hash"     => PlaylistsService::LIKED_HASH,
-                "name"     => "Liked",
-                "is_liked" => true,
-                "count"    => count($tracks),
-                "cover"    => $first['cover'] ?? '/images/no-album-art.png',
-                "dominant" => $this->coverArt->hexToRgb($first['dominant_color'] ?? null),
+                "hash"     => $virtual['hash'],
+                "name"     => $virtual['name'],
+                "icon"     => $virtual['icon'],
+                "count"    => $virtual['track_count'],
+                "cover"    => $virtual['cover'],
+                // An icon-faced playlist has no art to tint the hero with.
+                "dominant" => null,
             ]);
         }
 
@@ -73,11 +77,11 @@ class PlaylistsController extends Controller
     #[Get("/playlists/{hash}/actions", "playlists.actions")]
     public function actions(string $hash): string
     {
-        if ($this->isLiked($hash)) {
+        if ($virtual = $this->virtualPlaylist($hash)) {
             return $this->render("playlists/actions.html.twig", [
-                "hash"     => PlaylistsService::LIKED_HASH,
-                "name"     => "Liked",
-                "is_liked" => true,
+                "hash"       => $virtual['hash'],
+                "name"       => $virtual['name'],
+                "is_virtual" => true,
             ]);
         }
 
@@ -95,12 +99,13 @@ class PlaylistsController extends Controller
     #[Get("/playlists/{hash}/tracks", "playlists.tracks")]
     public function tracks(string $hash): string
     {
-        if ($this->isLiked($hash)) {
+        if ($this->isVirtual($hash)) {
             return $this->render("playlists/tracks.html.twig", [
-                "hash"     => PlaylistsService::LIKED_HASH,
-                "is_liked" => true,
-                "player"   => state()->player,
-                "tracks"   => $this->music->likedTracks(),
+                "hash"       => $hash,
+                "is_virtual" => true,
+                "is_liked"   => $this->isLiked($hash),
+                "player"     => state()->player,
+                "tracks"     => $this->virtualTracks($hash),
             ]);
         }
 
@@ -176,6 +181,41 @@ class PlaylistsController extends Controller
     private function isLiked(string $hash): bool
     {
         return $hash === PlaylistsService::LIKED_HASH;
+    }
+
+    /** The virtual "Random" playlist is a seeded shuffle of the library. */
+    private function isRandom(string $hash): bool
+    {
+        return $hash === PlaylistsService::RANDOM_HASH;
+    }
+
+    private function isVirtual(string $hash): bool
+    {
+        return $this->isLiked($hash) || $this->isRandom($hash);
+    }
+
+    /**
+     * The row for a virtual playlist, or null for a real one. Both virtuals
+     * render through the playlist views with no `playlists` row behind them.
+     */
+    private function virtualPlaylist(string $hash): ?array
+    {
+        return match (true) {
+            $this->isLiked($hash)  => $this->playlists->likedPlaylist(),
+            $this->isRandom($hash) => $this->playlists->randomPlaylist(),
+            default                => null,
+        };
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function virtualTracks(string $hash): array
+    {
+        return $this->isLiked($hash)
+            ? $this->music->likedTracks()
+            : $this->music->randomTracks(
+                $this->playlists->randomSeed(),
+                PlaylistsService::RANDOM_SIZE,
+            );
     }
 
     private function renderModal(?string $src, ?string $ref): string

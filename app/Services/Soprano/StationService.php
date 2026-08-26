@@ -29,11 +29,12 @@ class StationService
     {
     }
 
-    private const SIZE = 50;
+    private const SIZE = 200;
 
-    /** Max tracks per artist in one deal, so house music doesn't monopolize
-     *  Party — danceability concentrates heavily in a few artists. */
-    private const ARTIST_CAP = 5;
+    /** Max tracks per artist in one deal — a tenth of the queue, so house
+     *  music doesn't monopolize Party (danceability concentrates heavily in
+     *  a few artists). */
+    private const ARTIST_CAP = 20;
 
     /**
      * Affinity is a sampling *weight*, not a sort key (see build()). BASE is
@@ -240,7 +241,7 @@ class StationService
         //
         // Affinity picks the odds, not the tracks. Sorting by affinity made a
         // station deterministic: Feel Good had 42 tracks scoring above the
-        // jitter for 50 slots, so every spin dealt the same favourites and the
+        // jitter for its slots, so every spin dealt the same favourites and the
         // ~2.3k never-heard tracks in a pool were unreachable. Instead each row
         // draws an Exp(weight) race key (-LOG(U)/w, smallest wins), which
         // samples without replacement proportional to weight — a favourite is

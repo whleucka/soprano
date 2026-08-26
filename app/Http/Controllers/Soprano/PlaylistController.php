@@ -103,7 +103,7 @@ class PlaylistController extends Controller
         $was_empty = empty($this->playlist->getPlaylist()["tracks"]);
         $this->playlist->queueTrack($track, $next);
         // A previously empty queue has no player hooked up — load it so
-        // next/prev reach the freshly queued track (same as liked()).
+        // next/prev reach the freshly queued track.
         $this->hxTrigger("playlistQueue, playlistActions" . ($was_empty ? ", loadPlayer" : ""));
     }
 
@@ -119,30 +119,5 @@ class PlaylistController extends Controller
     {
         $this->playlist->cycleRepeat();
         $this->hxTrigger("playlistActions");
-    }
-
-    #[Get("/playlist/random", "playlist.random")]
-    public function random()
-    {
-        $tracks = $this->music->randomTracks();
-        if (empty($tracks)) {
-            return;
-        }
-        $this->playlist->setPlaylist($tracks, source: "random");
-        $this->hxTrigger("playlistActions, playlistQueue");
-    }
-
-    #[Get("/playlist/liked", "playlist.liked")]
-    public function liked()
-    {
-        $current_playlist = $this->playlist->getPlaylist()['tracks'] ?? [];
-        $tracks = $this->music->likedTracks();
-        $this->playlist->setPlaylist($tracks, source: "liked");
-        $this->hxTrigger("playlistActions, playlistQueue");
-        if (!$current_playlist) {
-            // In this case, we want to load the player so that we 
-            // can use next/prev for the liked queue
-            $this->hxTrigger("loadPlayer");
-        }
     }
 }

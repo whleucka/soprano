@@ -7,7 +7,11 @@
   <div class="hero d-flex flex-column justify-content-center p-3"{% if dominant %} style="background: linear-gradient(180deg, rgba({{ dominant[0] }}, {{ dominant[1] }}, {{ dominant[2] }}, 0.5) 0%, rgba(0, 0, 0, 0) 100%);"{% endif %}>
     <div class="d-flex flex-column truncate">
       <div class="d-flex align-items-start truncate">
-        <img class="cover me-3" src="{{ cover }}" />
+        {% if icon|default(false) %}
+          <span class="cover cover-icon me-3"><i class="bi {{ icon }}"></i></span>
+        {% else %}
+          <img class="cover me-3" src="{{ cover }}" />
+        {% endif %}
         <div class="d-flex flex-column truncate">
           <h1 title="{{ name }}" class="album truncate">{{ name }}</h1>
           <h3 class="artist">{{ count }} track{% if count != 1 %}s{% endif %}</h3>
@@ -16,6 +20,6 @@
       <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-3" hx-get="{{ uri("playlists.actions", [hash]) }}" hx-trigger="load, playlistActions from:body"></div>
     </div>
   </div>
-  <div class="tracks scrollable" hx-get="{{ uri('playlists.tracks', [hash]) }}" hx-trigger="load, playlistTracks-{{ hash }} from:body">{% include 'components/skeleton-rows.html.twig' %}</div>
+  <div class="tracks scrollable" hx-get="{{ uri('playlists.tracks', [hash]) }}" hx-trigger="load, playlistTracks-{{ hash }} from:body">{% include 'components/skeleton-rows.html.twig' with { cover: true } %}</div>
 </section>
 {% endblock %}

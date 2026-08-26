@@ -16,20 +16,26 @@ use App\Models\Playlist;
 class PlaylistsService
 {
     /**
-     * Reserved hash for the virtual "Liked" playlist. It has no `playlists`
-     * row — it is track_likes rendered through the playlist views — so every
-     * playlist route special-cases it before hitting the database.
+     * Reserved hashes for the virtual playlists. Neither has a `playlists`
+     * row — "Liked" is track_likes and "Random" is a seeded shuffle of the
+     * library, both rendered through the playlist views — so every playlist
+     * route special-cases them before hitting the database.
      */
     public const LIKED_HASH = 'liked';
+    public const RANDOM_HASH = 'random';
+
+    /** How many tracks the virtual "Random" playlist deals out. */
+    public const RANDOM_SIZE = 2500;
 
     /**
      * Current client's user-created playlists, most-recently-touched first,
      * each with a track_count and a cover (the album art of the first track
-     * added, or the default placeholder when empty). Drives the sidebar and
-     * the index grid. Generated mixes (slot set) live on the home rail via
+     * added, or the default placeholder when empty). Led by the two virtual
+     * playlists, which carry an icon instead of cover art. Drives the sidebar
+     * and the index grid. Generated mixes (slot set) live on the home rail via
      * getGeneratedPlaylists() instead.
      *
-     * @return array<int, array{hash: string, name: string, track_count: int, cover: string}>
+     * @return array<int, array{hash: string, name: string, track_count: int, cover: string, icon: ?string}>
      */
     public function getPlaylists(): array
     {
@@ -52,6 +58,7 @@ class PlaylistsService
 
         return [
             $this->likedPlaylist(),
+            $this->randomPlaylist(),
             ...array_map(fn($row) => $this->mapPlaylistRow($row), $rows),
         ];
     }
@@ -59,32 +66,64 @@ class PlaylistsService
     /**
      * The virtual "Liked" playlist row, shaped like any other playlist so the
      * sidebar and the index grid can render it without knowing it's special.
-     * Its cover is the most recently liked track's album art.
+     * Wears a filled heart rather than album art.
      *
-     * @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string}
+     * @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string, icon: ?string}
      */
     public function likedPlaylist(): array
     {
         $row = db()->fetch(
-            "SELECT COUNT(*) AS track_count,
-                    (SELECT al.cover
-                       FROM track_likes tl2
-                       JOIN tracks t ON t.id = tl2.track_id
-                       JOIN albums al ON al.id = t.album_id
-                       WHERE tl2.client_id = ?
-                       ORDER BY tl2.id DESC
-                       LIMIT 1) AS cover
-             FROM track_likes tl
-             WHERE tl.client_id = ?",
-            [client()->id, client()->id],
+            "SELECT COUNT(*) AS track_count FROM track_likes WHERE client_id = ?",
+            [client()->id],
         );
 
         return $this->mapPlaylistRow([
             'hash'        => self::LIKED_HASH,
             'name'        => 'Liked',
             'track_count' => $row['track_count'] ?? 0,
-            'cover'       => $row['cover'] ?? null,
+            'icon'        => 'bi-heart-fill',
         ]);
+    }
+
+    /**
+     * The virtual "Random" playlist row — a dice-faced shuffle of the whole
+     * library, capped at RANDOM_SIZE tracks (what the playlist actually
+     * deals out, so the count matches the rendered rows).
+     *
+     * @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string, icon: ?string}
+     */
+    public function randomPlaylist(): array
+    {
+        $row = db()->fetch("SELECT COUNT(*) AS track_count FROM tracks");
+
+        return $this->mapPlaylistRow([
+            'hash'        => self::RANDOM_HASH,
+            'name'        => 'Random',
+            'track_count' => min((int) ($row['track_count'] ?? 0), self::RANDOM_SIZE),
+            'icon'        => 'bi-dice-6-fill',
+        ]);
+    }
+
+    /**
+     * Ordering seed for the virtual "Random" playlist. The page, its track
+     * list and the click that plays row N are three separate requests — a
+     * fresh RAND() in each would play a different track than the one clicked,
+     * so the shuffle is pinned to a session seed.
+     */
+    public function randomSeed(): int
+    {
+        $seed = state()->random['seed'] ?? null;
+
+        return $seed === null ? $this->rerollRandomSeed() : (int) $seed;
+    }
+
+    /** Deal a new hand. Called when the Random playlist page is opened. */
+    public function rerollRandomSeed(): int
+    {
+        $seed = random_int(1, 2147483647);
+        state()->random = ['seed' => $seed];
+
+        return $seed;
     }
 
     /**
@@ -92,7 +131,7 @@ class PlaylistsService
      * order. Same row shape as getPlaylists(); drives the home "Made For You"
      * rail.
      *
-     * @return array<int, array{hash: string, name: string, slot: ?string, track_count: int, cover: string}>
+     * @return array<int, array{hash: string, name: string, slot: ?string, track_count: int, cover: string, icon: ?string}>
      */
     public function getGeneratedPlaylists(): array
     {
@@ -118,7 +157,9 @@ class PlaylistsService
         return array_map(fn($row) => $this->mapPlaylistRow($row), $rows);
     }
 
-    /** @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string} */
+    /**
+     * @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string, icon: ?string}
+     */
     private function mapPlaylistRow(array $row): array
     {
         return [
@@ -126,7 +167,9 @@ class PlaylistsService
             'name'        => $row['name'],
             'slot'        => $row['slot'] ?? null,
             'track_count' => (int) $row['track_count'],
-            'cover'       => $row['cover'] ?: '/images/no-album-art.png',
+            // An icon replaces the cover art entirely (virtual playlists).
+            'icon'        => $row['icon'] ?? null,
+            'cover'       => ($row['cover'] ?? null) ?: '/images/no-album-art.png',
         ];
     }
 

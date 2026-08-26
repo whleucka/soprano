@@ -1,3 +1,3 @@
 <a id="play-playlist" class="btn btn-sm btn-outline-light" title="Play" hx-boost="true" hx-push-url="false" href="{{ uri("player.play-collection", [hash]) }}" hx-swap="none"><i class="bi bi-play-circle-fill"></i></a>
 <button onclick="copyClipboard(event)" class="share btn btn-sm btn-outline-light" title="Share"><i class="bi bi-share-fill"></i></button>
-{% if not is_liked|default(false) %}<button class="btn btn-sm btn-outline-light" title="Delete playlist" hx-get="{{ uri('playlists.delete', [hash]) }}" hx-swap="none" hx-confirm="Delete the playlist &quot;{{ name }}&quot;?"><i class="bi bi-trash3"></i></button>{% endif %}
+{% if not is_virtual|default(false) %}<button class="btn btn-sm btn-outline-light" title="Delete playlist" hx-get="{{ uri('playlists.delete', [hash]) }}" hx-swap="none" hx-confirm="Delete the playlist &quot;{{ name }}&quot;?"><i class="bi bi-trash3"></i></button>{% endif %}

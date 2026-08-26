@@ -149,6 +149,14 @@ class PlayerController extends Controller
         if ($hash === PlaylistsService::LIKED_HASH) {
             $tracks = $this->music->likedTracks();
             $source = "liked";
+        } elseif ($hash === PlaylistsService::RANDOM_HASH) {
+            // Same seeded hand the playlist page rendered, so index N here is
+            // the row the client actually clicked.
+            $tracks = $this->music->randomTracks(
+                $this->playlists->randomSeed(),
+                PlaylistsService::RANDOM_SIZE,
+            );
+            $source = "random";
         } else {
             $playlist = $this->playlists->getPlaylistByHash($hash);
             if (!$playlist) {
