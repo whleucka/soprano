@@ -67,6 +67,9 @@ function toggleMute() {
 
 // Player controls
 function play() {
+  // Stamp before the state change so the resulting pause/play event is
+  // attributable to us rather than to an outside interruption.
+  if (window.__plogTouch) window.__plogTouch();
   if (audio.paused) {
     audio.play();
   } else {
@@ -76,11 +79,13 @@ function play() {
 
 function next() {
   // Try next track
+  if (window.__plogTouch) window.__plogTouch();
   htmx.ajax('GET', next_track_url, {swap: 'none'});
 }
 
 function prev() {
   // Try prev track
+  if (window.__plogTouch) window.__plogTouch();
   htmx.ajax('GET', prev_track_url, {swap: 'none'});
 }
 
@@ -114,8 +119,10 @@ function setupMediaSession() {
     ],
   });
 
-  navigator.mediaSession.setActionHandler('play',          () => audio.play());
-  navigator.mediaSession.setActionHandler('pause',         () => audio.pause());
+  // Bluetooth/lockscreen transport buttons arrive here — stamp them too, so a
+  // pause the earbuds asked for isn't mistaken for an OS interruption.
+  navigator.mediaSession.setActionHandler('play',          () => { if (window.__plogTouch) window.__plogTouch(); audio.play(); });
+  navigator.mediaSession.setActionHandler('pause',         () => { if (window.__plogTouch) window.__plogTouch(); audio.pause(); });
   navigator.mediaSession.setActionHandler('previoustrack', () => prev());
   navigator.mediaSession.setActionHandler('nexttrack',     () => next());
   navigator.mediaSession.setActionHandler('seekto', (details) => {
@@ -299,6 +306,7 @@ function recoverStalledCrossfade(xf) {
   if (crossfadePartnerArrived(xf)) return;
 
   console.warn('[player] crossfade handoff stalled — falling back to a plain advance');
+  if (window.__plog) window.__plog('crossfade-stalled');
   xf.torn = true;
   if (xf.timer) { clearTimeout(xf.timer); xf.timer = null; }
   window.__crossfade = null;
@@ -540,6 +548,128 @@ if (!window.__playReportHooked) {
   });
 }
 
+// --- Playback diagnostics --------------------------------------------------
+// The bug we're chasing ("it just stops") only reproduces on someone else's
+// phone, where a console.warn is written for nobody. This mirrors every event
+// that can end playback to the server instead, along with enough of the media
+// element's state to tell the causes apart:
+//
+//   a pause with no 'ui'  -> something outside the page stopped us (Android
+//                            audio focus: a call, another app, Bluetooth)
+//   ready>=2 but stalled  -> audio was buffered, so it wasn't the network
+//   visible=0 near a stop -> a frozen/throttled background tab, which kills
+//                            the setTimeout the crossfade handoff rides on
+//
+// Hooked once and reads the live DOM, like the play/podcast reporters above:
+// HTMX swaps the player partial, so a captured element reference goes stale.
+if (!window.__plogHooked) {
+  window.__plogHooked = true;
+
+  // Caps: this is diagnostics, and must not become the thing that breaks
+  // playback. A stuck loop can't flood the log or the request budget.
+  var PLOG_MAX_EVENTS = 300;   // per page life
+  var PLOG_MIN_GAP_MS = 400;   // collapse bursts of the same event
+
+  var plogSent = 0;
+  var plogLast = {};
+
+  // Stamped by our own controls just before they pause/play. A pause event
+  // arriving without a recent stamp came from outside the page — that
+  // distinction is the whole point of this instrumentation.
+  window.__plogUser = 0;
+  window.__plogTouch = function () { window.__plogUser = Date.now(); };
+
+  window.__plog = function (event, note) {
+    if (typeof client_log_url === 'undefined') return;
+    if (plogSent >= PLOG_MAX_EVENTS) return;
+
+    var now = Date.now();
+    if (plogLast[event] && now - plogLast[event] < PLOG_MIN_GAP_MS) return;
+    plogLast[event] = now;
+    plogSent++;
+
+    var p = new URLSearchParams({ e: event });
+    var a = document.getElementById('audio');
+    if (a) {
+      if (a.dataset.hash) p.set('h', a.dataset.hash);
+      if (a.dataset.type) p.set('ty', a.dataset.type);
+      if (isFinite(a.currentTime)) p.set('t', Math.round(a.currentTime * 1000));
+      if (isFinite(a.duration) && a.duration > 0) p.set('d', Math.round(a.duration * 1000));
+      p.set('pa', a.paused ? 1 : 0);
+      p.set('rs', a.readyState);
+      p.set('ns', a.networkState);
+      p.set('mu', a.muted ? 1 : 0);
+      p.set('vo', Math.round((isFinite(a.volume) ? a.volume : 1) * 100));
+      if (a.error) p.set('ec', a.error.code);
+    }
+    p.set('vis', document.visibilityState === 'visible' ? 1 : 0);
+    if (window.__crossfade) p.set('xf', 1);
+    if (window.__audioCtx) p.set('ctx', window.__audioCtx.state);
+    if (now - (window.__plogUser || 0) < 1000) p.set('ui', 1);
+    if (note) p.set('n', String(note).slice(0, 120));
+
+    // keepalive so a report fired by pagehide/freeze still leaves the device.
+    try {
+      fetch(client_log_url + '?' + p, { keepalive: true, credentials: 'same-origin' });
+    } catch (_) { /* diagnostics must never throw into the player */ }
+  };
+
+  // Capture phase on document: media events don't bubble, but capture still
+  // reaches them on the way down — so this survives every player swap without
+  // needing to re-bind, and sees the crossfade's second element too.
+  ['pause', 'play', 'playing', 'ended', 'stalled', 'waiting',
+   'suspend', 'abort', 'emptied', 'error'].forEach(function (type) {
+    document.addEventListener(type, function (ev) {
+      var el = ev.target;
+      if (!el || el.tagName !== 'AUDIO') return;
+      // The crossfade's outgoing element pauses by design every handoff;
+      // logging it would bury the pauses we actually care about.
+      window.__plog(type, el.id === 'audio' ? null : 'offscreen-el');
+    }, true);
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    window.__plog('visibility');
+  });
+  // Android can freeze a backgrounded tab outright; 'resume' says it came back.
+  window.addEventListener('pagehide', function () { window.__plog('pagehide'); });
+  document.addEventListener('freeze', function () { window.__plog('freeze'); });
+  document.addEventListener('resume', function () { window.__plog('resume'); });
+
+  // Earbuds connecting or dropping — the reported trigger for one stop.
+  if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+    try {
+      navigator.mediaDevices.addEventListener('devicechange', function () {
+        window.__plog('devicechange');
+      });
+    } catch (_) { /* not supported */ }
+  }
+
+  // Silent stalls: the element claims to be playing but the playhead isn't
+  // moving. No media event fires for this, and it's indistinguishable from
+  // normal playback from the user's side until the song never ends.
+  var plogLastPos = null;
+  var plogLastCtx = null;
+  setInterval(function () {
+    var a = document.getElementById('audio');
+    if (!a) { plogLastPos = null; return; }
+
+    // An AudioContext that leaves 'running' on its own silences playback while
+    // the element happily reports playing — worth catching separately.
+    if (window.__audioCtx && window.__audioCtx.state !== plogLastCtx) {
+      if (plogLastCtx !== null) window.__plog('ctxstate');
+      plogLastCtx = window.__audioCtx.state;
+    }
+
+    if (a.paused) { plogLastPos = null; return; }
+    var pos = a.currentTime;
+    if (plogLastPos !== null && Math.abs(pos - plogLastPos) < 0.05) {
+      window.__plog('stall-detected');
+    }
+    plogLastPos = pos;
+  }, 5000);
+}
+
 // Podcast resume: report the playhead so the server can save a resume point.
 // Fires every 15s while playing, plus on pause/ended/pagehide. Same
 // hook-once-read-live-DOM pattern as the track play reporter above.
@@ -594,7 +724,12 @@ if (!window.__podcastReportHooked) {
     // New media just loaded — always start it. Using the play() *toggle* here
     // races with radio's MANIFEST_PARSED autoplay: if playback already started,
     // the toggle would pause it ("play() interrupted by pause()").
-    audio.play().catch((e) => console.error('[player] autoplay blocked', e));
+    audio.play().catch(function (e) {
+      console.error('[player] autoplay blocked', e);
+      // The swap landed and the source loaded, but the browser refused to
+      // start it — indistinguishable from "it stopped" to the listener.
+      if (window.__plog) window.__plog('autoplay-blocked', e && e.name);
+    });
   }
 
   audio.onpause = function () {
@@ -645,6 +780,7 @@ if (!window.__podcastReportHooked) {
     // would otherwise just never happen.
     const err = audio.error;
     console.error('Audio playback error', err && err.code, audio.currentSrc);
+    if (window.__plog) window.__plog('error', err && err.message);
   }
 
   if (isRadio) {

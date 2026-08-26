@@ -7,10 +7,28 @@ use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
 use App\Http\StreamResponse;
+use Echo\Framework\Http\Response;
 
 #[Group(middleware: ["client"])]
 class PlayerController extends Controller
 {
+    /**
+     * Playback events player.js is allowed to report. Anything else is dropped
+     * by clientLog() — see the note there on why this list is closed.
+     */
+    private const CLIENT_EVENTS = [
+        // Media element events that can end or interrupt playback.
+        'pause', 'play', 'playing', 'ended', 'stalled', 'waiting',
+        'suspend', 'abort', 'emptied', 'error',
+        // Page/OS lifecycle — Android freezing a backgrounded tab, or the
+        // screen locking, stops the timers the crossfade rides on.
+        'visibility', 'pagehide', 'freeze', 'resume',
+        // Bluetooth earbuds connecting/dropping shows up as a device change.
+        'devicechange', 'ctxstate',
+        // Reported by our own code rather than the browser.
+        'stall-detected', 'crossfade-stalled', 'autoplay-blocked',
+    ];
+
     public function __construct(
         private PlayerService $player,
         private SearchService $search,
@@ -204,8 +222,8 @@ class PlayerController extends Controller
         // disable, and play the external HLS/stream URL directly (no transcode).
         $this->playlist->clearPlaylist();
         $this->player->setPlayer([
-            'type'   => 'radio',
-            'hash'   => $station->hash,
+            'type'      => 'radio',
+            'hash'      => $station->hash,
             'title'  => $station->name,
             'artist' => trim(implode(', ', array_filter([$station->city, $station->province]))) ?: ($station->country ?? ''),
             'album'  => "Soprano Radio",
@@ -232,8 +250,8 @@ class PlayerController extends Controller
         // Unlike radio it's seekable, so type 'podcast' keeps the progress bar.
         $this->playlist->clearPlaylist();
         $this->player->setPlayer([
-            'type'       => 'podcast',
-            'hash'       => $hash,
+            'type'      => 'podcast',
+            'hash'      => $hash,
             'episode_id' => $episode['id'],
             'resume_ms'  => $this->podcasts->touchProgress($episode),
             'title'      => $episode['title'],
@@ -258,8 +276,8 @@ class PlayerController extends Controller
         $this->finalizeOutgoingPlay();
         $this->playlist->clearPlaylist();
         $this->player->setPlayer([
-            'type'       => 'podcast',
-            'hash'       => $episode['podcast_hash'],
+            'type'      => 'podcast',
+            'hash'      => $episode['podcast_hash'],
             'episode_id' => $episode['id'],
             'resume_ms'  => $this->podcasts->touchProgress($episode),
             'title'      => $episode['title'],
@@ -310,7 +328,7 @@ class PlayerController extends Controller
         }
         $this->music->trackPlay($track->id, $source);
         $this->player->setPlayer([
-            'hash'        => $track->hash,
+            'hash'      => $track->hash,
             'album_hash'  => $album?->hash  ?? '#',
             'artist_hash' => $artist?->hash ?? '#',
             'title'       => $meta?->title  ?? '',
@@ -325,7 +343,7 @@ class PlayerController extends Controller
                 : $this->replaygain->trackGainDb($track),
             // Crossfade: the client's toggle, gated on there being a next track
             // to fade into (so the final track ends cleanly with no crossfade).
-            'crossfade'   => (bool) client()->crossfade,
+            'crossfade' => (bool) client()->crossfade,
             'has_next'    => $this->playlist->hasNextAuto(),
         ]);
         $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks, searchResults");
@@ -388,7 +406,7 @@ class PlayerController extends Controller
             // A queue that doesn't contain the track that just finished is a
             // different (stale or clobbered) queue than the one being played.
             'outgoing_queued' => $cur !== '' ? $this->playlist->hasTrack($cur) : null,
-            'client'       => client()?->id,
+            'client'    => client()?->id,
         ]);
     }
 
@@ -428,5 +446,66 @@ class PlayerController extends Controller
         }
 
         return $this->pageNotFound();
+    }
+
+    /**
+     * Client-side playback events, whitelisted and clamped.
+     *
+     * The failure we're chasing ("it just stops") happens in the browser, on
+     * someone else's phone, so a console.warn is written where nobody will
+     * ever read it. This is the other end of that: player.js beacons the
+     * media element's state here on every event that can end playback, and it
+     * lands in soprano-player-<date>.log next to the nginx access log, where
+     * one repro can be lined up against the request that served it.
+     *
+     * GET (not POST) on purpose: it stays CSRF-exempt, so telemetry can't die
+     * silently an hour into a listening session when the token rotates — which
+     * is exactly the session length where the bug shows up.
+     */
+    #[Get("/player/client-log", "player.client-log", ["max_requests" => 240, "decay_seconds" => 60])]
+    public function clientLog(): Response
+    {
+        $get   = request()->get;
+        $event = (string) ($get->get("e") ?? '');
+
+        // Unknown event names are dropped rather than logged: the endpoint is
+        // reachable by anything holding a session cookie, and a diagnostic log
+        // is worthless if a third party can write arbitrary lines into it.
+        if (!in_array($event, self::CLIENT_EVENTS, true)) {
+            return new Response('', 204);
+        }
+
+        $int = static fn(string $k, int $max): ?int => ($v = $get->get($k)) === null || $v === ''
+            ? null
+            : max(0, min($max, (int) $v));
+
+        logger()->channel('soprano-player')->info('client: ' . $event, array_filter([
+            'client'    => client()?->id,
+            'hash'      => ($h = (string) ($get->get("h") ?? '')) !== '' && preg_match('/^[a-f0-9]{32}$/', $h) ? $h : null,
+            'type'      => in_array($t = (string) ($get->get("ty") ?? ''), ['track', 'radio', 'podcast'], true) ? $t : null,
+            // Where in the track it happened — a mid-song stop and an
+            // end-of-track stall are different bugs with the same symptom.
+            'pos_ms'    => $int("t", 86_400_000),
+            'dur_ms'    => $int("d", 86_400_000),
+            'paused'    => $int("pa", 1),
+            // 0-4 / 0-2: whether the element still had buffered audio to play,
+            // which separates "the network died" from "something paused us".
+            'ready'     => $int("rs", 4),
+            'network'   => $int("ns", 2),
+            'err_code'  => $int("ec", 4),
+            'muted'     => $int("mu", 1),
+            'volume'    => $int("vo", 100),
+            'visible'   => $int("vis", 1),
+            'crossfade' => $int("xf", 1),
+            'ctx'       => in_array($c = (string) ($get->get("ctx") ?? ''), ['running', 'suspended', 'closed', 'interrupted'], true) ? $c : null,
+            // Set only when our own UI initiated it. Its ABSENCE on a pause is
+            // the signal: something outside the page stopped playback.
+            'ui'        => $int("ui", 1),
+            'note'      => ($n = (string) ($get->get("n") ?? '')) !== '' ? substr(preg_replace('/[^\w .:-]/', '', $n), 0, 120) : null,
+            'ip'        => request()->getClientIp(),
+            'ua'        => substr((string) (request()->headers->get('User-Agent') ?? ''), 0, 180),
+        ], static fn($v) => $v !== null && $v !== ''));
+
+        return new Response('', 204);
     }
 }

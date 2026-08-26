@@ -6,6 +6,7 @@ var next_track_url = '{{ uri("player.next-track") }}';
 var prev_track_url = '{{ uri("player.prev-track") }}';
 var progress_url = '{{ uri("player.progress") }}';
 var podcast_progress_url = '{{ uri("player.podcast-progress") }}';
+var client_log_url = '{{ uri("player.client-log") }}';
 var player_track = {
   title:  {{ player.title|json_encode|raw }},
   artist: {{ player.artist|json_encode|raw }},
@@ -13,7 +14,7 @@ var player_track = {
   cover:  {{ player.cover|json_encode|raw }},
 };
 </script>
-<script src="/js/player.js?v=20260826"></script>
+<script src="/js/player.js?v=20260826b"></script>
 {% endblock %}
 
 {% if player.type == 'radio' %}
