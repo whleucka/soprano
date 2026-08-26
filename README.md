@@ -43,8 +43,8 @@ cp .env.example .env
 
 ```sh
 ./bin/dev up -d --build
-./bin/php bin/console migrate:run
-./bin/php bin/console soprano:sync
+./echo migrate:run
+./echo soprano:sync
 ```
 
 - Open `http://localhost:8083` and register an account
@@ -63,17 +63,17 @@ cp .env.example .env
 Commands run inside the php container via `./bin/php`:
 
 ```sh
-./bin/php bin/console soprano:sync           # sync tracks, artists, albums, covers
-./bin/php bin/console soprano:lyrics         # backfill lyrics from LRCLIB
-./bin/php bin/console soprano:artist-images  # backfill artist images
-./bin/php bin/console soprano:transcode      # warm the Opus transcode cache
-./bin/php bin/console soprano:duplicates     # find and remove duplicate tracks
-./bin/php bin/console soprano:trash          # list or purge files trashed by soprano:duplicates
-./bin/php bin/console soprano:stations       # report station pool sizes and percentile thresholds
-./bin/php bin/console migrate:run            # run pending migrations
+./echo soprano:sync           # sync tracks, artists, albums, covers
+./echo soprano:lyrics         # backfill lyrics from LRCLIB
+./echo soprano:artist-images  # backfill artist images
+./echo soprano:transcode      # warm the Opus transcode cache
+./echo soprano:duplicates     # find and remove duplicate tracks
+./echo soprano:trash          # list or purge files trashed by soprano:duplicates
+./echo soprano:stations       # report station pool sizes and percentile thresholds
+./echo migrate:run            # run pending migrations
 ```
 
-Run `./bin/php bin/console list` for everything else.
+Run `./echo list` for everything else.
 
 ## Testing
 
