@@ -21,9 +21,11 @@ use FilesystemIterator;
  *
  * ReplayGain is baked into the encode (ffmpeg volume filter), so cached files
  * play at reference loudness with no client-side work; the player applies gain
- * via WebAudio only for sources that stream as-is. Freshness is mtime-based
- * and doesn't see gain changes — after tag or feature updates that shift a
- * track's gain, re-encode with soprano:transcode --force.
+ * via WebAudio only for sources that stream as-is. Freshness is mtime-based and
+ * doesn't see gain changes, so a file encoded before its Essentia loudness row
+ * existed stays flat and plays ~10dB hot forever. regain() finds and repairs
+ * those (soprano:transcode --regain, run nightly by jobs/soprano_regain.php);
+ * soprano:transcode --force re-encodes everything regardless.
  */
 class TranscodeService
 {
@@ -139,17 +141,54 @@ class TranscodeService
     }
 
     /**
+     * True when a cached encode predates the Essentia loudness row its gain is
+     * derived from — it was baked flat (or at a gain since superseded) and the
+     * track plays hot until it's re-encoded.
+     *
+     * A track with no cache file is never "stale": backfill() encodes those,
+     * and a track that needs no transcode has no cache file to begin with, so
+     * the stat doubles as the needsTranscode() test without paying for ffprobe.
+     */
+    public function hasStaleGain(Track $track): bool
+    {
+        $cache = $this->cacheFileFor($track);
+        if (!is_file($cache)) {
+            return false;
+        }
+
+        $stamp = $this->replaygain->essentiaStampFor($track);
+        if ($stamp === null) {
+            return false;
+        }
+
+        $mtime = @filemtime($cache);
+
+        return $mtime !== false && $mtime < $stamp;
+    }
+
+    /**
      * Encode $src to Opus at $dest, applying $gainDb of ReplayGain. Writes to a
      * temp file and atomically renames so a half-written file is never served,
      * and holds an flock so concurrent callers don't encode the same track at
      * once.
+     *
+     * $force re-encodes over a cache file that is fresh by mtime — the case
+     * where the gain, not the source, is what changed.
      */
-    public function transcode(string $src, string $dest, float $gainDb = 0.0): bool
+    public function transcode(string $src, string $dest, float $gainDb = 0.0, bool $force = false): bool
     {
         if (!is_file($src) || !is_readable($src)) {
             return false;
         }
         $this->ensureCacheDir();
+
+        // Snapshot before blocking on the lock, so a forced re-encode can tell
+        // "a file that was already here" from "a file someone else wrote while
+        // we waited". Without $force the freshness test answers both at once;
+        // with it, it can't — the stale file we were sent to replace is fresh
+        // by mtime and would satisfy the test itself, turning the whole call
+        // into a silent no-op.
+        $before = @filemtime($dest);
 
         $lock = @fopen($dest . '.lock', 'c');
         if ($lock === false) {
@@ -163,7 +202,10 @@ class TranscodeService
             }
 
             // The winner of the lock race may have just produced the file.
-            if ($this->isFresh($dest, $src)) {
+            $settled = $force
+                ? (($now = @filemtime($dest)) !== false && $now !== $before)
+                : $this->isFresh($dest, $src);
+            if ($settled) {
                 return true;
             }
 
@@ -255,7 +297,7 @@ class TranscodeService
                     continue;
                 }
 
-                $this->transcode($src, $cache, $this->replaygain->trackGainDb($track))
+                $this->transcode($src, $cache, $this->replaygain->trackGainDb($track), $force)
                     ? $encoded++
                     : $failed++;
             }
@@ -275,6 +317,98 @@ class TranscodeService
             'pruned'  => $pruned,
             'error'   => $error,
         ];
+    }
+
+    /**
+     * Re-encode cached files whose baked-in gain has gone stale (see
+     * hasStaleGain), stopping after $limit encodes or $seconds of wall clock,
+     * whichever lands first. 0 disables either cap.
+     *
+     * Once the budget is spent the walk keeps *counting* stale tracks without
+     * encoding them, so `remaining` is a real number of tracks left rather than
+     * a guess — divide by $limit for the number of nights still to go.
+     *
+     * Self-terminating and safe to re-run: a re-encode stamps the cache file
+     * with the current time, which puts it ahead of the feature row that made
+     * it stale, so no track is picked up twice.
+     *
+     * @return object{success:bool,stale:int,encoded:int,skipped:int,failed:int,remaining:int,error:?string}
+     */
+    public function regain(int $limit = 0, int $seconds = 0): object
+    {
+        $stale   = 0;
+        $encoded = 0;
+        $skipped = 0;
+        $failed  = 0;
+        $success = true;
+        $error   = null;
+
+        $deadline = $seconds > 0 ? time() + $seconds : 0;
+        $spent    = false;
+
+        try {
+            foreach ($this->staleGainCandidates() as $track) {
+                if (!$this->hasStaleGain($track)) {
+                    continue;
+                }
+                $stale++;
+
+                if ($spent) {
+                    continue;
+                }
+
+                $src = (string) $track->pathname;
+                if (!is_file($src)) {
+                    // The source went away; sync prunes the row, not this job.
+                    $skipped++;
+                    continue;
+                }
+
+                $this->transcode($src, $this->cacheFileFor($track), $this->replaygain->trackGainDb($track), true)
+                    ? $encoded++
+                    : $failed++;
+
+                if (($limit > 0 && $encoded + $failed >= $limit)
+                    || ($deadline > 0 && time() >= $deadline)) {
+                    $spent = true;
+                }
+            }
+        } catch (\Throwable $e) {
+            $success = false;
+            $error   = $e->getMessage();
+        }
+
+        return (object) [
+            'success'   => $success,
+            'stale'     => $stale,
+            'encoded'   => $encoded,
+            'skipped'   => $skipped,
+            'failed'    => $failed,
+            'remaining' => max(0, $stale - $encoded),
+            'error'     => $error,
+        ];
+    }
+
+    /**
+     * Tracks whose gain comes from the Essentia fallback — the only ones whose
+     * cached encode can go stale, since a tag-derived gain rides the source
+     * file's mtime. Narrowed in SQL so a run doesn't stat the whole library.
+     *
+     * @return array<int,Track>
+     */
+    private function staleGainCandidates(): array
+    {
+        return Track::query()
+            ->whereRaw(
+                'EXISTS (SELECT 1 FROM track_features tf'
+                . ' WHERE tf.track_id = tracks.id AND tf.avg_loudness_db IS NOT NULL)',
+            )
+            ->whereRaw(
+                'NOT EXISTS (SELECT 1 FROM track_meta tm'
+                . " WHERE tm.track_id = tracks.id AND COALESCE(tm.replaygain_track_gain, '') <> '')",
+            )
+            ->orderBy('id')
+            ->get();
     }
 
     /** Delete cached .opus files whose track hash is no longer in the library. */

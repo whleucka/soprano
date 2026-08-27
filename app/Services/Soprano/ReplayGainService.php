@@ -57,4 +57,32 @@ class ReplayGainService
 
         return $db === null ? null : self::ESSENTIA_REF_DB - (float) $db;
     }
+
+    /**
+     * Unix timestamp of the gain input a cached encode can be older than, or
+     * null when there isn't one.
+     *
+     * TranscodeService bakes the gain in at encode time and judges freshness by
+     * mtime, so a gain that only becomes known *after* the encode is invisible
+     * — the cache goes on playing flat forever. Only the Essentia fallback can
+     * move that way: features are extracted long after the file lands (the
+     * library's own backfill ran for five weeks) while the file itself never
+     * changes. A ReplayGain *tag* can't, because re-tagging rewrites the source
+     * and bumps its mtime, which the existing freshness check already catches.
+     */
+    public function essentiaStampFor(Track $track): ?int
+    {
+        if ($this->tagGainDb($track) !== null) {
+            return null;
+        }
+
+        $row = TrackFeature::where('track_id', $track->id)->first();
+        if ($row === null || $row->avg_loudness_db === null) {
+            return null;
+        }
+
+        $stamp = strtotime((string) ($row->updated_at ?: $row->created_at));
+
+        return $stamp === false ? null : $stamp;
+    }
 }

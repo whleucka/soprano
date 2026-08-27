@@ -45,6 +45,15 @@ $scheduler->php($jobs . "/soprano_transcode.php")
     ->onlyOne(null, $stale_lock)
     ->output($logs . "soprano-transcode-" . date("Y-m-d") . ".log", true);
 
+// Soprano regain - re-encode cached Opus files that were built before the
+// track's loudness feature existed and so carry no ReplayGain (they play ~10dB
+// hot). Capped at 50 minutes per run, drains over four or five nights, then
+// no-ops. At 01:00 it is well clear of the 03:00 sitemap and 04:00 playlists.
+$scheduler->php($jobs . "/soprano_regain.php")
+    ->daily('01:00')
+    ->onlyOne(null, $stale_lock)
+    ->output($logs . "soprano-regain-" . date("Y-m-d") . ".log", true);
+
 // Soprano playlists - nightly regeneration of the per-client generated mixes
 // (Heavy Rotation, Rediscover, Fresh Arrivals, Time Machine, Morning/Evening
 // Mix). Each mix keeps its hash and swaps tracks in place, like a daily mix.
