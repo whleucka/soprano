@@ -8,16 +8,18 @@ use App\Services\Soprano\TranscodeService;
 // loudness row existed, so they got no ReplayGain baked in and play hot (see
 // TranscodeService::regain).
 //
-// Measured ~7s per track on the 4-core box, so a 50-minute run clears roughly
-// 400 and the backlog (1830 as of 2026-08-27) drains in four or five nights.
-// The wall-clock budget is the real guard — track lengths vary enough that a
-// count alone would overshoot — and staying under an hour keeps a crashed run
-// inside the scheduler's stale-lock window instead of wedging the job forever.
-// The count is the backstop for the opposite case, a run of very short tracks.
+// The first nightly run cleared 600 in 38 minutes on the 4-core box (~3.8s per
+// track, not the 7s first guessed), so it spent its count before its clock. The
+// count is now set above what the wall-clock budget can reach, leaving the
+// budget as the only guard that normally fires — 711 were left after that run
+// and fit inside it, so the backlog ends tonight rather than over four nights.
+// Staying under an hour keeps a crashed run inside the scheduler's stale-lock
+// window instead of wedging the job forever; the count is only the backstop for
+// a run of very short tracks, where the deadline would let it run long.
 //
 // Once the backlog is gone this is a no-op, and stays one unless a feature
 // backfill lands after an encode again.
-$limit   = 600;
+$limit   = 800;
 $seconds = 3000;
 
 $service = container()->get(TranscodeService::class);
