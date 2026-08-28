@@ -18,6 +18,29 @@ var CROSSFADE_MIN_TRACK = 2 * CROSSFADE_SEC;
 var CROSSFADE_STALL_MS = 3000;
 var crossfadeEnabled = !!(audio && audio.dataset.crossfade === '1');
 
+// --- Pre-advance -----------------------------------------------------------
+// How early a HIDDEN tab hands off to the next track. The queue used to move
+// only on 'ended', which is the one moment a backgrounded phone is least able
+// to act on: the audio has just stopped, so the page is instantly eligible for
+// freezing and the radio is free to sleep. Both halves of the advance (the
+// event, and the request it fires) then go missing and nothing plays again
+// until someone opens the page. Advancing while audio is still coming out of
+// the buffer keeps the page alive and the network awake for the handoff.
+//
+// Same window as CROSSFADE_SEC — that's the value already proven to survive a
+// backgrounded Android tab on an account with crossfade enabled.
+var PREADVANCE_SEC = 6;
+// Tracks shorter than this never pre-advance: the handoff would land in their
+// opening seconds. Must be > PREADVANCE_SEC.
+var PREADVANCE_MIN_TRACK = 2 * PREADVANCE_SEC;
+// How long the handoff gets to produce an incoming element before we give up
+// and let the outgoing track advance the ordinary way. Must leave it enough
+// tail to do that.
+var PREADVANCE_STALL_MS = 3000;
+// Cap on how long the incoming track is held waiting for the outgoing one to
+// end. Past this it starts regardless — a silent player is the worse failure.
+var PREADVANCE_HOLD_MAX_MS = (PREADVANCE_SEC + 2) * 1000;
+
 // Progress bar stuff
 function updateProgress() {
   // Radio streams are live (no fixed duration) and render a LIVE badge instead
@@ -192,6 +215,35 @@ function setupReplayGain() {
       abortCrossfade();
     }
 
+    // Pre-advance handoff: same problem as the crossfade branch above, for the
+    // same reason. The outgoing element is parked on <body> still playing its
+    // tail through window.__audioGraph, and disconnecting a
+    // MediaElementAudioSourceNode silences the element for good — so build the
+    // incoming element a second chain instead of tearing that one down. No ramp
+    // here: this element stays paused until the outgoing one ends
+    // (finishPreAdvance), so it can sit at full gain from the start.
+    if (window.__preadvance && !window.__preadvance.torn) {
+      const pa = window.__preadvance;
+      if (!pa.inGraph && window.__audioGraph && window.__audioGraph.el === pa.outEl) {
+        const source = ctx.createMediaElementSource(audio);
+        const gain = ctx.createGain();
+        source.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.value = Math.max(target, 0.0001);
+        pa.inGraph = { el: audio, source: source, gain: gain };
+        window.__audioGraph = pa.inGraph; // the incoming chain is now "current"
+        // The swap can pause the outgoing element on its way out of #player;
+        // its tail is the whole point of holding the incoming one back.
+        if (pa.outEl && pa.outEl.paused && !pa.outEl.ended) {
+          pa.outEl.play().catch(function () {});
+        }
+        return;
+      }
+      // A different element landed than the one we handed off to (a manual skip
+      // raced the handoff) — drop the pre-advance and rebuild cleanly below.
+      abortPreAdvance();
+    }
+
     // The old element is gone from the DOM after a swap — detach its nodes.
     if (window.__audioGraph && window.__audioGraph.el !== audio) {
       try { window.__audioGraph.source.disconnect(); } catch (_) { /* ignore */ }
@@ -314,6 +366,12 @@ function recoverStalledCrossfade(xf) {
   const el = xf.outEl;
   if (!el) return;
   reattachMediaHandlers(el);
+  // startCrossfade cleared dataset.next to disarm a second fade. Restore it:
+  // __advanceStuck() treats next!=='1' as "nothing to advance to, a real stop",
+  // so leaving it at '0' locks this element out of the stuck-queue watchdog —
+  // and a stalled handoff is exactly when that watchdog is the last line of
+  // defence (the reattached 'ended' can go missing on a frozen phone too).
+  el.dataset.next = '1';
   // Put it back where a swap looks for it: a response that lands late must
   // replace this element, not leave it playing under the new one.
   const host = document.getElementById('player');
@@ -442,6 +500,204 @@ function abortCrossfade() {
   try { xf.inGraph && xf.inGraph.source.disconnect(); } catch (_) { /* ignore */ }
   try { xf.inGraph && xf.inGraph.gain.disconnect(); } catch (_) { /* ignore */ }
   window.__crossfade = null;
+  window.__audioGraph = null; // force a clean single-chain rebuild
+}
+
+// --- Pre-advance (gapless early handoff for a hidden tab) -------------------
+// Crossfade already advances the queue PREADVANCE_SEC early, and accounts with
+// it enabled never lose the queue on a backgrounded phone; accounts without it
+// wait for 'ended' and lose it routinely. That resilience shouldn't be a
+// side-effect of an audio-aesthetics preference, so this gives everyone the
+// early handoff without the overlap.
+//
+// Only while the tab is HIDDEN: that's where the failure lives, and it keeps
+// the foreground behaviour (and its timing) exactly as it was.
+//
+// Unlike crossfade the two tracks never sound together — the outgoing element
+// is parked on <body> to play its tail through the swap (removing a media
+// element from the DOM pauses it; moving it within the document does not), and
+// the incoming element is held paused until that tail ends. So no audio is lost
+// and nothing overlaps: it's the ordinary track change, just requested while
+// the page is still awake enough to make the request.
+function maybePreAdvance() {
+  if (crossfadeEnabled) return;                // crossfade owns the handoff
+  if (window.__crossfade) return;
+  if (window.__preadvance) return;             // one already in flight
+  if (!audio || audio.dataset.type) return;    // music tracks only
+  if (audio.dataset.next !== '1') return;      // nothing to advance to
+  if (audio.paused) return;
+  if (document.visibilityState === 'visible') return;
+  const d = audio.duration;
+  if (!isFinite(d) || d < PREADVANCE_MIN_TRACK) return;
+  const remaining = d - audio.currentTime;
+  if (remaining > PREADVANCE_SEC || remaining <= 0) return;
+  startPreAdvance();
+}
+
+function startPreAdvance() {
+  const outEl = audio;
+  const pa = window.__preadvance = {
+    outEl: outEl,
+    outGraph: (window.__audioGraph && window.__audioGraph.el === outEl) ? window.__audioGraph : null,
+    inGraph: null,
+    inEl: null,
+    torn: false,
+    hold: null,
+    watchdog: null,
+  };
+  // This element has handed off — it must never arm a second one, including
+  // after a stalled handoff hands its timeupdate handler back.
+  outEl.dataset.next = '0';
+  // Silence its media handlers before the swap: onpause/onplaying/onended write
+  // the SHARED progress bar, play button and mediaSession, which belong to the
+  // incoming track from here on. We keep one 'ended' hook to close the handoff.
+  detachMediaHandlers(outEl);
+  outEl.onended = function () { finishPreAdvance(); };
+  // Keep it audible through the swap (see the note above).
+  try { document.body.appendChild(outEl); } catch (_) { /* ignore */ }
+
+  if (window.__plog) window.__plog('preadvance', 'rem' + Math.round(outEl.duration - outEl.currentTime));
+
+  // auto=1: still a natural end-of-track advance, so repeat mode applies.
+  try {
+    htmx.ajax('GET', next_track_url + '?auto=1', { swap: 'none' });
+  } catch (_) { /* the watchdog below recovers */ }
+
+  // The handoff is now the only thing that can advance the queue — recover with
+  // at least a second of tail left, so the outgoing element's natural end can
+  // still do the ordinary advance if no partner shows up.
+  let grace = PREADVANCE_STALL_MS;
+  if (isFinite(outEl.duration) && outEl.duration > 0) {
+    grace = Math.min(grace, (outEl.duration - outEl.currentTime - 1) * 1000);
+  }
+  pa.watchdog = setTimeout(function () { recoverStalledPreAdvance(pa); }, Math.max(500, grace));
+}
+
+// Called from the swap: should this freshly-inserted element hold off starting?
+// True only for the incoming half of a live handoff, which finishPreAdvance
+// starts when the outgoing tail ends.
+function preAdvanceHoldsStart(el) {
+  const pa = window.__preadvance;
+  if (!pa || pa.torn) return false;
+  if (!pa.outEl || pa.outEl === el) return false;
+  if (pa.outEl.ended || pa.outEl.paused) return false; // tail already done
+  pa.inEl = el;
+  if (!pa.hold) {
+    // The outgoing element must not be able to strand the incoming one: if its
+    // 'ended' never arrives (a frozen page, a clipped source), start anyway.
+    pa.hold = setTimeout(function () { finishPreAdvance(); }, PREADVANCE_HOLD_MAX_MS);
+  }
+  return true;
+}
+
+// Idempotent: safe from the outgoing 'ended' AND the hold timer.
+function finishPreAdvance() {
+  const pa = window.__preadvance;
+  if (!pa || pa.torn) return;
+
+  // No partner ever arrived. Do NOT retire the outgoing element here: it would
+  // leave no <audio> in #player at all, which reads to __advanceStuck() as
+  // "nothing is playing and nothing is stuck" — a permanently dead player with
+  // no route back. Hand it back intact instead and let the ordinary advance,
+  // with requestAdvance's retries behind it, take over. Reachable when the page
+  // freezes through the whole handoff so neither timer below ever runs, and
+  // preAdvanceRescue() settles it on the way back.
+  const partner = document.getElementById('audio');
+  if (!pa.inGraph && (!partner || partner === pa.outEl)) {
+    recoverStalledPreAdvance(pa);
+    return;
+  }
+
+  pa.torn = true;
+  if (pa.hold) { clearTimeout(pa.hold); pa.hold = null; }
+  if (pa.watchdog) { clearTimeout(pa.watchdog); pa.watchdog = null; }
+
+  // Retire the outgoing element and its chain.
+  try {
+    if (pa.outEl) {
+      detachMediaHandlers(pa.outEl);
+      pa.outEl.pause();
+      pa.outEl.removeAttribute('src');
+      pa.outEl.load();
+      pa.outEl.remove(); // drop the <body>-parked element
+    }
+  } catch (_) { /* ignore */ }
+  try { pa.outGraph && pa.outGraph.source.disconnect(); } catch (_) { /* ignore */ }
+  try { pa.outGraph && pa.outGraph.gain.disconnect(); } catch (_) { /* ignore */ }
+
+  window.__preadvance = null;
+
+  // Release the track that's been waiting. Read the live DOM rather than
+  // trusting pa.inEl: another swap may have landed while we held.
+  const cur = document.getElementById('audio');
+  const el = (cur && cur !== pa.outEl) ? cur : pa.inEl;
+  if (el && el.paused && el.src && !el.src.endsWith('#')) {
+    resumeAudioCtx();
+    el.play().catch(function (e) {
+      if (window.__plog) window.__plog('autoplay-blocked', e && e.name, el);
+    });
+  }
+}
+
+// A hold that outlived the tail it was waiting for.
+//
+// PREADVANCE_HOLD_MAX_MS rides a setTimeout, and a setTimeout does not run on a
+// frozen page — the same freeze this whole mechanism exists to survive. Without
+// this the hold could outlast the outgoing track and leave the incoming one
+// paused indefinitely, trading a stopped queue for a silent player: strictly
+// worse than the bug. So every route back into the page settles a stale hold,
+// and so does the 5s diagnostics tick.
+function preAdvanceRescue() {
+  const pa = window.__preadvance;
+  if (!pa || pa.torn) return;
+  // Tail still sounding — the hold is doing its job.
+  if (pa.outEl && !pa.outEl.ended && !pa.outEl.paused) return;
+  if (window.__plog) window.__plog('preadvance-released');
+  finishPreAdvance();
+}
+
+// The handoff produced no incoming element (the request errored, or the radio
+// really was asleep). Without this the outgoing element runs out and stops for
+// good: startPreAdvance silenced its handlers for a partner that never came.
+// Hand them back and let its real end do the ordinary advance — which by then
+// has requestAdvance's own retries behind it.
+function recoverStalledPreAdvance(pa) {
+  if (!pa || pa.torn || window.__preadvance !== pa) return;
+  pa.watchdog = null;
+  const cur = document.getElementById('audio');
+  if (pa.inGraph || (cur && cur !== pa.outEl)) return; // partner arrived
+
+  if (window.__plog) window.__plog('preadvance-stalled');
+  pa.torn = true;
+  if (pa.hold) { clearTimeout(pa.hold); pa.hold = null; }
+  window.__preadvance = null;
+
+  const el = pa.outEl;
+  if (!el) return;
+  reattachMediaHandlers(el);
+  // dataset.next was cleared to disarm a second handoff; restore it so the
+  // ordinary 'ended' advance knows there is still somewhere to go.
+  el.dataset.next = '1';
+  // Put it back where a swap looks for it: a response that lands late must
+  // replace this element, not leave it playing under the new one.
+  const host = document.getElementById('player');
+  if (host && el.parentNode !== host) {
+    try { host.appendChild(el); } catch (_) { /* ignore */ }
+  }
+}
+
+// Drop a handoff in progress without a clean end (a manual skip landed on top
+// of it). The outgoing element goes; the caller rebuilds for the new one.
+function abortPreAdvance() {
+  const pa = window.__preadvance;
+  if (!pa) return;
+  if (pa.hold) { clearTimeout(pa.hold); pa.hold = null; }
+  if (pa.watchdog) { clearTimeout(pa.watchdog); pa.watchdog = null; }
+  try { if (pa.outEl) { detachMediaHandlers(pa.outEl); pa.outEl.pause(); pa.outEl.remove(); } } catch (_) { /* ignore */ }
+  try { pa.outGraph && pa.outGraph.source.disconnect(); } catch (_) { /* ignore */ }
+  try { pa.outGraph && pa.outGraph.gain.disconnect(); } catch (_) { /* ignore */ }
+  try { if (pa.inGraph) { pa.inGraph.source.disconnect(); pa.inGraph.gain.disconnect(); } } catch (_) { /* ignore */ }
+  window.__preadvance = null;
   window.__audioGraph = null; // force a clean single-chain rebuild
 }
 
@@ -677,6 +933,9 @@ if (!window.__plogHooked) {
 
     if (a.paused) {
       plogLastPos = null;
+      // Held by a handoff whose timer died with the page — release it before
+      // asking whether the queue is stuck, since a live hold masks that check.
+      preAdvanceRescue();
       // Finished but still sitting there: the advance never happened. Recover
       // here rather than waiting for the listener to pick the phone up.
       if (window.__advanceIfIdle) window.__advanceIfIdle();
@@ -755,6 +1014,7 @@ if (!window.__advanceHooked) {
     var a = document.getElementById('audio');
     if (!a || a.dataset.type) return false;   // music tracks only
     if (window.__crossfade) return false;     // that handoff has its own watchdog
+    if (window.__preadvance) return false;    // and so does that one
     if (a.dataset.next !== '1') return false; // nothing to advance to: a real stop
     if (a.error) return false;                // a broken source, not a lost advance
     return a.ended === true;
@@ -803,15 +1063,34 @@ if (!window.__advanceHooked) {
     window.__requestAdvance('stuck');
   };
 
-  // Coming back to the tab. If it stopped while we were away, start it moving
+  // Coming back to the page. If it stopped while we were away, start it moving
   // again before the listener has to.
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState !== 'visible') return;
+  //
+  // Hooked to every route back, not just visibilitychange: a page Android froze
+  // can be resumed WITHOUT a visibility transition, and that gap cost a real
+  // 27-minute silence (09:29 track end, 09:56 'resume' at pos == duration with
+  // the queue never advanced, and no recovery attempt in between because the
+  // page came back already visible). 'resume' pairs with the 'freeze' that
+  // stopped the watchdog interval in the first place; 'pageshow' covers a
+  // back-forward-cache restore; 'focus' is the cheap catch-all for the rest.
+  function recoverAdvance(reason) {
+    // Settle a pre-advance hold whose timer died with the page first — it can
+    // leave the incoming track paused, which __advanceStuck() reads as "a
+    // handoff is in flight" and would otherwise skip.
+    preAdvanceRescue();
     if (advance.inflight) return;  // one is already out there; don't duplicate it
     if (!window.__advanceStuck()) return;
-    if (window.__plog) window.__plog('advance-recovered');
-    window.__requestAdvance('visible', true);
+    if (window.__plog) window.__plog('advance-recovered', reason);
+    window.__requestAdvance(reason, true);
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    recoverAdvance('visible');
   });
+  document.addEventListener('resume', function () { recoverAdvance('resume'); });
+  window.addEventListener('pageshow', function () { recoverAdvance('pageshow'); });
+  window.addEventListener('focus', function () { recoverAdvance('focus'); });
 }
 
 // Podcast resume: report the playhead so the server can save a resume point.
@@ -865,6 +1144,10 @@ if (!window.__podcastReportHooked) {
     }
     setupMediaSession();
     updatePositionState();
+    // Held by a pre-advance handoff: the previous track is still playing its
+    // tail on a <body>-parked element, and finishPreAdvance starts this one the
+    // moment that tail ends. Starting here would play them both at once.
+    if (preAdvanceHoldsStart(audio)) return;
     // New media just loaded — always start it. Using the play() *toggle* here
     // races with radio's MANIFEST_PARSED autoplay: if playback already started,
     // the toggle would pause it ("play() interrupted by pause()").
@@ -884,10 +1167,14 @@ if (!window.__podcastReportHooked) {
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
   }
 
-  // Crossfade trigger rides on timeupdate (fires ~4×/s during playback and,
-  // unlike requestAnimationFrame, keeps firing in a backgrounded tab) so the
-  // fade starts on time even when the tab isn't focused.
-  audio.ontimeupdate = maybeStartCrossfade;
+  // Both early handoffs ride on timeupdate (fires ~4×/s during playback and,
+  // unlike requestAnimationFrame, keeps firing in a backgrounded tab) so they
+  // start on time even when the tab isn't focused. They're mutually exclusive —
+  // maybePreAdvance defers to crossfade.
+  audio.ontimeupdate = function () {
+    maybeStartCrossfade();
+    maybePreAdvance();
+  };
 
   audio.onplaying = function () {
     resumeAudioCtx();
@@ -951,7 +1238,10 @@ if (!window.__podcastReportHooked) {
   // until the phone was picked up 16s later. play() kicks the load off itself.
   // Skipped where something has to happen first: radio builds its own stream,
   // and a podcast seeks to its saved resume point before starting.
-  if (!isRadio && !audio.dataset.type && audio.src && !audio.src.endsWith('#')) {
+  // Skipped too while a pre-advance handoff is holding this element back — the
+  // outgoing track's tail is still sounding (see preAdvanceHoldsStart).
+  if (!isRadio && !audio.dataset.type && audio.src && !audio.src.endsWith('#')
+      && !preAdvanceHoldsStart(audio)) {
     audio.play().catch(function () {
       // Not fatal on its own — onloadedmetadata tries again and reports it
       // there (autoplay-blocked) if the browser really did refuse.
@@ -965,6 +1255,9 @@ if (!window.__podcastReportHooked) {
     setTimeout(function () {
       var a = document.getElementById('audio');
       if (a !== audio || !a.paused || a.currentTime > 0) return;
+      // Deliberately paused: a pre-advance is holding it until the outgoing
+      // track's tail ends. Not a stall.
+      if (window.__preadvance && !window.__preadvance.torn) return;
       if (window.__plog) window.__plog('start-stalled', 'rs' + a.readyState, a);
     }, 6000);
   }
