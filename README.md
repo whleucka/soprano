@@ -1,6 +1,6 @@
 # Soprano
 
-<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/9f878a55-1aa4-488e-b7f1-5d22cf9e211b" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/abf76ee1-15e0-4070-9368-b6c276687a29" />
 
 Self-hosted music server with a web player. Music, radio, and podcasts.
 
