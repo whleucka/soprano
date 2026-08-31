@@ -801,9 +801,15 @@ input:-webkit-autofill:active {
 .liked {
   color: var(--heart-off);
 }
-.liked:hover,
 .liked .active {
   color: var(--accent);
+}
+/* Guarded like every other hover on a tap target — a latched hover would show
+   an unliked heart in the liked colour after a tap. */
+@media (hover: hover) {
+  .liked:hover {
+    color: var(--accent);
+  }
 }
 .liked:active {
   transform: scale(0.85);
@@ -811,20 +817,26 @@ input:-webkit-autofill:active {
 
 /* Card covers lift slightly on hover so the home rails feel alive. The scrim
    is scaled in lockstep — it shares the cover's box, so any mismatch shows up
-   as a bright hairline along the artwork's bottom edge. */
+   as a bright hairline along the artwork's bottom edge.
+
+   Hover-capable pointers only: a touch tap leaves :hover latched on the card
+   until you tap somewhere else, so on mobile the lift sticks to whatever you
+   last played instead of fading out. */
 .album-cont .cover,
 .radio-cont .cover,
 .cover-wrap:has(.card-actions)::before {
   transition: transform var(--ease), filter var(--ease);
 }
-.album-cont:hover .cover,
-.radio-cont:hover .cover,
-.album-cont:hover .cover-wrap:has(.card-actions)::before {
-  transform: scale(1.03);
-}
-.album-cont:hover .cover,
-.radio-cont:hover .cover {
-  filter: brightness(1.08);
+@media (hover: hover) {
+  .album-cont:hover .cover,
+  .radio-cont:hover .cover,
+  .album-cont:hover .cover-wrap:has(.card-actions)::before {
+    transform: scale(1.03);
+  }
+  .album-cont:hover .cover,
+  .radio-cont:hover .cover {
+    filter: brightness(1.08);
+  }
 }
 
 /** Album Container */
@@ -909,12 +921,18 @@ input:-webkit-autofill:active {
 /* Lights up rather than taking the accent: the accent red is darker than the
    glyph's resting white, so it read as the control dimming, and red already
    means "liked" on the heart sitting next to it. */
-.card-menu:hover,
 .card-menu:focus,
 .card-menu.show {
   color: #fff;
   opacity: 1;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+@media (hover: hover) {
+  .card-menu:hover {
+    color: #fff;
+    opacity: 1;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  }
 }
 .card-menu::after {
   display: none; /* no caret — the glyph is the affordance */
@@ -1081,11 +1099,14 @@ input:-webkit-autofill:active {
 #track .liked {
   color: #ddd;
 }
-#track .liked:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  #track .liked:hover {
+    color: var(--accent);
+  }
 }
 .track {
   position: relative;
+  cursor: pointer;
   transition: background var(--ease);
 }
 /* An open dropdown must float above sibling rows; the .active row is later in
@@ -1123,9 +1144,10 @@ input:-webkit-autofill:active {
 .track.active .title {
   color: var(--accent-3);
 }
-.track:hover {
-  background: var(--surface-hover);
-  cursor: pointer;
+@media (hover: hover) {
+  .track:hover {
+    background: var(--surface-hover);
+  }
 }
 .track .title {
   font-size: 1rem;
@@ -1173,8 +1195,10 @@ input:-webkit-autofill:active {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   margin: -4px;
 }
-.like-overlay .liked:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .like-overlay .liked:hover {
+    color: var(--accent);
+  }
 }
 .like-overlay .liked .active {
   opacity: 1;
