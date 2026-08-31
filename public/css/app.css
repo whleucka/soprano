@@ -860,15 +860,18 @@ input:-webkit-autofill:active {
 }
 
 /** Album Container */
+/* 120px is the mobile size; the min-width:768px block takes it to 180px. Kept
+   under ~130px on purpose — at 375px wide the next card still peeks past the
+   right edge, which is the only cue that the rail scrolls. */
 .album-cont {
-  width: 100px;
+  width: 120px;
   margin-right: 20px;
   cursor: pointer;
   color: var(--text-muted);
 }
 .album-cont .cover {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
 }
 
 .album-cont a:link:not(.dropdown-item),
