@@ -18,9 +18,10 @@
         {# No title — the badge is pointer-events:none so the cover stays
            clickable, and the card menu already spells out both facts. #}
         <span class="played-badge">
+          <i class="bi bi-clock-history pe-1"></i>
           {% if track.client %}<span class="played-by truncate">{{ track.client }}</span>{% endif %}
           {% if track.client and track.ago_short %}<span class="sep">&middot;</span>{% endif %}
-          {% if track.ago_short %}<span>{{ track.ago_short }}</span>{% endif %}
+          {% if track.ago_short %}<span class="ago">{{ track.ago_short }}</span>{% endif %}
         </span>
       {% endif %}
     {% endblock %}

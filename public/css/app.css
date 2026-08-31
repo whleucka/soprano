@@ -505,7 +505,7 @@ input:-webkit-autofill:active {
   right: 4px;
   background: rgba(0, 0, 0, 0.75);
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
@@ -516,21 +516,25 @@ input:-webkit-autofill:active {
   pointer-events: none;
 }
 
-#home .play-count-badge .bi {
-  font-size: 0.75rem;
+/* Icon sits a step under the badge text so the value stays the loud part. */
+.play-count-badge .bi, .played-badge .bi {
+  font-size: 0.65rem;
 }
 
 /* Who played it and how long ago. The cover is only 100px wide, so the badge
    caps at most of it and the username — the variable-length half — is the part
-   that ellipses; the "3m" stays whole. Full text lives in the title. */
+   that ellipses; the "3m" stays whole. Full text lives in the card menu. */
 .played-badge {
   max-width: calc(100% - 8px);
-  font-size: 0.7rem;
-  font-weight: 600;
-  gap: 3px;
+}
+/* The clock, separator and "50s" hold their size; the username is the only
+   part allowed to give, so a long name ellipses instead of clipping the time. */
+.played-badge .bi, .played-badge .sep, .played-badge .ago {
+  flex: 0 0 auto;
 }
 .played-badge .played-by {
-  max-width: 60px;
+  flex: 0 1 auto;
+  max-width: 48px;
 }
 .played-badge .sep {
   opacity: 0.6;
