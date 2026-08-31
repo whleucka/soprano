@@ -440,7 +440,7 @@ class PlayerController extends Controller
      */
     private function queueReplaced(): void
     {
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions, queueReplaced");
+        $this->hxTrigger("queueReplaced, nowPlaying, playlistQueue, playlistActions");
     }
 
     private function logStalledAdvance(bool $auto): void

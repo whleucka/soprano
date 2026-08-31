@@ -1,7 +1,7 @@
 {% extends "layout/base.html.twig" %}
 
 {% block head_js %}
-<script src="/js/app.js?v=20260831b"></script>
+<script src="/js/app.js?v=20260831c"></script>
 {% endblock %}
 
 {% block head_css %}
@@ -24,7 +24,7 @@
             <div class="content overflow-hidden">{% block view %}{% endblock %}</div>
           </section>
           <section id="playlist" class="d-none h-100">
-            <div class="content d-flex flex-column" hx-get="{{ uri("playlist.index") }}" hx-trigger="load, loadPlaylist from:body"></div>
+            <div class="content d-flex flex-column" hx-get="{{ uri("playlist.index") }}" hx-trigger="load"></div>
           </section>
         </div>
       </div>

@@ -1,6 +1,11 @@
 {% block head_js %}
-<script src="/js/playlist.js?v=20260831b"></script>
+<script src="/js/playlist.js?v=20260831c"></script>
 {% endblock %}
+
+{# Re-paintable copy of the queue skeleton. The inline one below is consumed by
+   the first swap; a whole-queue replacement refetches every row (1400+ for
+   Liked) and needs to show something other than the queue it just replaced. #}
+<template id="queue-skeleton">{% include 'components/skeleton-rows.html.twig' with { cover: true } %}</template>
 
 <div class="d-flex flex-column align-content-start h-100" style="min-height: 0;">
   <div id="now-playing" class="d-flex flex-column p-2" hx-get="{{ uri('playlist.now-playing') }}" hx-trigger="load, nowPlaying from:body"></div>

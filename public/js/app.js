@@ -29,6 +29,9 @@ if ('serviceWorker' in navigator) {
 // event can fire, it's there.
 document.addEventListener('queueReplaced', () => {
   if (typeof showPlaylist === 'function') showPlaylist();
+  // The rows arrive on their own playlistQueue fetch, which is slow for a big
+  // queue — until then the pane still shows the queue that was just replaced.
+  if (typeof paintQueueSkeleton === 'function') paintQueueSkeleton();
 });
 
 // The top bar re-renders on loadTop from static markup that can't know whether

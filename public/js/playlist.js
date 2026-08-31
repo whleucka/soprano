@@ -31,6 +31,16 @@ function showPlaylist() {
   togglePlaylist();
 }
 
+// Paint the queue skeleton while a replacement's rows are in flight. Only for
+// replacements — an "add to queue" leaves the list correct bar one row, and
+// flashing ten placeholders over it would be worse than the wait.
+function paintQueueSkeleton() {
+  var tracks = document.querySelector("#playlist .tracks");
+  var tpl = document.getElementById("queue-skeleton");
+  if (!tracks || !tpl) return;
+  tracks.innerHTML = tpl.innerHTML;
+}
+
 function hidePlaylist() {
   var playlist = document.getElementById("playlist");
   var view = document.getElementById("view");

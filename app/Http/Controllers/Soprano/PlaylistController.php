@@ -71,7 +71,12 @@ class PlaylistController extends Controller
     public function queueClear(): void
     {
         $this->playlist->clearPlaylist();
-        $this->hxTrigger("loadPlaylist");
+        // Repaint the three panes in place rather than rebuilding the whole
+        // panel fragment: a rebuild re-inserts the queue skeleton, so clearing
+        // flashed ten placeholder rows on its way to "Queue is empty". Same
+        // triggers queueRemove() uses, plus nowPlaying — the header still names
+        // the track that was just cleared out from under it.
+        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
     }
 
     #[Get("/playlist/queue-next/{hash}", "playlist.queue-next")]
