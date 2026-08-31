@@ -1,14 +1,21 @@
 {% if tracks %}
   {% for track in tracks %}
+    {% set info = [] %}
+    {% if track.ago %}
+      {% set info = info|merge([{ icon: 'bi-clock-history', text: 'Played ' ~ track.ago }]) %}
+    {% endif %}
+    {% if track.client %}
+      {% set info = info|merge([{ icon: 'bi-person-circle', text: track.client }]) %}
+    {% endif %}
     {% embed 'components/album-cont.html.twig' with {
       track: track,
       play_src: 'recently-played',
       menu_id: 'rp',
+      info: info,
     } %}
     {% block extra %}
       <span title="{{ track.title }}" class="title truncate fw-bold mt-1">{{ track.title }}</span>
       <span title="{{ track.artist }}" class="artist small truncate"><i class="bi bi-person pe-1"></i> {{ track.artist }}</span>
-      <span title="{{ track.client }}" class="client truncate"><i class="bi bi-clock pe-1"></i> {{ track.client }} • {{ track.ago }}</span>
     {% endblock %}
     {% endembed %}
   {% endfor %}

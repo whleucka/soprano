@@ -825,8 +825,8 @@ input:-webkit-autofill:active {
   height: 100px;
 }
 
-.album-cont a:link,
-.album-cont a:visited {
+.album-cont a:link:not(.dropdown-item),
+.album-cont a:visited:not(.dropdown-item) {
   color: var(--text-muted);
 }
 
@@ -835,7 +835,7 @@ input:-webkit-autofill:active {
   font-size: 0.9rem;
 }
 
-.album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
+.album-cont .artist, .album-cont .year, .album-cont .album {
   font-size: 0.7rem;
   color: var(--text-muted);
 }
@@ -894,6 +894,16 @@ input:-webkit-autofill:active {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Read-only facts at the top of a card menu (last played, liked, duration).
+   Same size and spacing as the actions below — only the colour is dialled
+   back, so the menu still reads as a list of things you can do. */
+.card-menu + .dropdown-menu .card-info {
+  display: block;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 3-up responsive grid for podcast/radio card lists. Cards fill their cell
@@ -1231,7 +1241,7 @@ input:-webkit-autofill:active {
     font-size: 1.2rem;
   }
 
-  .album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
+  .album-cont .artist, .album-cont .year, .album-cont .album {
     font-size: 0.9rem;
   }
 

@@ -11,9 +11,18 @@
   badge slot (year, play count) stays free for the embedding rail.
 
   Params: track (feed row), play_src (one-off play source tag), menu_id
-  (suffix keeping dropdown ids unique when a card repeats across rails).
+  (suffix keeping dropdown ids unique when a card repeats across rails), info
+  (list of {icon, text} facts the rail wants shown at the top of the menu —
+  "Last played 3 days ago", "Liked yesterday"; the shared runtime line is
+  appended here so every track card gets it for free).
 #}
 {% set is_track = track.hash|default(null) is not empty %}
+{% set card_info = info|default([]) %}
+{# No year here — the tags only ever carry a bare year, and the rails that care
+   about it already show it as a badge. #}
+{% if is_track and track.playtime_string %}
+  {% set card_info = card_info|merge([{ icon: 'bi-stopwatch', text: track.playtime_string }]) %}
+{% endif %}
 {% set card_id  = (is_track ? track.hash : track.album_hash) ~ '-' ~ (menu_id|default('card')) %}
 <div class="d-flex flex-column album-cont">
   <div class="cover-wrap position-relative">
@@ -46,6 +55,12 @@
                 data-bs-config='{"popperConfig":{"strategy":"fixed"}}'><i class="bi bi-three-dots"></i></button>
         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ card_id }}"
             hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+          {% if card_info %}
+            {% for line in card_info %}
+              <li><span class="dropdown-item-text card-info"><i class="bi {{ line.icon }} pe-1"></i>{{ line.text }}</span></li>
+            {% endfor %}
+            <li><hr class="dropdown-divider"></li>
+          {% endif %}
           {% block menu %}
             {% if is_track %}
               <li><a class="dropdown-item" href="{{ uri('track.index', [track.hash]) }}"><i class="bi bi-music-note pe-1"></i> {{ track.title }}</a></li>

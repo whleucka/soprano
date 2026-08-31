@@ -4,6 +4,7 @@
       track: track,
       play_src: 'top-played',
       menu_id: 'tp',
+      info: track.ago ? [{ icon: 'bi-clock-history', text: 'Last played ' ~ track.ago }] : [],
     } %}
     {% block badge %}
       <span class="play-count-badge" title="{{ track.plays }} plays"><i class="bi bi-play-fill pe-1"></i>{{ track.plays }}</span>

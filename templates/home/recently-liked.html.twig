@@ -4,6 +4,7 @@
       track: track,
       play_src: 'recently-liked',
       menu_id: 'rl',
+      info: track.liked_ago ? [{ icon: 'bi-heart-fill', text: 'Liked ' ~ track.liked_ago }] : [],
     } %}
     {% block extra %}
       <span title="{{ track.title }}" class="title truncate fw-bold mt-1">{{ track.title }}</span>

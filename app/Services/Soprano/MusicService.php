@@ -731,7 +731,8 @@ class MusicService
     public function recentlyAdded(int $albumCount = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT " . self::ALBUM_COLUMNS . ", " . self::ALBUM_LIKED_COLUMN . "
+            "SELECT " . self::ALBUM_COLUMNS . ",
+                    al.created_at AS added_at, " . self::ALBUM_LIKED_COLUMN . "
              FROM albums al
              JOIN artists ar ON ar.id = al.artist_id
              ORDER BY al.id DESC
@@ -788,16 +789,21 @@ class MusicService
     {
         $since = (new \DateTime('- 1 WEEK'))->format('Y-m-d H:i:s');
 
+        // Collapse to one row per track FIRST, then join back on that play id:
+        // the username and the timestamp both have to come off the same (last)
+        // play, which a bare c.username under GROUP BY t.id doesn't guarantee.
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ",
                     c.username AS client,
-                    MAX(tp.created_at) AS last_played_at, " . self::LIKED_COLUMN . "
-             FROM track_plays tp
-             JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
-             LEFT JOIN clients c ON c.id = tp.client_id
-             WHERE tp.created_at > ?
-             GROUP BY t.id
-             ORDER BY MAX(tp.id) DESC
+                    lp.created_at AS last_played_at, " . self::LIKED_COLUMN . "
+             FROM (SELECT track_id, MAX(id) AS last_play_id
+                   FROM track_plays
+                   WHERE created_at > ?
+                   GROUP BY track_id) g
+             JOIN track_plays lp ON lp.id = g.last_play_id
+             JOIN tracks t ON t.id = g.track_id " . self::TRACK_JOINS . "
+             LEFT JOIN clients c ON c.id = lp.client_id
+             ORDER BY g.last_play_id DESC
              LIMIT ?",
             [client()->id, $since, $trackCount],
         );
@@ -810,7 +816,8 @@ class MusicService
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ",
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
+                    MAX(tp.id) AS last_play_id,
+                    MAX(tp.created_at) AS last_played_at, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              WHERE tp.client_id = ? AND " . self::CLOSED_PLAY . "
@@ -830,7 +837,8 @@ class MusicService
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ",
                     COUNT(tp.id) AS plays,
-                    MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
+                    MAX(tp.id) AS last_play_id,
+                    MAX(tp.created_at) AS last_played_at, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              WHERE tp.client_id = ? AND tp.created_at > ? AND " . self::CLOSED_PLAY . "
@@ -856,7 +864,8 @@ class MusicService
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ",
                     SUM(CASE WHEN tp.skipped = 1 THEN 0 ELSE 1 END) AS plays,
-                    MAX(tp.id) AS last_play_id, " . self::LIKED_COLUMN . "
+                    MAX(tp.id) AS last_play_id,
+                    MAX(tp.created_at) AS last_played_at, " . self::LIKED_COLUMN . "
              FROM track_plays tp
              JOIN tracks t ON t.id = tp.track_id " . self::TRACK_JOINS . "
              WHERE tp.client_id = ?
@@ -874,7 +883,8 @@ class MusicService
     public function recentlyLiked(int $trackCount = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT " . self::TRACK_COLUMNS . ", 1 AS liked
+            "SELECT " . self::TRACK_COLUMNS . ",
+                    tl.created_at AS liked_at, 1 AS liked
              FROM track_likes tl
              JOIN tracks t ON t.id = tl.track_id " . self::TRACK_JOINS . "
              WHERE tl.client_id = ?
@@ -1016,6 +1026,12 @@ class MusicService
         }
         if (isset($row['last_played_at'])) {
             $entry['ago'] = $this->timeAgo((string) $row['last_played_at']);
+        }
+        if (isset($row['liked_at'])) {
+            $entry['liked_ago'] = $this->timeAgo((string) $row['liked_at']);
+        }
+        if (isset($row['added_at'])) {
+            $entry['added_ago'] = $this->timeAgo((string) $row['added_at']);
         }
 
         return $entry;
