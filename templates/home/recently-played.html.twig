@@ -13,6 +13,17 @@
       menu_id: 'rp',
       info: info,
     } %}
+    {% block badge %}
+      {% if track.client or track.ago %}
+        {# No title — the badge is pointer-events:none so the cover stays
+           clickable, and the card menu already spells out both facts. #}
+        <span class="played-badge">
+          {% if track.client %}<span class="played-by truncate">{{ track.client }}</span>{% endif %}
+          {% if track.client and track.ago_short %}<span class="sep">&middot;</span>{% endif %}
+          {% if track.ago_short %}<span>{{ track.ago_short }}</span>{% endif %}
+        </span>
+      {% endif %}
+    {% endblock %}
     {% block extra %}
       <span title="{{ track.title }}" class="title truncate fw-bold mt-1">{{ track.title }}</span>
       <span title="{{ track.artist }}" class="artist small truncate"><i class="bi bi-person pe-1"></i> {{ track.artist }}</span>

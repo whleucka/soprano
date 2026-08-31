@@ -499,7 +499,7 @@ input:-webkit-autofill:active {
   }
 }
 
-.play-count-badge, .year-badge {
+.play-count-badge, .year-badge, .played-badge {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -518,6 +518,22 @@ input:-webkit-autofill:active {
 
 #home .play-count-badge .bi {
   font-size: 0.75rem;
+}
+
+/* Who played it and how long ago. The cover is only 100px wide, so the badge
+   caps at most of it and the username — the variable-length half — is the part
+   that ellipses; the "3m" stays whole. Full text lives in the title. */
+.played-badge {
+  max-width: calc(100% - 8px);
+  font-size: 0.7rem;
+  font-weight: 600;
+  gap: 3px;
+}
+.played-badge .played-by {
+  max-width: 60px;
+}
+.played-badge .sep {
+  opacity: 0.6;
 }
 
 #player {

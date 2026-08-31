@@ -782,6 +782,35 @@ class MusicService
     }
 
     /**
+     * Compact form of timeAgo for the card badges, where a 100px tile has no
+     * room for "50 seconds ago" — "50s", "5m", "3h", "2d", "3w", "5mo", "2y".
+     */
+    private function timeAgoShort(string $datetime): string
+    {
+        $now  = new \DateTime();
+        $past = new \DateTime($datetime);
+        $diff = $now->diff($past);
+
+        $intervals = [
+            ['y',  $diff->y],
+            ['mo', $diff->m],
+            ['w',  intdiv($diff->d, 7)],
+            ['d',  $diff->d % 7],
+            ['h',  $diff->h],
+            ['m',  $diff->i],
+            ['s',  $diff->s],
+        ];
+
+        foreach ($intervals as [$unit, $value]) {
+            if ($value >= 1) {
+                return $value . $unit;
+            }
+        }
+
+        return 'now';
+    }
+
+    /**
      * Raw listening history — skips stay visible here, unlike the play-count
      * feeds, since a track you changed away from was still played.
      */
@@ -1026,6 +1055,7 @@ class MusicService
         }
         if (isset($row['last_played_at'])) {
             $entry['ago'] = $this->timeAgo((string) $row['last_played_at']);
+            $entry['ago_short'] = $this->timeAgoShort((string) $row['last_played_at']);
         }
         if (isset($row['liked_at'])) {
             $entry['liked_ago'] = $this->timeAgo((string) $row['liked_at']);
