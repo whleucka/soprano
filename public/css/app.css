@@ -935,10 +935,27 @@ input:-webkit-autofill:active {
 }
 /* The corner-anchored heart's nudge is wrong inside the bar. */
 .album-cont .card-actions .liked {
+  position: relative;
   margin: 0;
   padding: 0 2px;
 }
+/* Same 44px target as .card-menu below, for the same reason — the heart is the
+   other ~22px control sitting on a cover that plays the track when tapped.
+   The two boxes are anchored to opposite ends of the bar and stay clear of each
+   other down to a ~72px card; the narrowest real case is the 3-up grid on a
+   320px phone at ~85px, and they don't meet in the gutter between rail cards
+   either (9px + 8px of spill into a 20px margin). */
+.album-cont .card-actions .liked::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
 .card-menu {
+  position: relative;
   color: #fff;
   opacity: 0.85;
   border: 0;
@@ -947,6 +964,24 @@ input:-webkit-autofill:active {
   font-size: 1rem;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   transition: color var(--ease), opacity var(--ease);
+}
+/* The glyph's own box is ~20x16px — well under a thumb — and every pixel around
+   it belongs to the cover, which plays the track. A near-miss is therefore a
+   wrong action, not a no-op, so pad the target out to 44px without changing what
+   the control looks like or where it sits in the bar. ::after is already spoken
+   for (caret removal), hence ::before.
+
+   The transform is safe here where one on .card-actions would not be: this is a
+   child of the button, and .dropdown-menu is the button's sibling, so it can't
+   become the menu's containing block and break the fixed positioning strategy. */
+.card-menu::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 /* Lights up rather than taking the accent: the accent red is darker than the
    glyph's resting white, so it read as the control dimming, and red already
