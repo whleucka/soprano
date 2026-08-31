@@ -18,6 +18,26 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Something replaced the whole queue — an album, a playlist, an artist radio,
+// a station, "play all" on a search. Reveal the queue panel so the swap is
+// visible; otherwise the queue silently becomes something else behind a panel
+// you have to know to open, which on mobile is entirely off-screen.
+//
+// Bound on document, not body: htmx dispatches HX-Trigger events on body and
+// they bubble, and this file runs in <head> before body exists. showPlaylist
+// lives in playlist.js, which loads with the panel fragment — by the time an
+// event can fire, it's there.
+document.addEventListener('queueReplaced', () => {
+  if (typeof showPlaylist === 'function') showPlaylist();
+});
+
+// The top bar re-renders on loadTop from static markup that can't know whether
+// the queue panel is currently open, so the button's pressed state would reset
+// out from under it. Resync after any swap that could have replaced it.
+document.addEventListener('htmx:afterSettle', () => {
+  if (typeof syncPlaylistToggle === 'function') syncPlaylistToggle();
+});
+
 document.addEventListener('htmx:beforeRequest', () => {
   document.querySelector('.hx-indicator')?.classList.add('htmx-request');
 });

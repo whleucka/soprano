@@ -136,7 +136,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks, $index, source: "album");
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        $this->queueReplaced();
         return $this->play($tracks[$index]['hash']);
     }
 
@@ -148,7 +148,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks, source: "artist");
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        $this->queueReplaced();
         return $this->play($tracks[0]['hash']);
     }
 
@@ -160,7 +160,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks, source: "artist-radio:$hash");
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        $this->queueReplaced();
         return $this->play($tracks[0]['hash']);
     }
 
@@ -181,7 +181,7 @@ class PlayerController extends Controller
         $search = $this->search->getSearch();
         if (!empty($search['tracks'])) {
             $this->playlist->setPlaylist($search['tracks'], source: "search");
-            $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+            $this->queueReplaced();
             return $this->play($search['tracks'][0]['hash']);
         }
     }
@@ -194,7 +194,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks, source: "station:$slug");
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        $this->queueReplaced();
         return $this->play($tracks[0]['hash']);
     }
 
@@ -233,7 +233,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks, $index, source: $source);
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        $this->queueReplaced();
         return $this->play($tracks[$index]['hash']);
     }
 
@@ -249,7 +249,7 @@ class PlayerController extends Controller
             return;
         }
         $this->playlist->setPlaylist($tracks, source: "album");
-        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions");
+        $this->queueReplaced();
         return $this->play($tracks[0]['hash']);
     }
 
@@ -428,6 +428,21 @@ class PlayerController extends Controller
      * its whole shape (plus the outgoing track, which says whether this is
      * even the queue that was playing) so one repro identifies the cause.
      */
+    /**
+     * A whole-queue swap — album, playlist, artist, artist radio, station, or
+     * "play all" on a search. Repaints the queue views and reveals the panel:
+     * the queue you had is gone, and on mobile that happens entirely off-screen
+     * behind a panel you have to know to open.
+     *
+     * Deliberately NOT fired for a one-off play (a rail card, a search result),
+     * which only splices itself in via setCurrentTrack(), nor for radio and
+     * podcasts, which clear the queue outright and would reveal an empty panel.
+     */
+    private function queueReplaced(): void
+    {
+        $this->hxTrigger("nowPlaying, playlistQueue, playlistActions, queueReplaced");
+    }
+
     private function logStalledAdvance(bool $auto): void
     {
         $playlist = $this->playlist->getPlaylist();

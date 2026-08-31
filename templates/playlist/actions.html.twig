@@ -3,5 +3,5 @@
   <button id="playlist-shuffle" title="Shuffle" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.shuffle") }}"><i class="bi bi-shuffle {% if playlist.shuffle %}text-success{% endif %}"></i></button>
   {% set repeat = playlist.repeat|default('off') %}
   <button id="playlist-repeat" title="Repeat: {{ repeat }}" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.repeat") }}"><i class="bi {{ repeat == 'one' ? 'bi-repeat-1' : 'bi-repeat' }} {% if repeat != 'off' %}text-success{% endif %}"></i></button>
-  <button id="playlist-clear" title="Clear" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash text-danger"></i></button>
+  <button id="playlist-clear" title="Clear queue" class="btn btn-sm btn-outline-light" hx-get="{{ uri("playlist.queue-clear") }}"><i class="bi bi-trash text-danger"></i></button>
 {% endif %}
