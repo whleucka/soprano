@@ -15,6 +15,10 @@ use App\Models\Playlist;
  * services nothing here may use client() — every query takes an explicit
  * client id. Skip-aware queries treat NULL as not-skipped since rows from
  * before skip tracking (and unreported plays) carry NULL.
+ *
+ * Every generator applies MusicService::LONG_ENOUGH, so silence tracks and
+ * short interludes never land in a mix — same gate the stations and artist
+ * radio use.
  */
 class AutoPlaylistService
 {
@@ -84,6 +88,7 @@ class AutoPlaylistService
              WHERE tp.client_id = ?
                AND tp.created_at > NOW() - INTERVAL 30 DAY
                AND " . self::NOT_SKIPPED . "
+               AND " . MusicService::LONG_ENOUGH . "
              GROUP BY t.id
              ORDER BY COUNT(*) DESC, MAX(tp.id) DESC
              LIMIT ?",
@@ -110,6 +115,7 @@ class AutoPlaylistService
              LEFT JOIN track_likes tl ON tl.track_id = t.id AND tl.client_id = ?
              WHERE (tl.id IS NOT NULL OR COALESCE(p.plays, 0) >= 3)
                AND (p.last_played IS NULL OR p.last_played < NOW() - INTERVAL 6 MONTH)
+               AND " . MusicService::LONG_ENOUGH . "
              ORDER BY (tl.id IS NOT NULL) DESC, COALESCE(p.plays, 0) DESC, RAND()
              LIMIT ?",
             [$clientId, $clientId, self::PLAYLIST_SIZE],
@@ -128,6 +134,7 @@ class AutoPlaylistService
              FROM tracks t
              LEFT JOIN track_plays tp ON tp.track_id = t.id AND tp.client_id = ?
              WHERE t.created_at > NOW() - INTERVAL 30 DAY
+               AND " . MusicService::LONG_ENOUGH . "
              GROUP BY t.id
              HAVING COUNT(tp.id) <= 1
              ORDER BY t.id DESC
@@ -174,6 +181,7 @@ class AutoPlaylistService
                  JOIN albums al ON al.id = t.album_id
                  WHERE al.year REGEXP '^[0-9]{4}$'
                    AND CAST(al.year AS UNSIGNED) BETWEEN ? AND ?
+                   AND " . MusicService::LONG_ENOUGH . "
                  ORDER BY RAND()
                  LIMIT ?",
                 [$decade, $decade + 9, $take],
@@ -254,7 +262,8 @@ class AutoPlaylistService
                         FROM track_plays tp
                         WHERE tp.client_id = ? AND $band AND " . self::NOT_SKIPPED . "
                         GROUP BY track_id) bp ON bp.track_id = t.id
-             WHERE " . implode(' OR ', $where) . "
+             WHERE (" . implode(' OR ', $where) . ")
+               AND " . MusicService::LONG_ENOUGH . "
              ORDER BY COALESCE(bp.plays, 0) DESC, RAND()
              LIMIT ?",
             $params,

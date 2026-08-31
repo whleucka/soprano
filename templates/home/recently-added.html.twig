@@ -2,6 +2,7 @@
   {% for track in tracks %}
     {% embed 'components/album-cont.html.twig' with {
       track: track,
+      menu_id: 'ra',
     } %}
     {% block badge %}
       <span class="year-badge" title="{{ track.year }}">{{ track.year }}</span>

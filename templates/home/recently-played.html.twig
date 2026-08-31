@@ -2,6 +2,8 @@
   {% for track in tracks %}
     {% embed 'components/album-cont.html.twig' with {
       track: track,
+      play_src: 'recently-played',
+      menu_id: 'rp',
     } %}
     {% block extra %}
       <span title="{{ track.title }}" class="title truncate fw-bold mt-1">{{ track.title }}</span>

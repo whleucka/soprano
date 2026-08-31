@@ -2,6 +2,8 @@
   {% for track in tracks %}
     {% embed 'components/album-cont.html.twig' with {
       track: track,
+      play_src: 'rediscover',
+      menu_id: 'rd',
     } %}
     {% block badge %}
       <span class="play-count-badge" title="{{ track.plays }} plays"><i class="bi bi-play-fill pe-1"></i>{{ track.plays }}</span>

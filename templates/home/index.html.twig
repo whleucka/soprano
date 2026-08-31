@@ -67,7 +67,7 @@
           <a hx-boost="true" href="{{ uri('search.feed', ['recently-added']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
-    <div id="recently-added" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-added") }}" hx-trigger="every 5m, load, recentlyAdded from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+    <div id="recently-added" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-added") }}" hx-trigger="every 5m, load, recentlyAdded from:body, trackLike from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-gem text-info pe-1"></i> Rediscover</h2>

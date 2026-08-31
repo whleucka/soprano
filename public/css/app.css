@@ -840,6 +840,62 @@ input:-webkit-autofill:active {
   color: var(--text-muted);
 }
 
+/* The cover is an inline image, so its line box leaves a few px of descender
+   under it — enough to float an overlay off the artwork's bottom edge. */
+.cover-wrap {
+  line-height: 0;
+}
+
+/* Card overlay controls — the heart and the ⋯ menu ride the bottom edge of
+   the cover, leaving the top-right badge slot (year, play count) free. The
+   bar itself is click-through so the cover stays fully playable between the
+   two controls; only the controls take the click. */
+.album-cont .card-actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1px 3px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+.album-cont .card-actions > * {
+  pointer-events: auto;
+}
+/* The corner-anchored heart's nudge is wrong inside the bar. */
+.album-cont .card-actions .liked {
+  margin: 0;
+  padding: 0 2px;
+}
+.card-menu {
+  color: #fff;
+  opacity: 0.85;
+  border: 0;
+  padding: 0 2px;
+  line-height: 1;
+  font-size: 1rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  transition: color var(--ease), opacity var(--ease);
+}
+.card-menu:hover,
+.card-menu:focus,
+.card-menu.show {
+  color: var(--accent);
+  opacity: 1;
+}
+.card-menu::after {
+  display: none; /* no caret — the glyph is the affordance */
+}
+.card-menu + .dropdown-menu {
+  max-width: 280px;
+}
+.card-menu + .dropdown-menu .dropdown-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* 3-up responsive grid for podcast/radio card lists. Cards fill their cell
    (overriding the fixed .album-cont/.radio-cont width) and covers become
    responsive squares so three fit per row at any width. */
@@ -1177,6 +1233,16 @@ input:-webkit-autofill:active {
 
   .album-cont .artist, .album-cont .year, .album-cont .album, .album-cont .client {
     font-size: 0.9rem;
+  }
+
+  .album-cont .card-actions {
+    padding: 3px 6px;
+  }
+  .album-cont .card-actions .liked {
+    font-size: 1.3rem;
+  }
+  .card-menu {
+    font-size: 1.3rem;
   }
 
   .radio-cont {

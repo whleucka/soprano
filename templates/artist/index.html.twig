@@ -21,7 +21,7 @@
     <div id="top-tracks" hx-get="{{ uri("artist.top-tracks", [artist_hash]) }}" hx-trigger="load, topTracks from:body">{% include 'components/skeleton-rows.html.twig' with { count: 5, cover: true } %}</div>
 
     <h2 class="mt-4"><i class="bi bi-disc text-secondary pe-1"></i> Discography</h2>
-    <div id="discography" class="d-flex justify-content-start scrollable py-1" hx-get="{{ uri("artist.discography", [artist_hash]) }}" hx-trigger="load"></div>
+    <div id="discography" class="d-flex justify-content-start scrollable py-1" hx-get="{{ uri("artist.discography", [artist_hash]) }}" hx-trigger="load, trackLike from:body"></div>
   </div>
 </section>
 {% endblock %}

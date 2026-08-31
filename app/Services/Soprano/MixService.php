@@ -340,6 +340,7 @@ class MixService
              ) ps ON ps.track_id = t.id
              LEFT JOIN track_likes tl2 ON tl2.track_id = t.id AND tl2.client_id = ?
              WHERE t.track_artist_id IN ($in)" . $genreGate . "
+               AND " . MusicService::LONG_ENOUGH . "
              GROUP BY t.id
              ORDER BY (IFNULL(ps.play_score, 0)
                        + IF(tl2.id IS NULL, 0, 3)

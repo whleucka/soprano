@@ -1,8 +1,84 @@
-<div class="d-flex flex-column album-cont" hx-push-url="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+{#
+  Rail / grid card. Two modes, picked by whether the feed row carries a track
+  hash — the album feeds select ALBUM_COLUMNS, so `hash` is null there:
+
+    track card  cover click plays the track; heart is the track's own like
+    album card  cover click opens the album (still the useful destination for
+                a whole-album tile); no heart — liking a whole album is a
+                menu item, not something a stray tap should trigger
+
+  The heart and the ⋯ menu ride the bottom edge of the cover so the top-right
+  badge slot (year, play count) stays free for the embedding rail.
+
+  Params: track (feed row), play_src (one-off play source tag), menu_id
+  (suffix keeping dropdown ids unique when a card repeats across rails).
+#}
+{% set is_track = track.hash|default(null) is not empty %}
+{% set card_id  = (is_track ? track.hash : track.album_hash) ~ '-' ~ (menu_id|default('card')) %}
+<div class="d-flex flex-column album-cont">
   <div class="cover-wrap position-relative">
-    <img title="{{ track.artist }} - {{ track.album }}" hx-get="{{ uri("album.index", [track.album_hash]) }}" class="cover" src="{{ track.cover }}" loading="lazy" />
+    {% if is_track %}
+      <img title="Play {{ track.title }}" class="cover" src="{{ track.cover }}" loading="lazy"
+           hx-get="{{ play_uri|default(uri('player.play', [track.hash]) ~ '?src=' ~ (play_src|default('card'))) }}"
+           hx-swap="none" />
+    {% else %}
+      <img title="{{ track.artist }} - {{ track.album }}" class="cover" src="{{ track.cover }}" loading="lazy"
+           hx-get="{{ uri('album.index', [track.album_hash]) }}" hx-push-url="true"
+           hx-target="#view" hx-select="#view" hx-swap="outerHTML" />
+    {% endif %}
     {% block badge %}
     {% endblock %}
+    <div class="card-actions d-flex align-items-center justify-content-between">
+      {% block like %}
+        {# Track cards only. An album heart is all-or-nothing — too heavy a
+           hit for a stray tap on a 100px tile, so it lives in the menu. #}
+        {% if is_track %}
+          <span class="like-overlay" hx-get="{{ uri('track.like', [track.hash]) }}" hx-trigger="like-{{ track.hash }} from:body">
+            {% include 'components/like-btn.html.twig' with { liked: track.liked, like_uri: uri('track.like-toggle', [track.hash]) } %}
+          </span>
+        {% endif %}
+      {% endblock %}
+      <div class="dropdown ms-auto">
+        {# Fixed positioning strategy: the rails are overflow containers, and an
+           absolutely-positioned menu gets clipped to a 100px-tall strip. #}
+        <button class="btn card-menu" type="button" id="{{ card_id }}" title="More"
+                data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options"
+                data-bs-config='{"popperConfig":{"strategy":"fixed"}}'><i class="bi bi-three-dots"></i></button>
+        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="{{ card_id }}"
+            hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML">
+          {% block menu %}
+            {% if is_track %}
+              <li><a class="dropdown-item" href="{{ uri('track.index', [track.hash]) }}"><i class="bi bi-music-note pe-1"></i> {{ track.title }}</a></li>
+            {% else %}
+              <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('player.play-album', [track.album_hash]) }}" hx-swap="none"><i class="bi bi-play-fill pe-1"></i> Play album</a></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="{{ uri('artist.index', [track.artist_hash]) }}"><i class="bi bi-person pe-1"></i> {{ track.artist }}</a></li>
+            <li><a class="dropdown-item" href="{{ uri('album.index', [track.album_hash]) }}"><i class="bi bi-disc pe-1"></i> {{ track.album }}</a></li>
+          {% endblock %}
+          <li><hr class="dropdown-divider"></li>
+          {% block queue_actions %}
+            {% if is_track %}
+              <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('playlist.queue-next', [track.hash]) }}" hx-swap="none"><i class="bi bi-arrow-return-right pe-1"></i> Play next</a></li>
+              <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('playlist.queue-last', [track.hash]) }}" hx-swap="none"><i class="bi bi-plus-square pe-1"></i> Add to queue</a></li>
+            {% else %}
+              {# The toggle re-renders a like button we have nowhere to put, so
+                 swallow it — its trackLike trigger reloads the rail, which is
+                 what refreshes this item's own label. #}
+              <li><a class="dropdown-item" style="cursor: pointer;" hx-get="{{ uri('album.like-toggle', [track.album_hash]) }}" hx-swap="none">
+                {% if track.liked %}
+                  <i class="bi bi-heart-fill text-heart pe-1"></i> Unlike all tracks
+                {% else %}
+                  <i class="bi bi-heart pe-1"></i> Like all tracks
+                {% endif %}
+              </a></li>
+            {% endif %}
+          {% endblock %}
+          <li><a class="dropdown-item" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modal"
+                 hx-get="{{ uri('playlists.modal') }}?src={{ is_track ? 'track' : 'album' }}&ref={{ is_track ? track.hash : track.album_hash }}"
+                 hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-music-note-list pe-1"></i> Add to playlist</a></li>
+        </ul>
+      </div>
+    </div>
   </div>
   {% block extra %}
     <span title="{{ track.album }}" class="title truncate fw-bold mt-1">{{ track.album }}</span>

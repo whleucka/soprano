@@ -260,6 +260,10 @@ class StationService
             $params[] = client()->id;
             $params[] = client()->id;
         }
+        // Silence and interludes analyze fine and can score well on a feature
+        // filter (a silent track is very "chill"), so the gate goes here, not
+        // in the station definitions.
+        $where .= ' AND ' . MusicService::LONG_ENOUGH;
         $params[] = self::WEIGHT_FLOOR;
         $params[] = self::WEIGHT_BASE;
 
@@ -331,9 +335,14 @@ class StationService
             $where = '';
             if ($thresholds !== null) {
                 $where = self::resolveWhere($s['where'], $thresholds);
+                // Counts the pool build() would actually deal from, length
+                // gate included — otherwise the tuning report overstates it.
                 $row = db()->fetch(
-                    "SELECT COUNT(*) AS pool FROM track_features tf
-                     WHERE tf.error IS NULL AND $where",
+                    "SELECT COUNT(*) AS pool
+                     FROM track_features tf
+                     JOIN tracks t ON t.id = tf.track_id
+                     WHERE tf.error IS NULL AND $where
+                       AND " . MusicService::LONG_ENOUGH,
                 );
                 $pool = (int) ($row['pool'] ?? 0);
             }
@@ -382,6 +391,7 @@ class StationService
              JOIN track_features tf ON tf.track_id = t.id AND tf.error IS NULL "
             . MusicService::TRACK_JOINS . "
              WHERE " . self::resolveWhere($station['where'], $thresholds) . "
+               AND " . MusicService::LONG_ENOUGH . "
              ORDER BY RAND()
              LIMIT " . max(1, $limit),
         );

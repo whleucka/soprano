@@ -30,6 +30,18 @@ class MusicService
         "IFNULL((SELECT 1 FROM track_likes WHERE client_id=? AND track_id=t.id), 0) AS liked";
 
     /**
+     * The album collection-heart for the card feeds: filled only once every
+     * track on the album is liked, matching albumFullyLiked(). Inlined as a
+     * column so a rail of 50 album cards costs one query instead of 50.
+     */
+    public const ALBUM_LIKED_COLUMN =
+        "(EXISTS (SELECT 1 FROM tracks tx WHERE tx.album_id = al.id)
+          AND NOT EXISTS (SELECT 1 FROM tracks tx
+                          WHERE tx.album_id = al.id
+                            AND NOT EXISTS (SELECT 1 FROM track_likes tl
+                                            WHERE tl.track_id = tx.id AND tl.client_id = ?))) AS liked";
+
+    /**
      * Confirmed skips don't count as listens in the play-count feeds. NULL
      * (pre-tracking rows and unreported plays) counts as played — same
      * semantics as AutoPlaylistService.
@@ -44,6 +56,28 @@ class MusicService
      * starts, then vanish when it's skipped.
      */
     public const CLOSED_PLAY = "(tp.skipped = 0 OR (tp.skipped IS NULL AND tp.ms_played IS NOT NULL))";
+
+    /**
+     * Nothing shorter than this belongs in something we generated. Silence
+     * tracks, interludes and sub-20s joke cuts are legitimate library rows,
+     * but dealt into a mix they read as the player breaking — the queue
+     * lurches on a beat after it started.
+     */
+    public const MIN_MIX_LENGTH_MS = 20000;
+
+    /**
+     * The length gate itself, for any query with `tracks` aliased `t`. Written
+     * as NOT EXISTS rather than a `tm.length_ms` predicate so it drops into
+     * queries that never joined track_meta (the AutoPlaylistService feeds).
+     *
+     * A missing meta row or a NULL length passes: unscanned means unknown,
+     * not short, and excluding those would quietly shrink every mix on a
+     * library mid-sync.
+     */
+    public const LONG_ENOUGH =
+        "NOT EXISTS (SELECT 1 FROM track_meta tm_len
+                     WHERE tm_len.track_id = t.id
+                       AND tm_len.length_ms < " . self::MIN_MIX_LENGTH_MS . ")";
 
     public const TRACK_JOINS =
         "JOIN albums al ON al.id = t.album_id
@@ -558,7 +592,7 @@ class MusicService
     public function discography(int $artistId, int $limit = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT " . self::ALBUM_COLUMNS . ",
+            "SELECT " . self::ALBUM_COLUMNS . ", " . self::ALBUM_LIKED_COLUMN . ",
                     (al.artist_id <> ?) AS appears_on
              FROM albums al
              JOIN artists ar ON ar.id = al.artist_id
@@ -567,7 +601,7 @@ class MusicService
                            WHERE tx.album_id = al.id AND tx.track_artist_id = ?)
              ORDER BY appears_on ASC, al.year DESC, al.title ASC
              LIMIT ?",
-            [$artistId, $artistId, $artistId, $limit],
+            [client()->id, $artistId, $artistId, $artistId, $limit],
         );
 
         return $this->mapTrackRows($rows);
@@ -697,12 +731,12 @@ class MusicService
     public function recentlyAdded(int $albumCount = 50): array
     {
         $rows = db()->fetchAll(
-            "SELECT " . self::ALBUM_COLUMNS . "
+            "SELECT " . self::ALBUM_COLUMNS . ", " . self::ALBUM_LIKED_COLUMN . "
              FROM albums al
              JOIN artists ar ON ar.id = al.artist_id
              ORDER BY al.id DESC
              LIMIT ?",
-            [$albumCount],
+            [client()->id, $albumCount],
         );
 
         return $this->mapTrackRows($rows);
