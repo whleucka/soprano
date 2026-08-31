@@ -809,14 +809,21 @@ input:-webkit-autofill:active {
   transform: scale(0.85);
 }
 
-/* Card covers lift slightly on hover so the home rails feel alive. */
+/* Card covers lift slightly on hover so the home rails feel alive. The scrim
+   is scaled in lockstep — it shares the cover's box, so any mismatch shows up
+   as a bright hairline along the artwork's bottom edge. */
 .album-cont .cover,
-.radio-cont .cover {
+.radio-cont .cover,
+.cover-wrap:has(.card-actions)::before {
   transition: transform var(--ease), filter var(--ease);
 }
 .album-cont:hover .cover,
-.radio-cont:hover .cover {
+.radio-cont:hover .cover,
+.album-cont:hover .cover-wrap:has(.card-actions)::before {
   transform: scale(1.03);
+}
+.album-cont:hover .cover,
+.radio-cont:hover .cover {
   filter: brightness(1.08);
 }
 
@@ -853,6 +860,21 @@ input:-webkit-autofill:active {
   line-height: 0;
 }
 
+/* Scrim behind the overlay controls. It lives on the wrap rather than on
+   .card-actions so it occupies exactly the cover's box and can take the same
+   hover transform; a transform on .card-actions itself would also become the
+   containing block for the fixed-strategy dropdown nested inside it. The fade
+   height matches the control bar (see the media query for the larger cards). */
+.cover-wrap:has(.card-actions)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 6px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0, rgba(0, 0, 0, 0) 18px);
+  pointer-events: none;
+}
+
 /* Card overlay controls — the heart and the ⋯ menu ride the bottom edge of
    the cover, leaving the top-right badge slot (year, play count) free. The
    bar itself is click-through so the cover stays fully playable between the
@@ -862,9 +884,8 @@ input:-webkit-autofill:active {
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 1;
   padding: 1px 3px;
-  border-radius: 0 0 6px 6px;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
   pointer-events: none;
 }
 .album-cont .card-actions > * {
@@ -885,11 +906,15 @@ input:-webkit-autofill:active {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   transition: color var(--ease), opacity var(--ease);
 }
+/* Lights up rather than taking the accent: the accent red is darker than the
+   glyph's resting white, so it read as the control dimming, and red already
+   means "liked" on the heart sitting next to it. */
 .card-menu:hover,
 .card-menu:focus,
 .card-menu.show {
-  color: var(--accent);
+  color: #fff;
   opacity: 1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 .card-menu::after {
   display: none; /* no caret — the glyph is the affordance */
@@ -1254,6 +1279,9 @@ input:-webkit-autofill:active {
 
   .album-cont .card-actions {
     padding: 3px 6px;
+  }
+  .cover-wrap:has(.card-actions)::before {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0, rgba(0, 0, 0, 0) 27px);
   }
   .album-cont .card-actions .liked {
     font-size: 1.3rem;
