@@ -6,7 +6,11 @@
       info: track.added_ago ? [{ icon: 'bi-plus-lg', text: 'Added ' ~ track.added_ago }] : [],
     } %}
     {% block badge %}
-      <span class="year-badge" title="{{ track.year }}">{{ track.year }}</span>
+      {# Not every album has a year — without the guard the badge renders as a
+         bare black pill on the cover. #}
+      {% if track.year %}
+        <span class="year-badge" title="{{ track.year }}">{{ track.year }}</span>
+      {% endif %}
     {% endblock %}
     {% block extra %}
       <span title="{{ track.album }}" class="title truncate fw-bold mt-1">{{ track.album }}</span>
