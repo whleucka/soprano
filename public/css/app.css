@@ -1104,6 +1104,24 @@ input:-webkit-autofill:active {
   border-radius: 2px;
   background: var(--accent);
 }
+/* Dismiss (✕) on a Continue Listening row. Muted at rest so it doesn't
+   compete with the episode title — playing the episode is the common action
+   on the row, dropping the resume point is the rare one. */
+#podcasts .dismiss-progress {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: color var(--ease);
+}
+#podcasts .dismiss-progress:focus-visible {
+  color: #fff;
+}
+@media (hover: hover) {
+  #podcasts .dismiss-progress:hover {
+    color: #fff;
+  }
+}
+
 #podcasts .play-episode {
   font-size: 1.6rem;
   color: var(--text-soft);

@@ -11,6 +11,17 @@
          hx-get="{{ uri('player.play-podcast-episode', [e.podcast_hash, e.episode_id]) }}" hx-swap="none">
       <div class="cover-wrap position-relative">
         <img title="{{ e.episode_title }}" class="cover" src="{{ e.image }}" loading="lazy" style="cursor: pointer;" />
+        {# Rides the bottom edge of the cover like the heart/⋯ on a track card.
+           `click consume` stops the click reaching the card, which would
+           otherwise start playing the episode we are removing. #}
+        <div class="card-actions d-flex justify-content-end">
+          <button type="button" class="btn card-menu" title="Remove from Continue Listening"
+                  aria-label="Remove {{ e.episode_title }} from Continue Listening"
+                  hx-get="{{ uri('podcasts.progress-dismiss', [e.episode_id]) }}"
+                  hx-trigger="click consume" hx-swap="none">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
       <div class="episode-progress mt-1" role="progressbar" aria-valuenow="{{ e.percent }}" aria-valuemin="0" aria-valuemax="100">
         <div class="episode-progress-bar" style="width: {{ e.percent }}%"></div>

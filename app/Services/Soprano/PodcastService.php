@@ -293,6 +293,20 @@ class PodcastService
     }
 
     /**
+     * Drop an episode's resume row so it leaves Continue Listening.
+     *
+     * saveProgress() only ever updates an existing row, so dismissing an
+     * episode that is still playing stays dismissed for the rest of the
+     * session instead of being re-created by the next position beacon.
+     */
+    public function dismissProgress(string $episodeId): void
+    {
+        PodcastProgress::where('episode_id', $episodeId)
+            ->andWhere('client_id', client()->id)
+            ->first()?->delete();
+    }
+
+    /**
      * Episodes the client is partway through, most recent first, for the
      * "Continue Listening" section. Rows under 30s in are noise, not progress.
      */

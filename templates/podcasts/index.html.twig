@@ -35,25 +35,12 @@
   <div class="scrollable p-3">
     <div id="podcast-results"></div>
 
-    {% if in_progress %}
-    <h2 class="mb-2"><i class="bi bi-play-btn text-success pe-1"></i> Continue Listening</h2>
-    <div class="continue-listening mb-4">
-      {% for e in in_progress %}
-        <div class="episode d-flex align-items-center gap-2 py-2" title="{{ e.episode_title }}"
-             hx-get="{{ uri('player.play-podcast-episode', [e.podcast_hash, e.episode_id]) }}" hx-swap="none">
-          <img class="episode-cover" src="{{ e.image }}" loading="lazy" width="56" height="56" alt="" />
-          <div class="d-flex flex-column truncate flex-grow-1">
-            <span title="{{ e.episode_title }}" class="title truncate fw-bold">{{ e.episode_title }}</span>
-            <span class="artist small truncate">{{ e.podcast_title }}</span>
-            <div class="episode-progress mt-1" role="progressbar" aria-valuenow="{{ e.percent }}" aria-valuemin="0" aria-valuemax="100">
-              <div class="episode-progress-bar" style="width: {{ e.percent }}%"></div>
-            </div>
-            <span class="artist small">{{ e.remaining_min }} min left</span>
-          </div>
-        </div>
-      {% endfor %}
+    <div id="podcast-in-progress"
+         hx-get="{{ uri('podcasts.in-progress') }}"
+         hx-trigger="podcastProgress from:body"
+         hx-swap="innerHTML">
+      {% include 'podcasts/in-progress.html.twig' with { in_progress: in_progress } %}
     </div>
-    {% endif %}
 
     <h2 class="mb-2"><i class="bi bi-collection text-info pe-1"></i> My Podcasts</h2>
     <div class="card-grid" id="podcast-liked"

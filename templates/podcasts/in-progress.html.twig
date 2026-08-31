@@ -1,0 +1,29 @@
+{# Header lives inside the fragment so the whole section disappears once the
+   last episode is finished or dismissed. #}
+{% if in_progress %}
+<h2 class="mb-2"><i class="bi bi-play-btn text-success pe-1"></i> Continue Listening</h2>
+<div class="continue-listening mb-4">
+  {% for e in in_progress %}
+    <div class="episode d-flex align-items-center gap-2 py-2" title="{{ e.episode_title }}"
+         hx-get="{{ uri('player.play-podcast-episode', [e.podcast_hash, e.episode_id]) }}" hx-swap="none">
+      <img class="episode-cover" src="{{ e.image }}" loading="lazy" width="56" height="56" alt="" />
+      <div class="d-flex flex-column truncate flex-grow-1">
+        <span title="{{ e.episode_title }}" class="title truncate fw-bold">{{ e.episode_title }}</span>
+        <span class="artist small truncate">{{ e.podcast_title }}</span>
+        <div class="episode-progress mt-1" role="progressbar" aria-valuenow="{{ e.percent }}" aria-valuemin="0" aria-valuemax="100">
+          <div class="episode-progress-bar" style="width: {{ e.percent }}%"></div>
+        </div>
+        <span class="artist small">{{ e.remaining_min }} min left</span>
+      </div>
+      {# `click consume` stops the click reaching the row, which would otherwise
+         start playing the episode we are removing. #}
+      <button type="button" class="btn btn-sm dismiss-progress" title="Remove from Continue Listening"
+              aria-label="Remove {{ e.episode_title }} from Continue Listening"
+              hx-get="{{ uri('podcasts.progress-dismiss', [e.episode_id]) }}"
+              hx-trigger="click consume" hx-swap="none">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

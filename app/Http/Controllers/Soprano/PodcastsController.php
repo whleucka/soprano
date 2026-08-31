@@ -84,6 +84,28 @@ class PodcastsController extends Controller
         ]);
     }
 
+    #[Get("/podcasts/in-progress", "podcasts.in-progress")]
+    public function inProgress(): string
+    {
+        return $this->render("podcasts/in-progress.html.twig", [
+            "in_progress" => $this->podcasts->getInProgress(),
+        ]);
+    }
+
+    /**
+     * Remove an episode from Continue Listening. Declared ahead of the
+     * {hash} route so "progress" is never read as a podcast hash.
+     */
+    #[Get("/podcasts/progress/{episodeId}/dismiss", "podcasts.progress-dismiss")]
+    public function dismissProgress(string $episodeId): string
+    {
+        $this->podcasts->dismissProgress($episodeId);
+        // Repaints both places the episode shows up: the home rail and the
+        // podcasts page section.
+        $this->hxTrigger("podcastProgress");
+        return "";
+    }
+
     #[Get("/podcasts/{hash}", "podcasts.show")]
     public function show(string $hash): string
     {
