@@ -51,8 +51,14 @@ class StationService
     /**
      * 'hours' is an optional [start, end) local-time window (may wrap
      * midnight) used to badge one station as the right-now pick on the home
-     * rail — it never hides a station, only suggests. Untimed stations
-     * (Rainy Day, Full Throttle) are weather/activity moods, not clock moods.
+     * rail — it never hides a station, only suggests. The timed windows tile
+     * all 24 hours between them, so there is always a pick; the untimed
+     * stations (Rainy Day, Full Throttle, Workout, Dynamics, Deep Cuts) are
+     * weather/activity/mastering picks, not clock moods.
+     *
+     * Windows are evaluated against the *server* clock — date_default_timezone
+     * from config('app.timezone'), set in Application — not the listener's, so
+     * a client in another timezone gets this server's idea of evening.
      */
     public const STATIONS = [
         'party' => [
@@ -72,6 +78,33 @@ class StationService
                          AND (tf.bpm BETWEEN 100 AND 165 OR tf.bpm / 2 BETWEEN 100 AND 165)
                          AND tf.avg_loudness_db >= {l25})",
             'hours' => [6, 12],
+        ],
+        /**
+         * Fills what used to be a five-hour hole in the badge windows
+         * (12:00–17:00). The filter is a *steadiness* filter, not a mood one:
+         * mid-loud, not danceable, a dyn_complexity ceiling so nothing lurches
+         * in volume, and low zcr so nothing is abrasive. The loudness floor is
+         * what separates it from Chill — Chill is defined by being quiet, this
+         * by sitting mid-loud and never moving, so the pools are disjoint by
+         * construction.
+         *
+         * It was called Focus first, which was wrong: on a rock-heavy library
+         * "steady and unobtrusive" still deals Quiet Riot and Deftones, and
+         * tightening zcr to the 30th percentile only shrank the pool (512 →
+         * 206) without changing its character. Adding an energy ceiling on top
+         * left 2 tracks. There is no background-music cluster to find on these
+         * axes here, so the station is named for what it actually selects.
+         */
+        'steady' => [
+            'name'  => 'Steady',
+            'icon'  => 'bi-water',
+            'blurb' => 'Even-keeled, nothing jarring',
+            'where' => '(tf.avg_loudness_db > {l40}
+                         AND tf.avg_loudness_db < {l75}
+                         AND tf.danceability < {d60}
+                         AND tf.dyn_complexity < {dc40}
+                         AND tf.zcr < {z60})',
+            'hours' => [12, 17],
         ],
         'chill' => [
             'name'  => 'Chill',
@@ -128,6 +161,21 @@ class StationService
         ],
 
         /**
+         * The anti-loudness-war pool, and the only station that wants *high*
+         * dyn_complexity (everywhere else it appears as a ceiling): records
+         * that still have quiet passages to be quiet. The loudness ceiling
+         * keeps brickwalled masters out and makes it disjoint from both loud
+         * stations, which sit above {l75}.
+         */
+        'dynamics' => [
+            'name'  => 'Dynamics',
+            'icon'  => 'bi-soundwave',
+            'blurb' => 'Wide range, room to breathe',
+            'where' => '(tf.dyn_complexity >= {dc75}
+                         AND tf.avg_loudness_db <= {l50})',
+        ],
+
+        /**
          * The one station that filters on listening history instead of audio
          * features: tracks never played on this client, by artists already
          * liked or played. 93% of the library has never been played, so a
@@ -174,22 +222,46 @@ class StationService
      * Slug-keyed UI defs with the time-of-day pick flagged ('now') and moved
      * to the front of the rail.
      *
+     * Stations whose pool is empty are dropped rather than rendered: the play
+     * endpoint no-ops silently on an empty deal, so a button that cannot
+     * possibly play anything is worse than no button. In a fully analyzed
+     * library nothing is dropped — this only matters while the features
+     * backfill is still working through the library.
+     *
      * @return array<string,array{name:string,icon:string,blurb:string,now:bool}>
      */
     public function stations(): array
     {
-        $suggested = self::suggestedFor((int) date('G'));
+        // One percentile scan plus one pool scan, both over the whole
+        // features table, on a rail that every home page load renders and
+        // re-renders on a timer. Pools only move as the backfill progresses,
+        // so an hour of staleness costs nothing.
+        // Keyed by the station definitions themselves, so editing a station
+        // takes effect on the next render instead of leaving the rail culling
+        // against an hour-stale pool map — a newly added slug is missing from
+        // that map, and a missing slug reads as an empty pool and vanishes.
+        $pools = cache()->remember(
+            'soprano:station_pools:' . substr(md5(json_encode(self::STATIONS)), 0, 8),
+            (int) config('soprano.station_pools_ttl'),
+            fn() => $this->pools($this->thresholds()),
+        );
 
         $out = [];
         foreach (self::STATIONS as $slug => $s) {
+            if (($pools[$slug] ?? 0) < 1) {
+                continue;
+            }
             $out[$slug] = [
                 'name'  => $s['name'],
                 'icon'  => $s['icon'],
                 'blurb' => $s['blurb'],
-                'now'   => $slug === $suggested,
+                'now'   => false,
             ];
         }
+
+        $suggested = self::suggestedFor((int) date('G'), array_keys($out));
         if ($suggested !== null) {
+            $out[$suggested]['now'] = true;
             $out = [$suggested => $out[$suggested]] + $out;
         }
 
@@ -197,15 +269,29 @@ class StationService
     }
 
     /**
-     * The station whose hours window covers the given local hour, or null
-     * outside every window. Windows may wrap midnight ([23, 6) = 11pm–6am);
-     * definition order breaks ties.
+     * The station to badge as the right-now pick for the given local hour.
+     *
+     * The hours windows tile all 24 hours (asserted in StationServiceTest),
+     * so the clock alone answers this in the normal case. $eligible narrows
+     * the candidates to stations that actually have a pool; when the hour's
+     * own station is not among them the fallback is the first eligible timed
+     * station in definition order, and failing that the first eligible
+     * station at all — the rail's lead button doubles as the badge, so
+     * leaving it unset would mean leading with whatever happens to be first
+     * in the array literal. Null only when nothing is eligible.
+     *
+     * Windows may wrap midnight ([23, 6) = 11pm–6am); definition order breaks
+     * ties, though no two windows currently overlap.
+     *
+     * @param ?string[] $eligible Slugs to choose from; null means all.
      */
-    public static function suggestedFor(int $hour): ?string
+    public static function suggestedFor(int $hour, ?array $eligible = null): ?string
     {
+        $ok = fn(string $slug): bool => $eligible === null || in_array($slug, $eligible, true);
+
         foreach (self::STATIONS as $slug => $s) {
             $window = $s['hours'] ?? null;
-            if ($window === null) {
+            if ($window === null || !$ok($slug)) {
                 continue;
             }
             [$start, $end] = $window;
@@ -216,7 +302,16 @@ class StationService
                 return $slug;
             }
         }
-        return null;
+
+        if ($eligible === null) {
+            return null;
+        }
+        foreach (self::STATIONS as $slug => $s) {
+            if (isset($s['hours']) && $ok($slug)) {
+                return $slug;
+            }
+        }
+        return $eligible[0] ?? null;
     }
 
     /**
@@ -328,28 +423,19 @@ class StationService
              FROM track_features",
         );
         $thresholds = $this->thresholds();
+        // Deliberately uncached: `soprano:stations` is the tuning tool, so it
+        // has to see the library as it is right now, not as the home rail
+        // last cached it.
+        $pools = $this->pools($thresholds);
 
         $stations = [];
         foreach (self::STATIONS as $slug => $s) {
-            $pool = 0;
-            $where = '';
-            if ($thresholds !== null) {
-                $where = self::resolveWhere($s['where'], $thresholds);
-                // Counts the pool build() would actually deal from, length
-                // gate included — otherwise the tuning report overstates it.
-                $row = db()->fetch(
-                    "SELECT COUNT(*) AS pool
-                     FROM track_features tf
-                     JOIN tracks t ON t.id = tf.track_id
-                     WHERE tf.error IS NULL AND $where
-                       AND " . MusicService::LONG_ENOUGH,
-                );
-                $pool = (int) ($row['pool'] ?? 0);
-            }
             $stations[$slug] = [
                 'name'  => $s['name'],
-                'pool'  => $pool,
-                'where' => $where,
+                'pool'  => $pools[$slug] ?? 0,
+                'where' => $thresholds === null
+                    ? ''
+                    : self::resolveWhere($s['where'], $thresholds),
                 'hours' => $s['hours'] ?? null,
                 // Pool is client-independent only for feature stations. An
                 // affinity station's real pool depends on listening history,
@@ -398,6 +484,59 @@ class StationService
     }
 
     /**
+     * Pool size per station slug — the number of tracks build() would
+     * actually have to deal from, length gate included, so a tuning report
+     * never overstates a pool.
+     *
+     * One SUM() per station over a single scan rather than a COUNT per
+     * station: with a station list this long that is the difference between
+     * one pass over track_features and a dozen, and stations() runs it on a
+     * page fragment. FALSE sums as 0 and NULL (an unanalyzed feature column)
+     * is skipped, so each SUM is exactly the count of matching rows.
+     *
+     * Affinity stations (Deep Cuts) are counted on their feature filter only;
+     * their listening-history predicate is per-client and lives in build(),
+     * so the number here is an upper bound. That is deliberate — it keeps the
+     * station out of the empty-pool cull in stations(), where dropping it for
+     * a client with no history would be right but is not worth a per-client
+     * query on every home load.
+     *
+     * All zeros before any track has been analyzed.
+     *
+     * @param ?array<string,string> $thresholds
+     * @return array<string,int>
+     */
+    private function pools(?array $thresholds): array
+    {
+        $empty = array_fill_keys(array_keys(self::STATIONS), 0);
+        if ($thresholds === null) {
+            return $empty;
+        }
+
+        $selects = [];
+        foreach (self::STATIONS as $slug => $s) {
+            $selects[] = 'SUM(' . self::resolveWhere($s['where'], $thresholds) . ') AS `' . $slug . '`';
+        }
+
+        $row = db()->fetch(
+            "SELECT " . implode(",\n                    ", $selects) . "
+             FROM track_features tf
+             JOIN tracks t ON t.id = tf.track_id
+             WHERE tf.error IS NULL
+               AND " . MusicService::LONG_ENOUGH,
+        );
+        if (!$row) {
+            return $empty;
+        }
+
+        $pools = [];
+        foreach ($empty as $slug => $zero) {
+            $pools[$slug] = (int) ($row[$slug] ?? $zero);
+        }
+        return $pools;
+    }
+
+    /**
      * Replace {token}s in a station WHERE clause with resolved numeric
      * thresholds. Tokens map is '{d75}' => '1.2633' style, values already
      * formatted as SQL literals.
@@ -411,6 +550,9 @@ class StationService
      * Library-relative feature thresholds, one window-function query:
      * d* = danceability percentiles, l* = avg_loudness_db, e* = energy,
      * z* = zcr (timbre), dc* = dyn_complexity.
+     * (key_strength has no percentile here on purpose: an Acoustic station
+     * built on it selected "confidently keyed", which most rock is, so the
+     * feature is analyzed but unused.)
      * Null before any track has been analyzed. Values are formatted as
      * locale-safe SQL numeric literals keyed by their {token}.
      *
@@ -429,7 +571,8 @@ class StationService
                 PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY avg_loudness_db) OVER () AS l75,
                 PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY energy) OVER () AS e50,
                 PERCENTILE_CONT(0.60) WITHIN GROUP (ORDER BY zcr) OVER () AS z60,
-                PERCENTILE_CONT(0.40) WITHIN GROUP (ORDER BY dyn_complexity) OVER () AS dc40
+                PERCENTILE_CONT(0.40) WITHIN GROUP (ORDER BY dyn_complexity) OVER () AS dc40,
+                PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY dyn_complexity) OVER () AS dc75
              FROM track_features WHERE error IS NULL",
         );
         if (!$row) {

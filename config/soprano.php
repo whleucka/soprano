@@ -43,4 +43,9 @@ return [
     "listennotes_search_ttl" => 600,      // 10 minutes
     "listennotes_detail_ttl" => 3600,     // 1 hour
     "listennotes_genres_ttl" => 604800,   // 1 week
+
+    // Station pool sizes drive the home rail (empty stations are hidden) and
+    // cost two full scans of track_features to compute. They only move as the
+    // features backfill progresses, so an hour of staleness is free.
+    "station_pools_ttl" => 3600,          // 1 hour
 ];

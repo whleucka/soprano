@@ -18,7 +18,7 @@
 
     {# Header lives inside the fragment so the section vanishes until the
        feature backfill has analyzed part of the library. #}
-    <div id="stations" class="mb-4" hx-get="{{ uri("home.stations") }}" hx-trigger="load"></div>
+    <div id="stations" class="mb-4" hx-get="{{ uri("home.stations") }}" hx-trigger="load, every 10m"></div>
 
     <div class="d-inline-flex align-items-center gap-2">
       <h2 class="mb-0"><i class="bi bi-clock text-secondary pe-1"></i> Recently Played</h2>
