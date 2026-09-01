@@ -82,8 +82,12 @@ class HomeController extends Controller
     #[Get("/home/recently-played", "home.recently-played")]
     public function recentlyplayed(): string
     {
+        // 50, like every other rail. This one used to take recentlyPlayed()'s
+        // default of 1000 and render a week of listening — ~900 cards — into a
+        // rail nobody scrolls past the first dozen of, on load, every 2m, and
+        // again on every track change. The full list is the "More" link.
         return $this->render("home/recently-played.html.twig", [
-            "tracks" => $this->music->recentlyPlayed(),
+            "tracks" => $this->music->recentlyPlayed(50),
         ]);
     }
 

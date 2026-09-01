@@ -821,6 +821,13 @@ class MusicService
         // Collapse to one row per track FIRST, then join back on that play id:
         // the username and the timestamp both have to come off the same (last)
         // play, which a bare c.username under GROUP BY t.id doesn't guarantee.
+        //
+        // The ORDER BY / LIMIT lives inside the derived table as well as
+        // outside it. A week of listening groups down to ~1k tracks, and
+        // without the inner limit all of them get carried through six joins
+        // and a per-row liked subquery just for the outer LIMIT to throw the
+        // tail away. The outer ORDER BY still has to be there — a derived
+        // table's ordering isn't guaranteed to survive the join.
         $rows = db()->fetchAll(
             "SELECT " . self::TRACK_COLUMNS . ",
                     c.username AS client,
@@ -828,12 +835,13 @@ class MusicService
              FROM (SELECT track_id, MAX(id) AS last_play_id
                    FROM track_plays
                    WHERE created_at > ?
-                   GROUP BY track_id) g
+                   GROUP BY track_id
+                   ORDER BY last_play_id DESC
+                   LIMIT ?) g
              JOIN track_plays lp ON lp.id = g.last_play_id
              JOIN tracks t ON t.id = g.track_id " . self::TRACK_JOINS . "
              LEFT JOIN clients c ON c.id = lp.client_id
-             ORDER BY g.last_play_id DESC
-             LIMIT ?",
+             ORDER BY g.last_play_id DESC",
             [client()->id, $since, $trackCount],
         );
 
