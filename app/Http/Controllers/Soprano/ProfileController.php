@@ -44,8 +44,9 @@ class ProfileController extends Controller
         $repeat    = (string) ($data["default_repeat"] ?? "off");
         $crossfade = !empty($data["crossfade"]);
         $dataSaver = !empty($data["data_saver"]);
+        $transcode = !empty($data["transcode"]);
 
-        $this->profile->saveSettings($shuffle, $repeat, $crossfade, $dataSaver);
+        $this->profile->saveSettings($shuffle, $repeat, $crossfade, $dataSaver, $transcode);
         Flash::add("success", "Player settings saved.");
 
         return $this->index();

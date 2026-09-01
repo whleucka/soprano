@@ -137,7 +137,7 @@ class ProfileService
      * Current player defaults for the signed-in client, normalised so the
      * template always has usable values even on rows predating the columns.
      *
-     * @return array{shuffle:bool,repeat:string,crossfade:bool,data_saver:bool}
+     * @return array{shuffle:bool,repeat:string,crossfade:bool,data_saver:bool,transcode:bool}
      */
     public function getSettings(): array
     {
@@ -152,6 +152,9 @@ class ProfileService
             'repeat'     => $repeat,
             'crossfade'  => (bool) ($client->crossfade ?? false),
             'data_saver' => (bool) ($client->data_saver ?? false),
+            // Default on, including for rows predating the column: without a
+            // transcode a lossless track is a stall, not a feature.
+            'transcode'  => (bool) ($client->transcode ?? true),
         ];
     }
 
@@ -164,6 +167,7 @@ class ProfileService
         string $repeat,
         bool $crossfade,
         bool $dataSaver = false,
+        bool $transcode = true,
     ): void {
         if (!in_array($repeat, PlaylistService::REPEAT_MODES, true)) {
             $repeat = 'off';
@@ -174,6 +178,7 @@ class ProfileService
             'default_repeat'  => $repeat,
             'crossfade'       => $crossfade ? 1 : 0,
             'data_saver'      => $dataSaver ? 1 : 0,
+            'transcode'       => $transcode ? 1 : 0,
         ]);
 
         container()->get(PlaylistService::class)->applyDefaults($shuffle, $repeat);

@@ -107,6 +107,14 @@
         </label>
       </div>
       <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="transcode"
+               name="transcode" value="1" {% if settings.transcode %}checked{% endif %}>
+        <label class="form-check-label" for="transcode">
+          Transcode audio
+          <span class="settings-hint d-block">Convert lossless files to a smaller stream before sending them. Turn this off to receive the original file untouched &mdash; better quality, far more data, and some browsers stall on large FLACs. Data saver does nothing while this is off.</span>
+        </label>
+      </div>
+      <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" role="switch" id="data_saver"
                name="data_saver" value="1" {% if settings.data_saver %}checked{% endif %}>
         <label class="form-check-label" for="data_saver">

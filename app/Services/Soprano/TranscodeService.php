@@ -29,6 +29,12 @@ use FilesystemIterator;
  * entitlement is checked *before* the cache is consulted: a client without the
  * mode never gets a lossy source's encode, only its original.
  *
+ * A client can opt out entirely (clients.transcode, on by default): every
+ * track then streams from its source file and the player applies ReplayGain
+ * itself. That is the setting for someone who wants the lossless bytes and
+ * has the link to carry them -- it also switches off data saver in practice,
+ * since there is no encode left for it to reach for.
+ *
  * ReplayGain is baked into the encode (ffmpeg volume filter), so cached files
  * play at reference loudness with no client-side work; the player applies gain
  * via WebAudio only for sources that stream as-is. Freshness is mtime-based and
@@ -104,12 +110,20 @@ class TranscodeService
      * source file -- lossless always, lossy only under data saver and only
      * when the encode is actually the smaller of the two.
      *
+     * $transcode is the client's opt-out (clients.transcode) and outranks
+     * everything else: off means the source file, whatever it is. It also
+     * neutralises data saver, which has nothing left to shrink to.
+     *
      * The gain question rides on this: a track served as Opus has ReplayGain
      * baked in, so the client must apply none of its own. Both the stream and
      * the player payload ask here, so they can't disagree and double it up.
      */
-    public function servesOpus(Track $track, bool $dataSaver = false): bool
+    public function servesOpus(Track $track, bool $dataSaver = false, bool $transcode = true): bool
     {
+        if (!$transcode) {
+            return false;
+        }
+
         return $this->needsTranscode($track)
             || ($dataSaver && $this->worthShrinking($track));
     }
@@ -213,8 +227,14 @@ class TranscodeService
      * -- the reverse order silently downgrades every other client to 128k the
      * moment one data-saver listener touches the track.
      */
-    public function resolve(Track $track, bool $dataSaver = false): ?string
+    public function resolve(Track $track, bool $dataSaver = false, bool $transcode = true): ?string
     {
+        // Opted out: never touch the cache, never encode -- not even the fast
+        // path below, which would otherwise hand back a warmed file.
+        if (!$transcode) {
+            return null;
+        }
+
         $src   = (string) $track->pathname;
         $cache = $this->cacheFileFor($track);
         $ext   = strtolower(pathinfo($src, PATHINFO_EXTENSION));
@@ -228,7 +248,7 @@ class TranscodeService
             return $cache;
         }
 
-        if (!$this->servesOpus($track, $dataSaver)) {
+        if (!$this->servesOpus($track, $dataSaver, $transcode)) {
             return null;
         }
 
