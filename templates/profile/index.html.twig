@@ -106,6 +106,14 @@
           <span class="settings-hint d-block">Fade the end of each track into the next as your queue plays.</span>
         </label>
       </div>
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="data_saver"
+               name="data_saver" value="1" {% if settings.data_saver %}checked{% endif %}>
+        <label class="form-check-label" for="data_saver">
+          Data saver
+          <span class="settings-hint d-block">Stream everything at a lower bitrate. Uses roughly half the data and starts much faster on a weak mobile signal.</span>
+        </label>
+      </div>
       <div class="mb-3">
         <label class="form-label" for="default_repeat">Repeat by default</label>
         <select class="form-select" id="default_repeat" name="default_repeat">

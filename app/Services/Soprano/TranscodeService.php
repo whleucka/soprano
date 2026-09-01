@@ -19,6 +19,16 @@ use FilesystemIterator;
  * job. resolve() also transcodes on demand as a fallback, guarded by an flock so
  * two concurrent stream requests never encode the same track twice.
  *
+ * Data saver (per-client, see clients.data_saver) widens that rule: for a
+ * client on a marginal link, an already-compressed source is *also* shrunk to
+ * Opus whenever the original is meaningfully bigger than the encode would be
+ * (worthShrinking). A 320kbps MP3 is ~2.5x the bytes of the 128k Opus, and on
+ * a weak cellular link that difference decides whether the track starts at all
+ * -- measured: the same phone in one sitting started every Opus track in <=4s
+ * and stalled up to 52s on the raw MP3s. The cache file is shared, so
+ * entitlement is checked *before* the cache is consulted: a client without the
+ * mode never gets a lossy source's encode, only its original.
+ *
  * ReplayGain is baked into the encode (ffmpeg volume filter), so cached files
  * play at reference loudness with no client-side work; the player applies gain
  * via WebAudio only for sources that stream as-is. Freshness is mtime-based and
@@ -29,6 +39,14 @@ use FilesystemIterator;
  */
 class TranscodeService
 {
+    /**
+     * How much bigger than its own Opus encode a lossy source has to be before
+     * data saver bothers re-encoding it. Below this the saving doesn't pay for
+     * a second lossy generation -- and it keeps the mode from "shrinking" a
+     * 96kbps MP3 into a larger 128k Opus.
+     */
+    public const SHRINK_MARGIN = 1.3;
+
     private string $cachePath;
     private string $bitrate;
     private string $ffmpeg;
@@ -82,6 +100,83 @@ class TranscodeService
     }
 
     /**
+     * True when this client will be served the Opus encode rather than the
+     * source file -- lossless always, lossy only under data saver and only
+     * when the encode is actually the smaller of the two.
+     *
+     * The gain question rides on this: a track served as Opus has ReplayGain
+     * baked in, so the client must apply none of its own. Both the stream and
+     * the player payload ask here, so they can't disagree and double it up.
+     */
+    public function servesOpus(Track $track, bool $dataSaver = false): bool
+    {
+        return $this->needsTranscode($track)
+            || ($dataSaver && $this->worthShrinking($track));
+    }
+
+    /**
+     * True when re-encoding an already-compressed source would meaningfully
+     * cut what goes over the wire. Compares the real file against what the
+     * configured bitrate would produce for the same duration -- the source's
+     * own tagged bitrate lies on VBR files and ignores embedded artwork,
+     * while filesize is exactly what the client has to download.
+     *
+     * Unknown duration means no answer, so it returns false: leaving a track
+     * on its original is always safe, encoding blind is not.
+     */
+    private function worthShrinking(Track $track): bool
+    {
+        $bytes = @filesize((string) $track->pathname);
+        if ($bytes === false || $bytes <= 0) {
+            return false;
+        }
+
+        return self::shrinkWorthwhile(
+            (int) $bytes,
+            (int) ($track->meta()?->length_ms ?? 0),
+            self::parseBitrate($this->bitrate),
+        );
+    }
+
+    /**
+     * The threshold itself, kept static and free of models so it can be unit
+     * tested without standing up the container. Unknown duration or bitrate
+     * means no answer, so it returns false: leaving a track on its original
+     * is always safe, encoding blind is not.
+     */
+    public static function shrinkWorthwhile(int $bytes, int $ms, int $bitrateBps): bool
+    {
+        if ($bytes <= 0 || $ms <= 0 || $bitrateBps <= 0) {
+            return false;
+        }
+
+        $encoded = ($bitrateBps / 8) * ($ms / 1000);
+
+        return $bytes >= $encoded * self::SHRINK_MARGIN;
+    }
+
+    /**
+     * Parse an ffmpeg bitrate string ("128k", "96000", "1M") into bits per
+     * second. Static and public so the threshold can be unit tested without
+     * standing up the container.
+     */
+    public static function parseBitrate(string $bitrate): int
+    {
+        $value = strtolower(trim($bitrate));
+        $scale = 1;
+
+        if (str_ends_with($value, 'k')) {
+            $scale = 1000;
+            $value = substr($value, 0, -1);
+        } elseif (str_ends_with($value, 'm')) {
+            $scale = 1000000;
+            $value = substr($value, 0, -1);
+        }
+
+        return max(0, (int) round(((float) $value) * $scale));
+    }
+
+    /**
      * Return the lowercased audio codec name of a file (e.g. "alac", "aac"), or
      * "" if it can't be determined. Used to disambiguate MP4-family containers.
      */
@@ -109,22 +204,36 @@ class TranscodeService
 
     /**
      * Return the path to a ready Opus transcode for this track, encoding it on
-     * demand if missing or stale. Returns null when the track needs no transcode
-     * (caller should serve the original) or when encoding failed.
+     * demand if missing or stale. Returns null when this client should be served
+     * the original (see servesOpus) or when encoding failed.
+     *
+     * One cache file backs both modes, so freshness alone can't decide: a lossy
+     * track encoded for a data-saver client leaves a perfectly fresh .opus that
+     * everyone else must *not* be given. Hence entitlement first, cache second
+     * -- the reverse order silently downgrades every other client to 128k the
+     * moment one data-saver listener touches the track.
      */
-    public function resolve(Track $track): ?string
+    public function resolve(Track $track, bool $dataSaver = false): ?string
     {
         $src   = (string) $track->pathname;
         $cache = $this->cacheFileFor($track);
+        $ext   = strtolower(pathinfo($src, PATHINFO_EXTENSION));
+        $fresh = $this->isFresh($cache, $src);
 
-        // Fast path: a warmed transcode is served without re-probing the codec,
-        // so the common stream request never pays for an ffprobe call.
-        if ($this->isFresh($cache, $src)) {
+        // Fast path, for the cases where entitlement is already settled without
+        // opening the file: an extension that proves the source lossless, or a
+        // data-saver client, who takes the encode whenever one exists. Both skip
+        // the ffprobe that disambiguating an MP4 container would cost.
+        if ($fresh && ($dataSaver || isset($this->sourceFormats[$ext]))) {
             return $cache;
         }
 
-        if (!$this->needsTranscode($track)) {
+        if (!$this->servesOpus($track, $dataSaver)) {
             return null;
+        }
+
+        if ($fresh) {
+            return $cache;
         }
 
         return $this->transcode($src, $cache, $this->replaygain->trackGainDb($track))

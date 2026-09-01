@@ -382,8 +382,10 @@ class PlayerController extends Controller
             'cover'       => $album?->cover,
             'src'         => $src,
             // ReplayGain the client should apply (WebAudio). Transcoded tracks
-            // get 0 — their gain is baked into the cached Opus file.
-            'gain'        => $this->transcode->needsTranscode($track)
+            // get 0 — their gain is baked into the cached Opus file. Asked with
+            // the client's data-saver flag, because that decides whether a lossy
+            // source is served raw (apply gain) or as Opus (already baked in).
+            'gain'        => $this->transcode->servesOpus($track, (bool) client()->data_saver)
                 ? 0.0
                 : $this->replaygain->trackGainDb($track),
             // Crossfade: the client's toggle, gated on there being a next track
@@ -500,8 +502,10 @@ class PlayerController extends Controller
         if ($track && is_file($track->pathname) && is_readable($track->pathname)) {
             // Lossless/large sources are served from the cached Opus transcode
             // (encoded on demand if not warmed yet); everything else streams
-            // straight from disk.
-            $path = $this->transcode->resolve($track) ?? $track->pathname;
+            // straight from disk, unless this client is on data saver, which
+            // shrinks high-bitrate lossy sources too.
+            $path = $this->transcode->resolve($track, (bool) client()->data_saver)
+                ?? $track->pathname;
             return new StreamResponse($path);
         }
 
