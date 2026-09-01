@@ -10,16 +10,18 @@ use Echo\Framework\Routing\Group;
  *
  * All API endpoints should extend this controller.
  * Provides:
- * - /v1 path prefix
+ * - /api/v1 path prefix
  * - api.* name prefix
- * - api subdomain constraint (api.example.com)
  * - api middleware (JSON responses, versioning)
  * - Rate limiting: 60 requests/minute
+ *
+ * Served from the main host under /api/v1 rather than an api subdomain. Keep
+ * the '/api/' segment: ApiVersion::parseVersion sniffs the version out of the
+ * path with /\/api\/(v\d+)\//, which never matched under the old scheme.
  */
 #[Group(
-    pathPrefix: '/v1',
+    pathPrefix: '/api/v1',
     namePrefix: 'api',
-    subdomain: 'api',
     middleware: ['api', 'max_requests' => 60]
 )]
 abstract class ApiController extends Controller

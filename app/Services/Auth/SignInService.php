@@ -40,6 +40,14 @@ class SignInService
             $currentUser?->email,
             request()->getClientIp(),
         ));
-        session()->destroy();
+
+        // Only the admin user's own keys. The backend moved from its own
+        // subdomain to /admin on the main host, so it now shares one PHP
+        // session with the player — destroy() here would sign the listener
+        // out and wipe their playback queue (App\State\Soprano lives in
+        // $_SESSION too). regenerate() carries the remaining data to a new id.
+        session()->delete("user_uuid");
+        session()->delete("dark_mode");
+        session()->regenerate();
     }
 }

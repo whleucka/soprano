@@ -55,6 +55,15 @@ class ClientSignInService
             request()->getClientIp(),
         ));
         container()->get(RememberTokenService::class)->forget();
-        session()->destroy();
+
+        // Only the client's own keys, for the same reason as
+        // SignInService::signOut() — the admin at /admin shares this session.
+        // The App\State\Soprano keys go too, so the next listener on this
+        // browser doesn't inherit the previous one's queue and player.
+        session()->delete("client_uuid");
+        foreach (['search', 'random', 'playlist', 'player'] as $key) {
+            session()->delete($key);
+        }
+        session()->regenerate();
     }
 }

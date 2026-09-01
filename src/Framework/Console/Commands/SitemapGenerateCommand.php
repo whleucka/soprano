@@ -215,7 +215,11 @@ class SitemapGenerateCommand extends Command
         if (preg_match('/namespace\s+([^;]+);/', $contents, $m)) {
             $namespace = $m[1];
         }
-        if (preg_match('/class\s+(\w+)/', $contents, $m)) {
+        // Anchored to the start of a line, and the optional modifiers matter:
+        // the old unanchored /class\s+(\w+)/ matched the words "class chain"
+        // inside a comment and silently resolved the file to a class that
+        // doesn't exist, so the controller's routes vanished with no error.
+        if (preg_match('/^\s*(?:final\s+|abstract\s+)*class\s+(\w+)/m', $contents, $m)) {
             $class = $m[1];
         }
 

@@ -19,6 +19,10 @@
     <li class="d-block d-md-none"><a class="dropdown-item" href="{{ uri("playlists.show", ["liked"]) }}"><i class="bi bi-heart-fill pe-1"></i> Liked</a></li>
 
     <li class="d-block"><a class="dropdown-item" href="{{ uri("profile.index") }}"><i class="bi bi-person pe-1"></i> Profile</a></li>
+    {# hx-boost="false": see the sidebar. This menu boosts into #view and the
+       admin layout has its own #view, so a boosted /admin swaps the backend
+       into the player instead of leaving it. #}
+    <li class="d-block"><a class="dropdown-item" hx-boost="false" href="{{ uri("admin.root") }}"><i class="bi bi-shield-check pe-1"></i> Admin</a></li>
     <li><hr class="dropdown-divider"></li>
     <li class="d-block">
       <form method="POST" action="{{ uri('client.auth.sign-out.post') }}" hx-post="{{ uri('client.auth.sign-out.post') }}" hx-target="this" hx-swap="none" class="m-0">

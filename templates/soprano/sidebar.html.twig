@@ -7,6 +7,10 @@
       <a class="nav-link shadow-none border-0" href="{{ uri("radio.index") }}"><i class="bi bi-broadcast pe-1"></i> Radio</a>
       <a class="nav-link shadow-none border-0" href="{{ uri("podcasts.index") }}"><i class="bi bi-mic pe-1"></i> Podcasts</a>
       <a class="nav-link shadow-none border-0" href="{{ uri("profile.index") }}"><i class="bi bi-person pe-1"></i> Profile</a>
+      {# hx-boost="false" is required, not stylistic: this nav boosts into #view,
+         and the admin layout has a #view of its own, so a boosted /admin would
+         splice the backend into the player shell instead of navigating. #}
+      <a class="nav-link shadow-none border-0" hx-boost="false" href="{{ uri("admin.root") }}"><i class="bi bi-shield-check pe-1"></i> Admin</a>
     </nav>
 
     <nav class="nav flex-column">

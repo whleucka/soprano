@@ -58,8 +58,8 @@ class ArtistsController extends ModuleController
     /**
      * Render a button linking to the frontend page for this record.
      *
-     * The admin runs on the `admin` subdomain while the player routes live on
-     * the main host, so the URL is built against the app's public base.
+     * Built against the app's public base rather than a relative uri(): the
+     * link opens in a new tab, and an absolute URL is what belongs there.
      */
     private function frontendLink(?string $hash, string $route): string
     {

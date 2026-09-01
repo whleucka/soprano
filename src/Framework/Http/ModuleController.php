@@ -15,7 +15,7 @@ use RuntimeException;
 use Throwable;
 use Twig\TwigFunction;
 
-#[Group(subdomain: 'admin', middleware: ["auth"])]
+#[Group(pathPrefix: '/admin', middleware: ["auth"])]
 abstract class ModuleController extends Controller
 {
     // --- Schema-driven components ---

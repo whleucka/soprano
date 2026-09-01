@@ -9,7 +9,7 @@ use Echo\Framework\Routing\Route\Get;
  * API Status Controller
  *
  * Provides system status and health information via API.
- * Accessible at: api.example.com/v1/status
+ * Accessible at: example.com/api/v1/status
  */
 class StatusController extends ApiController
 {

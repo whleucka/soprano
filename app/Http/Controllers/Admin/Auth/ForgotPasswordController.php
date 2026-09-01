@@ -12,13 +12,13 @@ class ForgotPasswordController extends AuthController
     {
     }
 
-    #[Get("/forgot-password", "auth.forgot-password.index")]
+    #[Get("/forgot-password", "forgot-password.index")]
     public function index(): string
     {
         return $this->render("auth/forgot-password/index.html.twig");
     }
 
-    #[Post("/forgot-password", "auth.forgot-password.post", ["max_requests" => 5, "decay_seconds" => 60])]
+    #[Post("/forgot-password", "forgot-password.post", ["max_requests" => 5, "decay_seconds" => 60])]
     public function post(): string
     {
         $valid = $this->validate([

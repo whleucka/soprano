@@ -3,8 +3,9 @@
 # Copy to docker-compose.local.yml (gitignored) to enable it; ./bin/dev loads
 # that file automatically when present. Use it for niceties that depend on YOUR
 # machine and shouldn't be committed. The example below routes the app through a
-# shared Traefik proxy so it answers on *.localhost (alongside the host port
-# docker-compose.dev.yml already publishes) and mounts your music library.
+# shared Traefik proxy so it answers on <DEV_HOSTNAME>.localhost (alongside the
+# host port docker-compose.dev.yml already publishes) and mounts your music
+# library.
 #
 #   cp docker-compose.local.yml.example docker-compose.local.yml
 #   ./bin/dev up -d
@@ -13,7 +14,6 @@
 #   - The shared Traefik stack at ~/Projects/traefik running first
 #     (it owns the external `proxy` network).
 #   - DEV_HOSTNAME set in .env (e.g. DEV_HOSTNAME=soprano → http://soprano.localhost).
-#     nginx accepts *.localhost, so admin.<host>.localhost also routes correctly.
 #   - MUSIC_DIR set in .env (path to your music library).
 
 services:
@@ -30,7 +30,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.${DEV_HOSTNAME:?DEV_HOSTNAME must be set in .env}.rule=HostRegexp(`^(.+\.)?${DEV_HOSTNAME}\.localhost$`)
+      - traefik.http.routers.${DEV_HOSTNAME:?DEV_HOSTNAME must be set in .env}.rule=Host(`${DEV_HOSTNAME}.localhost`)
       - traefik.http.routers.${DEV_HOSTNAME}.entrypoints=web
       - traefik.http.services.${DEV_HOSTNAME}.loadbalancer.server.port=80
 

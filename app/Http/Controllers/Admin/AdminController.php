@@ -7,10 +7,10 @@ use Echo\Framework\Routing\Group;
 
 /**
  * AdminController
- * Admin routes will extend this controller for subdomain / name prefix
+ * Admin routes will extend this controller for the /admin path prefix
  * These are routes used in the admin backend, for ModuleControllers
  */
-#[Group(subdomain: 'admin', middleware: ["auth"])]
+#[Group(pathPrefix: '/admin', middleware: ["auth"])]
 class AdminController extends Controller
 {
 }

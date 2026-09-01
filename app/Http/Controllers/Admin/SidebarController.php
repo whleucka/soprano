@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Services\Admin\SidebarService;
-use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
 
-#[Group(subdomain: 'admin', middleware: ["auth"])]
+// No #[Group] of its own on purpose. The Collector concatenates pathPrefix all
+// the way up the inheritance chain, so repeating '/admin' here on top of
+// AdminController's would route these to /admin/admin/sidebar.
 class SidebarController extends AdminController
 {
     public function __construct(private SidebarService $service)
