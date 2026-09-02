@@ -1,5 +1,11 @@
+{# Most feeds identify the current row by hash against the player state the
+   controller passed in. The queue can't: it is index-addressed (the same track
+   can sit in it twice) and it renders without `player`, which used to make
+   this test silently null and left the queue with no highlight at all until
+   something in JS put one there. Callers that know better pass `active`. #}
+{% set is_active = active is defined ? active : track.hash == player.hash %}
 <div id="{{ dom_id|default(track.hash) }}" tabindex="-1"
-     class="track p-1 {% if track.hash == player.hash %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
+     class="track p-1 {% if is_active %}active{% endif %} d-flex align-items-center justify-content-center shadow-none border-0">
   {% block first %}
     <div hx-get="{{ uri('track.like', [track.hash]) }}" hx-trigger="like-{{ track.hash }} from:body">
       {% include 'components/like-btn.html.twig' with { liked: track.liked, like_uri: uri('track.like-toggle', [track.hash]) } %}
@@ -13,6 +19,10 @@
       {% block subtitle %}
         <span title="{{ track.artist }}" class="artist small truncate">{{ track.artist }}</span>
       {% endblock %}
+      {# Opt-in third line. Empty by default: only the feed lists have history
+         on the row worth showing, and an album or playlist track list would
+         gain a blank line for nothing. #}
+      {% block meta %}{% endblock %}
     </div>
   </div>
   <div class="dropdown">

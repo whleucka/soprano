@@ -1,0 +1,22 @@
+{# Title + count + actions for the search view. All three read the same session
+   state, so they re-render together — see SearchController::hero(). #}
+{% set ctx = search.context|default(null) %}
+{% set count = search.tracks|default([])|length %}
+<h1 class="title">
+  {% if ctx %}
+    <i class="bi {{ ctx.icon }} {{ ctx.color|default('') }} pe-1"></i> {{ ctx.label }}
+  {% else %}
+    <i class="bi bi-search pe-1"></i> Search
+  {% endif %}
+</h1>
+{% if ctx %}
+  <h5 class="mb-0">{{ count }} track{{ count == 1 ? '' : 's' }}{% if ctx.note|default(null) %} &middot; {{ ctx.note }}{% endif %}</h5>
+{% endif %}
+<div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2">
+  {% if search.tracks %}
+    <button class="btn btn-sm btn-outline-light" title="Play results" hx-get="{{ uri("player.play-search") }}" hx-swap="none"><i class="bi bi-play-fill text-success"></i></button>
+    <button class="btn btn-sm btn-outline-light" title="Add to playlist" data-bs-toggle="modal" data-bs-target="#modal"
+            hx-get="{{ uri('playlists.modal') }}?src=search" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker"><i class="bi bi-music-note-list"></i></button>
+    <button class="btn btn-sm btn-outline-light" title="Clear search" hx-get="{{ uri("search.clear") }}" hx-swap="none"><i class="bi bi-trash text-danger"></i></button>
+  {% endif %}
+</div>

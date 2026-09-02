@@ -471,6 +471,11 @@ input:-webkit-autofill:active {
   height: 40px;
   border-radius: 4px;
 }
+/* Mirrors .track:has(.track-meta) .cover — the three-line feed rows. */
+.skeleton-row-meta .skeleton-cover {
+  width: 56px;
+  height: 56px;
+}
 .skeleton-row .skeleton-line {
   width: 60%;
   margin-top: 0;
@@ -1257,6 +1262,28 @@ input:-webkit-autofill:active {
 .track .plays {
   font-size: 0.8rem;
   color: #fff;
+}
+/* Third row line on the "More" feeds — the history that the home rail card
+   showed on its cover badge. Dimmer than .artist so the row still reads
+   title-then-artist at a glance and the meta stays a footnote. */
+.track .track-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+.track .track-meta .sep {
+  padding: 0 0.3rem;
+  opacity: 0.6;
+}
+/* A third line puts the text column at ~61px, so the default 40px cover floats
+   with a band of dead space above and below it. Scoped with :has() rather than
+   a modifier class because only these rows grow — the album, playlist, queue
+   and top-track lists are two lines and keep the 40px art.
+   Kept a touch under the text height: the row is sized by its text either way,
+   and overshooting would add height instead of just filling it. */
+.track:has(.track-meta) .cover {
+  width: 56px;
+  height: 56px;
 }
 .track .rank {
   font-weight: 800;

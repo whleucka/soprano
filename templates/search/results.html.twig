@@ -7,6 +7,11 @@
       {% block leading %}
         <img title="{{ track.album }}" class="cover me-2" src="{{ track.cover }}" loading="lazy"/>
       {% endblock %}
+      {# The feed views are the flat version of a home rail, and the rail card
+         carried the fact that put the track in the list — who played it, how
+         many times, when it was liked. Without this line the "More" click
+         trades all of it for a longer list. #}
+      {% block meta %}{% include 'components/track-meta.html.twig' %}{% endblock %}
     {% endembed %}
   {% endfor %}
 {% else %}

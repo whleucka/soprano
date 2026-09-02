@@ -4,7 +4,7 @@
       track: track,
       play_uri: uri('player.play-playlist-track', [loop.index0]),
       dom_id: track.hash,
-      active: current.hash == track.hash,
+      active: loop.index0 == playlist.index,
       dropdown_suffix: 'queue-dropdown',
       link_before_request: 'hidePlaylist()',
     } %}

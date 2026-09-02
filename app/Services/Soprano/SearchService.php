@@ -15,13 +15,21 @@ class SearchService
         state()->search = [
             'tracks' => $this->music->searchTracks($term),
             'term' => $term,
+            'context' => null,
         ];
     }
 
-    public function setSearchResults(array $tracks): void
+    /**
+     * $context labels the header for the non-term entry points (the home
+     * rails' "More" links, genre, decade) as {label, icon, color, note}.
+     * Without it every one of them rendered a bare "Search" hero and you
+     * couldn't tell Rediscover from Top Played once you'd clicked through.
+     */
+    public function setSearchResults(array $tracks, ?array $context = null): void
     {
         state()->search = [
             'tracks' => $tracks,
+            'context' => $context,
         ];
     }
 
@@ -30,6 +38,7 @@ class SearchService
         state()->search = [
             'tracks' => [],
             'term' => "",
+            'context' => null,
         ];
     }
 

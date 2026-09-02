@@ -57,13 +57,12 @@ class PlaylistController extends Controller
     public function queue(): string
     {
         $playlist = $this->playlist->getPlaylist();
-        $index = $playlist["index"];
         // Queue rows are a session snapshot; their liked flag goes stale the
-        // moment a like is toggled elsewhere.
+        // moment a like is toggled elsewhere. refreshLikedState keeps the keys,
+        // so playlist.index still addresses the same row the template renders.
         $playlist["tracks"] = $this->music->refreshLikedState($playlist["tracks"] ?? []);
         return $this->render("playlist/queue.html.twig", [
             "playlist" => $playlist,
-            "current" => $playlist["tracks"][$index] ?? false
         ]);
     }
 

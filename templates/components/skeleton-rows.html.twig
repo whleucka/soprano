@@ -7,9 +7,12 @@
      cover    — leading is a 40px album-art square (queue, top-tracks)
                 rather than a slim track-number (album, playlist)
      subtitle — show the second (artist) line (default true; album tracks
-                render title-only, so pass false there) #}
+                render title-only, so pass false there)
+     meta     — show a third line and the taller cover that goes with it, for
+                the lists that render track-row's meta block (the home rails'
+                "More" feeds) #}
 {% for i in 1..(count|default(10)) %}
-  <div class="track skeleton-row p-1 d-flex align-items-center" aria-hidden="true">
+  <div class="track skeleton-row{% if meta|default(false) %} skeleton-row-meta{% endif %} p-1 d-flex align-items-center" aria-hidden="true">
     <span class="skeleton-heart"></span>
     {% if cover|default(false) %}
       <span class="skeleton skeleton-cover me-2"></span>
@@ -19,6 +22,9 @@
     <div class="d-flex flex-column flex-grow-1 truncate">
       <span class="skeleton skeleton-line"></span>
       {% if subtitle|default(true) %}
+        <span class="skeleton skeleton-line short"></span>
+      {% endif %}
+      {% if meta|default(false) %}
         <span class="skeleton skeleton-line short"></span>
       {% endif %}
     </div>

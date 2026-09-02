@@ -10,6 +10,21 @@ use Echo\Framework\Routing\Route\Get;
 #[Group(middleware: ["client"])]
 class SearchController extends Controller
 {
+    /**
+     * The "More" feeds, labelled the way their home rail is. Label, icon and
+     * colour are duplicated from templates/home/index.html.twig on purpose —
+     * the rail headers are static markup in the shell, so there's nothing to
+     * read them from. Change a rail heading, change it here too.
+     */
+    private const FEEDS = [
+        "recently-played"  => ["label" => "Recently Played", "icon" => "bi-clock",           "color" => "text-secondary", "note" => "Last 7 days"],
+        "top-played"       => ["label" => "Top Played",      "icon" => "bi-star-fill",       "color" => "text-warning"],
+        "recently-added"   => ["label" => "Recently Added",  "icon" => "bi-plus-lg",         "color" => ""],
+        "recently-liked"   => ["label" => "Recently Liked",  "icon" => "bi-heart-fill",      "color" => "text-danger"],
+        "top-played-month" => ["label" => "Top This Month",  "icon" => "bi-graph-up-arrow",  "color" => "text-success",   "note" => "Last 30 days"],
+        "rediscover"       => ["label" => "Rediscover",      "icon" => "bi-gem",             "color" => "text-info",      "note" => "Not played in 30 days"],
+    ];
+
     public function __construct(
         private SearchService $search,
         private MusicService $music,
@@ -44,7 +59,7 @@ class SearchController extends Controller
      */
     private function view(): string
     {
-        $this->hxTrigger("loadTop, searchResults, searchActions");
+        $this->hxTrigger("loadTop, searchResults, searchHero");
 
         return $this->render("search/index.html.twig", [
             "search" => $this->search->getSearch(),
@@ -68,7 +83,7 @@ class SearchController extends Controller
             default            => [],
         };
 
-        $this->search->setSearchResults($tracks);
+        $this->search->setSearchResults($tracks, self::FEEDS[$feed] ?? null);
 
         return $this->view();
     }
@@ -77,7 +92,10 @@ class SearchController extends Controller
     public function genre(): string
     {
         $genre = request()->get->get("genre");
-        $this->search->setSearchResults($genre ? $this->music->tracksByGenre($genre) : []);
+        $this->search->setSearchResults(
+            $genre ? $this->music->tracksByGenre($genre) : [],
+            $genre ? ["label" => $genre, "icon" => "bi-tags", "color" => "text-info"] : null,
+        );
 
         return $this->view();
     }
@@ -86,7 +104,10 @@ class SearchController extends Controller
     public function decade(): string
     {
         $decade = (int) request()->get->get("decade");
-        $this->search->setSearchResults($decade ? $this->music->tracksByDecade($decade) : []);
+        $this->search->setSearchResults(
+            $decade ? $this->music->tracksByDecade($decade) : [],
+            $decade ? ["label" => $decade . "s", "icon" => "bi-calendar3", "color" => "text-info"] : null,
+        );
 
         return $this->view();
     }
@@ -109,10 +130,16 @@ class SearchController extends Controller
         ]);
     }
 
-    #[Get("/search/actions", "search.actions")]
-    public function actions(): string
+    /**
+     * The whole hero — title, result count and the action buttons. It's one
+     * fragment rather than just the buttons because the title is derived from
+     * the same session state: clearing a feed has to drop the "Rediscover"
+     * heading in the same swap that drops its rows.
+     */
+    #[Get("/search/hero", "search.hero")]
+    public function hero(): string
     {
-        return $this->render("search/actions.html.twig", [
+        return $this->render("search/hero.html.twig", [
             "search" => $this->search->getSearch(),
         ]);
     }
@@ -130,6 +157,6 @@ class SearchController extends Controller
     public function clear()
     {
         $this->search->clearSearch();
-        $this->hxTrigger("loadTop, searchResults, searchActions");
+        $this->hxTrigger("loadTop, searchResults, searchHero");
     }
 }

@@ -1,0 +1,36 @@
+{# The third line of a track row: the same context a home rail card puts on its
+   cover badge and in its ⋯ menu, which the flat "More" list otherwise drops.
+
+   Driven by which keys the feed actually selected, not by a feed name —
+   mapTrackRow() adds plays/ago/liked_ago/added_ago conditionally, so one
+   partial covers every feed and renders nothing for the ones (search, genre,
+   decade) that carry no history at all. #}
+{% set plays = track.plays|default(null) %}
+{% set parts = [] %}
+
+{% if plays is not null %}
+  {% set parts = parts|merge([{ icon: 'bi-play-fill', text: plays ~ ' play' ~ (plays == 1 ? '' : 's') }]) %}
+{% endif %}
+{% if track.ago|default(null) %}
+  {# "last played" only reads right next to a play count; on its own the fact
+     is the play itself. #}
+  {% set parts = parts|merge([{ icon: 'bi-clock-history', text: (plays is not null ? 'last played ' : 'played ') ~ track.ago }]) %}
+{% endif %}
+{% if track.liked_ago|default(null) %}
+  {% set parts = parts|merge([{ icon: 'bi-heart-fill', text: 'liked ' ~ track.liked_ago }]) %}
+{% endif %}
+{% if track.added_ago|default(null) %}
+  {% set parts = parts|merge([{ icon: 'bi-plus-lg', text: 'added ' ~ track.added_ago }]) %}
+{% endif %}
+{% if track.client|default(null) %}
+  {% set parts = parts|merge([{ icon: 'bi-person-circle', text: track.client }]) %}
+{% endif %}
+
+{% if parts %}
+  <span class="track-meta small truncate">
+    {%- for part in parts -%}
+      {%- if not loop.first %}<span class="sep">&middot;</span>{% endif -%}
+      <i class="bi {{ part.icon }} pe-1"></i>{{ part.text }}
+    {%- endfor -%}
+  </span>
+{% endif %}

@@ -745,8 +745,12 @@ class MusicService
 
     public function recentlyAddedTracks(int $albumCount = 50): array
     {
+        // created_at is selected purely so the row carries added_ago into the
+        // "More" view, which is a track list where the home rail is albums —
+        // without it the one fact that ordered the feed isn't on the row.
         $rows = db()->fetchAll(
-            "SELECT " . self::TRACK_COLUMNS . ", " . self::LIKED_COLUMN . "
+            "SELECT " . self::TRACK_COLUMNS . ",
+                    t.created_at AS added_at, " . self::LIKED_COLUMN . "
              FROM tracks t " . self::TRACK_JOINS . "
              ORDER BY t.id DESC
              LIMIT ?",

@@ -41,6 +41,32 @@ function paintQueueSkeleton() {
   tracks.innerHTML = tpl.innerHTML;
 }
 
+// Scroll-to-current for a queue that was just replaced. The rows and the
+// now-playing header are two separate fetches off the same HX-Trigger and
+// now-playing all but always wins, so updateActiveTrack()'s focus() — the only
+// thing that ever scrolled the queue — landed on the skeleton and the real
+// rows arrived sitting at the top. Arm on the replacement, consume once the
+// rows themselves have settled.
+//
+// Deliberately not armed for every queue swap: "add to queue" and "remove from
+// queue" re-render the rows too, and yanking the list back to the playing
+// track while you are reading further down it is worse than not scrolling.
+var queueScrollPending = false;
+
+function armQueueScroll() {
+  queueScrollPending = true;
+}
+
+// Called by the rows' own hx-on::after-settle, so the rows are in the DOM by
+// definition and their active class came from the server — no dependence on
+// which of the two fetches came back first.
+function scrollQueueToActive() {
+  if (!queueScrollPending) return;
+  queueScrollPending = false;
+  var row = document.querySelector("#playlist .tracks .track.active");
+  if (row) row.scrollIntoView({ block: "center", inline: "nearest" });
+}
+
 function hidePlaylist() {
   var playlist = document.getElementById("playlist");
   var view = document.getElementById("view");

@@ -4,9 +4,12 @@
 
 {% block view %}
 <section id="search" class="h-100 d-flex flex-column">
-  <div class="hero d-flex flex-column justify-content-center p-3">
-    <h1 class="title"><i class="bi bi-search pe-1"></i> Search</h1>
-    <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2" hx-get="{{ uri("search.actions") }}" hx-trigger="load, searchActions from:body"></div>
+  {# Rendered inline rather than fetched on load: this template only ever
+     renders as a whole page, so the state is already here, and on a feed link
+     the heading is the point of the page — fetching it flashes a bare hero
+     first. The hx-get is only for the in-place refresh after a clear. #}
+  <div class="hero d-flex flex-column justify-content-center p-3" hx-get="{{ uri("search.hero") }}" hx-trigger="searchHero from:body">
+    {% include 'search/hero.html.twig' %}
   </div>
   <div class="tracks scrollable" hx-get="{{ uri('search.results') }}" hx-trigger="load, searchResults from:body">
     {# Only the track-result path is slow enough to need a placeholder, and only
@@ -14,7 +17,7 @@
        so key off the rows themselves; with nothing to render the load resolves
        to the browse grid and we leave it empty rather than flash mismatched
        track-row skeletons. #}
-    {% if search.term|default('') or search.tracks|default([]) %}{% include 'components/skeleton-rows.html.twig' with { cover: true } %}{% endif %}
+    {% if search.term|default('') or search.tracks|default([]) %}{% include 'components/skeleton-rows.html.twig' with { cover: true, meta: search.context|default(null) is not null } %}{% endif %}
   </div>
 </section>
 {% endblock %}
