@@ -32,6 +32,10 @@ document.addEventListener('queueReplaced', () => {
   // The rows arrive on their own playlistQueue fetch, which is slow for a big
   // queue — until then the pane still shows the queue that was just replaced.
   if (typeof paintQueueSkeleton === 'function') paintQueueSkeleton();
+  // Those rows land after now-playing has already had its go at scrolling the
+  // queue, so the scroll has to wait for them. scrollQueueToActive() picks
+  // this up on the rows' own after-settle.
+  if (typeof armQueueScroll === 'function') armQueueScroll();
 });
 
 // The top bar re-renders on loadTop from static markup that can't know whether

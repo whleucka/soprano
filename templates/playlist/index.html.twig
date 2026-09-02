@@ -1,5 +1,5 @@
 {% block head_js %}
-<script src="/js/playlist.js?v=20260831c"></script>
+<script src="/js/playlist.js?v=20260902a"></script>
 {% endblock %}
 
 {# Re-paintable copy of the queue skeleton. The inline one below is consumed by
@@ -10,5 +10,5 @@
 <div class="d-flex flex-column align-content-start h-100" style="min-height: 0;">
   <div id="now-playing" class="d-flex flex-column p-2" hx-get="{{ uri('playlist.now-playing') }}" hx-trigger="load, nowPlaying from:body"></div>
   <div class="actions d-flex flex-nowrap align-items-center gap-2 px-3" hx-get="{{ uri('playlist.actions') }}" hx-trigger="load, playlistActions from:body"></div>
-  <div class="tracks scrollable mt-2" hx-get="{{ uri('playlist.queue') }}" hx-trigger="load, playlistQueue from:body">{% include 'components/skeleton-rows.html.twig' with { cover: true } %}</div>
+  <div class="tracks scrollable mt-2" hx-get="{{ uri('playlist.queue') }}" hx-trigger="load, playlistQueue from:body" hx-on::after-settle="scrollQueueToActive()">{% include 'components/skeleton-rows.html.twig' with { cover: true } %}</div>
 </div>
