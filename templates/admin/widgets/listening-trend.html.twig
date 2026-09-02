@@ -1,0 +1,9 @@
+{% embed 'admin/widgets/card.html.twig' %}
+  {% block body %}
+    {% if data.empty %}
+      <p class="dash-empty">Nothing played in this window</p>
+    {% else %}
+      {% include 'admin/widgets/_chart.html.twig' with {chart: data.chart, height: 300} only %}
+    {% endif %}
+  {% endblock %}
+{% endembed %}

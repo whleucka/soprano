@@ -1,0 +1,5 @@
+{% embed 'admin/widgets/card.html.twig' %}
+  {% block body %}
+    {% include 'admin/widgets/_chart.html.twig' with {chart: data.chart, height: 220} only %}
+  {% endblock %}
+{% endembed %}

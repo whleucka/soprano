@@ -14,17 +14,54 @@ abstract class Widget
     protected int $priority = 100; // Lower = higher priority (displayed first)
 
     /**
+     * Which band of the dashboard this widget belongs to. The dashboard renders
+     * groups in its own order rather than one flat priority-sorted list, so a
+     * new widget lands in the right band without renumbering everything else's
+     * priority to squeeze it in.
+     */
+    protected string $group = 'ops';
+
+    /**
+     * Whether getData() reads $this->range. Ranged widgets re-render when the
+     * page's range selector changes and cache per range; unranged ones are
+     * rendered once and left alone.
+     */
+    protected bool $ranged = false;
+
+    protected ?WidgetRange $range = null;
+
+    /**
      * Get the widget data
      */
     abstract public function getData(): array;
+
+    /**
+     * Bind a time window to this widget.
+     *
+     * Widgets are registry singletons, so this mutates rather than clones —
+     * a request renders each widget at most once, and cloning would defeat the
+     * per-instance memoisation the analytics services rely on.
+     */
+    public function withRange(?WidgetRange $range): static
+    {
+        $this->range = $range;
+        return $this;
+    }
 
     /**
      * Render the widget
      */
     public function render(): string
     {
+        // Ranged widgets cache per window. Without the suffix a "24 hours"
+        // request happily serves the cached "7 days" HTML, which looks like a
+        // broken range selector rather than a caching bug.
+        $cacheKey = 'widget_' . $this->id;
+        if ($this->ranged && $this->range) {
+            $cacheKey .= '_' . $this->range->rangeKey();
+        }
+
         if ($this->cacheTtl > 0) {
-            $cacheKey = 'widget_' . $this->id;
             $cached = $this->getCache($cacheKey);
             if ($cached !== null) {
                 return $cached;
@@ -40,6 +77,12 @@ abstract class Widget
                 'icon' => $this->icon,
                 'width' => $this->width,
                 'refresh_interval' => $this->refreshInterval,
+                'group' => $this->group,
+                'ranged' => $this->ranged,
+                'range' => $this->range ? [
+                    'key' => $this->range->rangeKey(),
+                    'label' => $this->range->rangeLabel(),
+                ] : null,
             ],
             'data' => $data,
         ]);
@@ -97,6 +140,22 @@ abstract class Widget
     public function getPriority(): int
     {
         return $this->priority;
+    }
+
+    /**
+     * Get the dashboard band this widget belongs to
+     */
+    public function getGroup(): string
+    {
+        return $this->group;
+    }
+
+    /**
+     * Whether this widget's data depends on the selected time range
+     */
+    public function isRanged(): bool
+    {
+        return $this->ranged;
     }
 
     /**

@@ -1,0 +1,39 @@
+{#
+  Plays by weekday and hour. Replaces the framework's request heatmap, which lit
+  up whenever a phone woke up and polled an endpoint — this only lights up when
+  something actually played.
+
+  Intensity is a CSS custom property rather than an inline colour so both
+  themes can pick their own ramp from the same markup.
+#}
+{% embed 'admin/widgets/card.html.twig' %}
+  {% block actions %}
+    {% if data.peak %}<span class="dash-chip">peak {{ data.peak }}</span>{% endif %}
+  {% endblock %}
+  {% block body %}
+    {% if data.total == 0 %}
+      <p class="dash-empty">Nothing played in this window</p>
+    {% else %}
+      <div class="dash-clock">
+        <div class="dash-clock-hours">
+          {% for hour in 0..23 %}
+            <span>{{ hour % 6 == 0 ? '%02d'|format(hour) : '' }}</span>
+          {% endfor %}
+        </div>
+        {% for index, day in data.days %}
+        <div class="dash-clock-row">
+          <span class="dash-clock-day">{{ day }}</span>
+          <div class="dash-clock-cells">
+            {% for hour in 0..23 %}
+              {% set plays = data.matrix[index][hour] %}
+              <span class="dash-clock-cell"
+                style="--i: {{ data.max > 0 ? (plays / data.max)|round(3) : 0 }}"
+                title="{{ day }} {{ '%02d'|format(hour) }}:00 — {{ plays }} play{{ plays == 1 ? '' : 's' }}"></span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endblock %}
+{% endembed %}

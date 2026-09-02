@@ -2,27 +2,30 @@
 
 namespace App\Admin\Widgets;
 
-use App\Services\Admin\MusicStatsService;
-use Echo\Framework\Admin\Widget;
-
-class TopTracksWidget extends Widget
+/**
+ * Most-played tracks, with cover art and a completion rate.
+ *
+ * The play count on its own was misleading: a track at the top of the list
+ * with a 30% completion rate isn't a favourite, it's something that keeps
+ * getting dealt into mixes and skipped. Both numbers or neither.
+ */
+class TopTracksWidget extends AnalyticsWidget
 {
-    protected string $id = 'soprano-top-tracks';
-    protected string $title = 'Top Tracks';
+    protected string $id = 'top-tracks';
+    protected string $title = 'Top tracks';
     protected string $icon = 'music-note-list';
-    protected string $template = 'admin/widgets/top-tracks.html.twig';
-    protected int $width = 6;
-    protected int $refreshInterval = 120;
-    protected int $priority = 210;
-
-    public function __construct(private MusicStatsService $service)
-    {
-    }
+    protected string $template = 'admin/widgets/leaderboard.html.twig';
+    protected int $width = 4;
+    protected int $priority = 140;
 
     public function getData(): array
     {
         return [
-            'tracks' => $this->service->getTopTracks(5),
+            'rows' => $this->analytics->getTopTracks($this->range(), 8),
+            'link' => uri('tracks.admin.index'),
+            'link_label' => 'View all tracks',
+            'empty' => 'Nothing played in this window',
+            'round' => false,
         ];
     }
 }

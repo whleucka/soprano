@@ -1,0 +1,52 @@
+{% embed 'admin/widgets/card.html.twig' %}
+  {% block body_class %}p-0{% endblock %}
+  {% block body %}
+    {% import 'admin/widgets/_macros.html.twig' as ui %}
+    {% if data.listeners is empty %}
+      <p class="dash-empty">Nobody listened in this window</p>
+    {% else %}
+      <div class="dash-scroll">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Listener</th>
+              <th>Listening</th>
+              <th class="text-end">Plays</th>
+              <th>Through</th>
+              <th class="text-end">Last</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for listener in data.listeners %}
+            <tr>
+              <td class="dash-truncate">
+                <span class="dash-board-title">{{ listener.username }}</span>
+                {% if listener.top_artist %}
+                  <span class="dash-board-sub">{{ listener.top_artist }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="dash-meter-row">
+                  {# Bar is relative to the busiest listener, so the table
+                     ranks without needing a chart beside it. #}
+                  <span class="dash-meter">
+                    <span class="dash-meter-fill dash-meter-accent" style="width: {{ listener.share }}%"></span>
+                  </span>
+                  <span class="dash-meter-value">{{ listener.duration }}</span>
+                </div>
+              </td>
+              <td class="text-end">{{ listener.plays|number_format }}</td>
+              <td>{{ ui.meter(listener.completion, listener.tone) }}</td>
+              <td class="text-end dash-dim">{{ listener.ago }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  {% endblock %}
+  {% block footer %}
+    {% import 'admin/widgets/_macros.html.twig' as ui %}
+    {{ ui.module_link(uri('clients.admin.index'), 'View all clients') }}
+  {% endblock %}
+{% endembed %}

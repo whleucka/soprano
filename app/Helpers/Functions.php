@@ -322,6 +322,33 @@ function format_bytes(int $bytes, int $precision = 2): string
 }
 
 /**
+ * Format a millisecond duration as listening time ("3d 4h", "41h 12m", "12m").
+ *
+ * Two units at most, largest first, and never seconds above a minute —
+ * "41h 12m 07s" of aggregate listening reads as precision nobody asked for.
+ */
+function format_duration(int $ms): string
+{
+    $seconds = intdiv(max(0, $ms), 1000);
+
+    if ($seconds < 60) {
+        return $seconds . 's';
+    }
+
+    $days = intdiv($seconds, 86400);
+    $hours = intdiv($seconds % 86400, 3600);
+    $minutes = intdiv($seconds % 3600, 60);
+
+    if ($days > 0) {
+        return $hours > 0 ? "{$days}d {$hours}h" : "{$days}d";
+    }
+    if ($hours > 0) {
+        return $minutes > 0 ? "{$hours}h {$minutes}m" : "{$hours}h";
+    }
+    return "{$minutes}m";
+}
+
+/**
  * Get application config
  */
 function config(string $name): mixed

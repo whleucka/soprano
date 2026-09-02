@@ -2,27 +2,24 @@
 
 namespace App\Admin\Widgets;
 
-use App\Services\Admin\MusicStatsService;
-use Echo\Framework\Admin\Widget;
-
-class TopArtistsWidget extends Widget
+class TopArtistsWidget extends AnalyticsWidget
 {
-    protected string $id = 'soprano-top-artists';
-    protected string $title = 'Top Artists';
+    protected string $id = 'top-artists';
+    protected string $title = 'Top artists';
     protected string $icon = 'person-lines-fill';
-    protected string $template = 'admin/widgets/top-artists.html.twig';
-    protected int $width = 6;
-    protected int $refreshInterval = 120;
-    protected int $priority = 220;
-
-    public function __construct(private MusicStatsService $service)
-    {
-    }
+    protected string $template = 'admin/widgets/leaderboard.html.twig';
+    protected int $width = 4;
+    protected int $priority = 150;
 
     public function getData(): array
     {
         return [
-            'artists' => $this->service->getTopArtists(5),
+            'rows' => $this->analytics->getTopArtists($this->range(), 8),
+            'link' => uri('artists.admin.index'),
+            'link_label' => 'View all artists',
+            'empty' => 'Nothing played in this window',
+            // Artist images are portraits, not sleeves — circles read better.
+            'round' => true,
         ];
     }
 }

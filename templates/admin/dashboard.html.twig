@@ -1,29 +1,13 @@
+{#
+  The dashboard shell.
+
+  The body renders server-side on first paint rather than being pulled in with
+  hx-trigger="load". The range selector has to come back from the server with
+  the right button marked active, so it lives inside the swapped region — and
+  lazy-loading a region that contains the control you just clicked means the
+  selector disappears and reappears on every change.
+#}
 <div id="dashboard">
   {% include "components/flash.html.twig" %}
-
-  <div id="widgets" hx-get="{{ uri('dashboard.widgets.all') }}" hx-trigger="load">
-  </div>
-
-  <div id="charts">
-    <div class="row">
-      <div class="col-12 mb-3" hx-get="{{ uri('dashboard.status.chart') }}" hx-trigger="load">
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-12 mb-3" hx-get="{{ uri('dashboard.requests.today.chart') }}" hx-trigger="load">
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-12 mb-3" hx-get="{{ uri('dashboard.requests.week.chart') }}" hx-trigger="load">
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-12 mb-3" hx-get="{{ uri('dashboard.requests.month.chart') }}" hx-trigger="load">
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-12 mb-3" hx-get="{{ uri('dashboard.requests.ytd.chart') }}" hx-trigger="load">
-      </div>
-    </div>
-  </div>
+  {% include "admin/dashboard-body.html.twig" %}
 </div>

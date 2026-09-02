@@ -1,0 +1,22 @@
+{#
+  The headline strip. Not a card — bare tiles, so it deliberately skips the
+  shared card shell. It spans the row on its own and carries no refresh button:
+  the range selector above it re-renders the whole band.
+#}
+{% import 'admin/widgets/_macros.html.twig' as ui %}
+<div class="col-12" id="widget-{{ widget.id }}">
+  <div class="dash-kpis">
+    {% for kpi in data.kpis %}
+    <div class="dash-kpi dash-kpi-{{ kpi.tone }}">
+      <div class="dash-kpi-head">
+        <i class="bi bi-{{ kpi.icon }}"></i>
+        <span class="dash-kpi-label">{{ kpi.label }}</span>
+        {{ ui.delta(kpi.delta) }}
+      </div>
+      <div class="dash-kpi-value">{{ kpi.value }}</div>
+      {{ ui.spark(kpi.spark, kpi.tone) }}
+      {% if kpi.note %}<div class="dash-kpi-note">{{ kpi.note }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>

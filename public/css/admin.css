@@ -1,4 +1,41 @@
 /**
+ * Dashboard palette
+ *
+ * The dashboard is the only part of the admin that has to look deliberate in
+ * both themes at once — charts, meters, sparklines and tone-coded cells all
+ * need the same colour to mean the same thing. Every one of them reads these
+ * tokens, and admin-dark.css redefines nothing but the values below, so a
+ * theme change is one edit instead of a hunt through six components.
+ *
+ * admin.js reads the same custom properties off documentElement to colour the
+ * Chart.js canvases — that's why the chart colours are here and not in PHP,
+ * where CSS could never have reached them.
+ */
+:root {
+  --dash-surface: #ffffff;
+  --dash-surface-2: #f6f8fa;
+  --dash-border: rgba(15, 23, 42, 0.10);
+  --dash-text: #1e293b;
+  --dash-muted: #64748b;
+  --dash-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+
+  /* Tones. Semantic, not decorative: accent is listening, info is requests,
+     success/warning/danger are thresholds, primary is people. */
+  --dash-accent: #0d6e6e;
+  --dash-info: #2563eb;
+  --dash-success: #16a34a;
+  --dash-warning: #d97706;
+  --dash-danger: #dc2626;
+  --dash-primary: #7c3aed;
+
+  /* Chart chrome */
+  --dash-grid: rgba(15, 23, 42, 0.07);
+  --dash-tick: #64748b;
+  --dash-tooltip-bg: #1e293b;
+  --dash-tooltip-fg: #f8fafc;
+}
+
+/**
  * Structure
  */
 html,body {
@@ -240,42 +277,608 @@ nav#nav-sidebar header h4 {
 
 /**
 * Dashboard
+*
+* Everything here is themed through the tokens at the top of this file, so
+* admin-dark.css only has to redefine values — not repeat this whole section.
 */
-#dashboard .card {
-  border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-#dashboard .card-header {
-  background-color: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-#dashboard .card-footer {
-  background-color: #fff;
-}
-#dashboard #widgets {
+
+/* Tone vocabulary. Seven roles, resolved once into --tone, so each component
+   below reads var(--tone) instead of carrying its own colour table. */
+.dash-kpi-accent,  .spark-accent,  .dash-meter-accent,  .dash-ops-accent  { --tone: var(--dash-accent); }
+.dash-kpi-info,    .spark-info,    .dash-meter-info,    .dash-ops-info    { --tone: var(--dash-info); }
+.dash-kpi-success, .spark-success, .dash-meter-success, .dash-ops-success { --tone: var(--dash-success); }
+.dash-kpi-warning, .spark-warning, .dash-meter-warning, .dash-ops-warning { --tone: var(--dash-warning); }
+.dash-kpi-danger,  .spark-danger,  .dash-meter-danger,  .dash-ops-danger  { --tone: var(--dash-danger); }
+.dash-kpi-primary, .spark-primary, .dash-meter-primary, .dash-ops-primary { --tone: var(--dash-primary); }
+.dash-kpi-muted,   .spark-muted,   .dash-meter-muted,   .dash-ops-muted   { --tone: var(--dash-muted); }
+
+/* Range selector */
+#dashboard .dash-toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
-#dashboard #widgets > div {
-  margin-bottom: 0 !important; /* Override mb-4 since gap handles spacing */
+#dashboard .dash-range {
+  display: inline-flex;
+  padding: 0.2rem;
+  border-radius: 0.6rem;
+  background-color: var(--dash-surface-2);
+  border: 1px solid var(--dash-border);
 }
-#dashboard #widgets > div.col-lg-6 {
-  flex: 1 1 calc(50% - 0.5rem);
-  min-width: 300px;
+#dashboard .dash-range-btn {
+  padding: 0.3rem 0.85rem;
+  border-radius: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dash-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
-@media (min-width: 1200px) {
-  #dashboard #widgets > div.col-lg-6 {
-    flex: 1 1 calc(33.333% - 0.667rem);
-  }
+#dashboard .dash-range-btn:hover {
+  color: var(--dash-text);
 }
-#dashboard #widgets > div.col-lg-12,
-#dashboard #widgets > div.col-12:not(.col-lg-6) {
-  flex: 1 1 100%;
+#dashboard .dash-range-btn.active {
+  background-color: var(--dash-surface);
+  color: var(--dash-accent);
+  box-shadow: var(--dash-shadow);
 }
-#dashboard #charts {
-  margin-top: 1rem;
+#dashboard .dash-range-note {
+  font-size: 0.78rem;
+  color: var(--dash-muted);
 }
+
+/* Bands */
+#dashboard .dash-band {
+  margin-bottom: 1.25rem;
+}
+#dashboard .dash-band-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  margin: 0 0 0.6rem;
+}
+
+/* KPI strip. Auto-fit rather than fixed columns: six tiles wrap to 3x2 then
+   2x3 without a media query per breakpoint. */
+#dashboard .dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+#dashboard .dash-kpi {
+  --tone: var(--dash-accent);
+  position: relative;
+  padding: 0.85rem 0.95rem 0.7rem;
+  border-radius: 0.7rem;
+  background-color: var(--dash-surface);
+  border: 1px solid var(--dash-border);
+  box-shadow: var(--dash-shadow);
+  overflow: hidden;
+}
+/* Tone shows as a left edge, not a tinted background — six saturated tiles in
+   a row is a toybox. */
+#dashboard .dash-kpi::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background-color: var(--tone);
+}
+#dashboard .dash-kpi-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--dash-muted);
+}
+#dashboard .dash-kpi-head > .bi {
+  color: var(--tone);
+}
+#dashboard .dash-kpi-label {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#dashboard .dash-kpi-head .dash-delta {
+  margin-left: auto;
+}
+#dashboard .dash-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--dash-text);
+  font-variant-numeric: tabular-nums;
+}
+#dashboard .dash-kpi-note {
+  font-size: 0.72rem;
+  color: var(--dash-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sparkline */
+#dashboard .spark {
+  --tone: var(--dash-accent);
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 26px;
+  margin: 0.3rem 0;
+}
+#dashboard .spark i {
+  flex: 1 1 0;
+  min-width: 1px;
+  border-radius: 1px;
+  background-color: var(--tone);
+  opacity: 0.55;
+}
+#dashboard .spark i:last-child {
+  opacity: 1;
+}
+
+/* Delta pill */
+#dashboard .dash-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#dashboard .dash-delta-up { color: var(--dash-success); }
+#dashboard .dash-delta-down { color: var(--dash-danger); }
+#dashboard .dash-delta-flat { color: var(--dash-muted); }
+
+/* Card shell */
+/* Bootstrap columns default to min-width: auto, which lets a wide table or one
+   long unbroken title push a column past its share of the row. */
+#dashboard .dash-cell {
+  min-width: 0;
+}
+#dashboard .dash-card {
+  border: 1px solid var(--dash-border);
+  border-radius: 0.7rem;
+  background-color: var(--dash-surface);
+  box-shadow: var(--dash-shadow);
+  overflow: hidden;
+}
+#dashboard .dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background-color: var(--dash-surface);
+  border-bottom: 1px solid var(--dash-border);
+}
+#dashboard .dash-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--dash-text);
+}
+#dashboard .dash-card-title .bi {
+  color: var(--dash-accent);
+}
+#dashboard .dash-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+#dashboard .dash-icon-btn {
+  border: 0;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--dash-muted);
+  line-height: 1;
+}
+#dashboard .dash-icon-btn:hover {
+  background-color: var(--dash-surface-2);
+  color: var(--dash-text);
+}
+/* htmx sets .htmx-request on the indicator target while a swap is in flight. */
+#dashboard .htmx-request .dash-card,
+#dashboard.htmx-request .dash-card {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+#dashboard .dash-card-footer {
+  padding: 0.45rem 0.85rem;
+  background-color: var(--dash-surface);
+  border-top: 1px solid var(--dash-border);
+}
+#dashboard .dash-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--dash-muted);
+  text-decoration: none;
+}
+#dashboard .dash-footer-link:hover {
+  color: var(--dash-accent);
+}
+#dashboard .dash-chip {
+  padding: 0.1rem 0.45rem;
+  border-radius: 1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--dash-muted);
+  background-color: var(--dash-surface-2);
+  border: 1px solid var(--dash-border);
+  white-space: nowrap;
+}
+#dashboard .dash-empty {
+  margin: 0;
+  padding: 2rem 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--dash-muted);
+}
+#dashboard .dash-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+  font-size: 0.76rem;
+  color: var(--dash-muted);
+}
+#dashboard .dash-facts strong {
+  color: var(--dash-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Charts */
+#dashboard .dash-chart {
+  position: relative;
+  width: 100%;
+}
+#dashboard .dash-chart canvas {
+  max-width: 100%;
+}
+
+/* Horizontal bar list */
+#dashboard .dash-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+#dashboard .dash-bar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+#dashboard .dash-bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--dash-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#dashboard .dash-bar-label .bi {
+  color: var(--dash-accent);
+  flex-shrink: 0;
+}
+#dashboard .dash-bar-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-text);
+}
+#dashboard .dash-bar-track {
+  display: block;
+  height: 6px;
+  margin: 0.25rem 0 0.15rem;
+  border-radius: 3px;
+  background-color: var(--dash-surface-2);
+  overflow: hidden;
+}
+#dashboard .dash-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background-color: var(--dash-accent);
+}
+#dashboard .dash-bar-note {
+  font-size: 0.72rem;
+  color: var(--dash-muted);
+}
+
+/* Tables */
+#dashboard .dash-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+#dashboard .dash-table {
+  width: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+#dashboard .dash-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  background-color: var(--dash-surface-2);
+  border-bottom: 1px solid var(--dash-border);
+  white-space: nowrap;
+}
+#dashboard .dash-table td {
+  padding: 0.45rem 0.85rem;
+  color: var(--dash-text);
+  border-bottom: 1px solid var(--dash-border);
+  vertical-align: middle;
+}
+#dashboard .dash-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+#dashboard .dash-table tbody tr:hover td {
+  background-color: var(--dash-surface-2);
+}
+#dashboard .dash-truncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#dashboard .dash-dim {
+  color: var(--dash-muted);
+  white-space: nowrap;
+}
+#dashboard .dash-row-icon {
+  margin-right: 0.4rem;
+  color: var(--dash-accent);
+}
+
+/* Completion meter */
+#dashboard .dash-meter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+#dashboard .dash-meter {
+  --tone: var(--dash-muted);
+  display: block;
+  flex: 1 1 auto;
+  min-width: 42px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--dash-surface-2);
+  overflow: hidden;
+}
+#dashboard .dash-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background-color: var(--tone);
+}
+#dashboard .dash-meter-value {
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted);
+  white-space: nowrap;
+}
+#dashboard .dash-meter-na {
+  color: var(--dash-muted);
+}
+
+/* Leaderboards */
+#dashboard .dash-board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#dashboard .dash-board-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.85rem;
+  border-bottom: 1px solid var(--dash-border);
+}
+#dashboard .dash-board-row:last-child {
+  border-bottom: 0;
+}
+#dashboard .dash-board-rank {
+  width: 1.1rem;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-muted);
+  text-align: right;
+}
+#dashboard .dash-board-art {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 0.3rem;
+  object-fit: cover;
+  background-color: var(--dash-surface-2);
+}
+#dashboard .dash-board-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+#dashboard .dash-board-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--dash-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#dashboard .dash-board-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--dash-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#dashboard .dash-board-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  width: 4.2rem;
+  flex-shrink: 0;
+}
+#dashboard .dash-board-plays {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--dash-text);
+}
+#dashboard .dash-board-stats .dash-meter {
+  width: 100%;
+  flex: 0 0 auto;
+  height: 4px;
+}
+
+/* Listening clock */
+#dashboard .dash-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#dashboard .dash-clock-hours {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  margin-left: 2.1rem;
+  font-size: 0.6rem;
+  color: var(--dash-muted);
+}
+#dashboard .dash-clock-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+#dashboard .dash-clock-day {
+  width: 1.75rem;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: var(--dash-muted);
+  text-align: right;
+}
+#dashboard .dash-clock-cells {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  flex: 1 1 auto;
+}
+#dashboard .dash-clock-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  /* Fallback for browsers without color-mix: the empty-cell colour, so the
+     grid still reads as a grid instead of vanishing. */
+  background-color: var(--dash-surface-2);
+  background-color: color-mix(in srgb, var(--dash-accent) calc(var(--i, 0) * 92% + 8%), var(--dash-surface-2));
+}
+
+/* Ops strip */
+#dashboard .dash-ops {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+#dashboard .dash-ops-cell {
+  --tone: var(--dash-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.6rem;
+  background-color: var(--dash-surface);
+  border: 1px solid var(--dash-border);
+  color: var(--dash-text);
+  text-decoration: none;
+}
+#dashboard a.dash-ops-cell:hover {
+  border-color: var(--tone);
+  background-color: var(--dash-surface-2);
+}
+#dashboard .dash-ops-cell > .bi {
+  font-size: 1.1rem;
+  color: var(--tone);
+  flex-shrink: 0;
+}
+#dashboard .dash-ops-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+#dashboard .dash-ops-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+#dashboard .dash-ops-label {
+  font-size: 0.7rem;
+  color: var(--dash-muted);
+}
+#dashboard .dash-ops-note {
+  font-size: 0.66rem;
+  color: var(--dash-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* World map */
+#dashboard .dash-map {
+  width: 100%;
+  height: 240px;
+}
+#dashboard .dash-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+}
+#dashboard .dash-flag {
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--dash-muted);
+  background-color: var(--dash-surface-2);
+  border: 1px solid var(--dash-border);
+  white-space: nowrap;
+}
+#dashboard .dash-flag strong {
+  color: var(--dash-text);
+  font-variant-numeric: tabular-nums;
+}
+
 #dashboard #widget-activity-heatmap .table {
   table-layout: fixed;
   width: 100%;
@@ -550,6 +1153,21 @@ nav#nav-sidebar header h4 {
   #pagination .page-link {
     font-size: 0.8em;
     padding: 8px;
+  }
+  /* The clock is 24 columns wide no matter the viewport, so at phone widths it
+     scrolls rather than squeezing each hour down to a hairline. */
+  #dashboard .dash-clock {
+    overflow-x: auto;
+  }
+  #dashboard .dash-clock-cells {
+    min-width: 340px;
+  }
+  #dashboard .dash-clock-hours {
+    min-width: 340px;
+  }
+  #dashboard .dash-range {
+    width: 100%;
+    overflow-x: auto;
   }
 }
 

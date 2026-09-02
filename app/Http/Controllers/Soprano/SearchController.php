@@ -121,7 +121,8 @@ class SearchController extends Controller
     public function top(): string
     {
         return $this->render("search/top.html.twig", [
-            "search" => $this->search->getSearch()
+            "search" => $this->search->getSearch(),
+            "client" => client(),
         ]);
     }
 

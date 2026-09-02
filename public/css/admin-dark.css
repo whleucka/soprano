@@ -21,6 +21,37 @@
  */
 
 /**
+ * Dashboard palette
+ *
+ * Values only — every rule that consumes these lives in admin.css, including
+ * the ones admin.js reads to colour the charts. If a dashboard colour needs
+ * changing for dark mode, it changes here and nowhere else.
+ *
+ * The tones stay six distinct hues rather than six shades of the dark theme's
+ * indigo: accent and info share a chart legend, so they cannot be neighbours.
+ */
+[data-bs-theme="dark"] {
+  --dash-surface: #1e1e2e;
+  --dash-surface-2: #252536;
+  --dash-border: #313244;
+  --dash-text: #cdd6f4;
+  --dash-muted: #a6adc8;
+  --dash-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+
+  --dash-accent: #2dd4bf;
+  --dash-info: #60a5fa;
+  --dash-success: #4ade80;
+  --dash-warning: #fbbf24;
+  --dash-danger: #f87171;
+  --dash-primary: #c4b5fd;
+
+  --dash-grid: rgba(205, 214, 244, 0.08);
+  --dash-tick: #a6adc8;
+  --dash-tooltip-bg: #252536;
+  --dash-tooltip-fg: #cdd6f4;
+}
+
+/**
  * Structure
  */
 [data-bs-theme="dark"] body {

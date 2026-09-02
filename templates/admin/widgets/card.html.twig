@@ -1,0 +1,49 @@
+{#
+  The one dashboard card.
+
+  Every widget template used to open with the same twenty lines of column
+  wrapper, htmx refresh attributes, card header, icon, title and reload button
+  — fifteen copies of it, so fixing the header meant fifteen edits and the dark
+  theme had drifted in four of them. Embed this instead:
+
+    {% embed 'admin/widgets/card.html.twig' %}
+      {% block body %}...{% endblock %}
+    {% endembed %}
+
+  Blocks: body (required), footer, actions (extra controls left of the reload
+  button), body_class (e.g. `p-0` for a table that should reach the card edge).
+
+  Ranged widgets carry `?range=` on both refresh URLs. Without it a reload
+  silently drops back to the default window, which reads as the range selector
+  losing its selection.
+#}
+{% set widget_url = uri('dashboard.widgets.render', {id: widget.id}) ~ (widget.ranged and widget.range ? '?range=' ~ widget.range.key : '') %}
+<div class="col-12 col-lg-{{ widget.width }} dash-cell" id="widget-{{ widget.id }}"
+  {% if widget.refresh_interval > 0 %}
+  hx-get="{{ widget_url }}"
+  hx-trigger="every {{ widget.refresh_interval }}s"
+  hx-swap="outerHTML"
+  {% endif %}>
+  <div class="card dash-card h-100">
+    <div class="card-header dash-card-header">
+      <span class="dash-card-title">
+        {% if widget.icon %}<i class="bi bi-{{ widget.icon }}"></i>{% endif %}
+        {{ widget.title }}
+      </span>
+      <span class="dash-card-actions">
+        {% block actions %}{% endblock %}
+        <button type="button" class="dash-icon-btn" title="Refresh"
+          hx-get="{{ widget_url }}"
+          hx-swap="outerHTML"
+          hx-target="#widget-{{ widget.id }}"
+          hx-indicator="#widget-{{ widget.id }}">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </span>
+    </div>
+    <div class="card-body {% block body_class %}{% endblock %}">
+      {% block body %}{% endblock %}
+    </div>
+    {% block footer %}{% endblock %}
+  </div>
+</div>

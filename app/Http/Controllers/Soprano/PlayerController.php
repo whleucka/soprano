@@ -31,10 +31,6 @@ class PlayerController extends Controller
         // a finished track found still sitting there when the tab came back,
         // and a track that swapped in but never started.
         'advance-retry', 'advance-recovered', 'start-stalled',
-        // The gapless early handoff a hidden tab uses when crossfade is off:
-        // one armed, one whose next-track request never came back, and one
-        // whose hold outlived its (frozen) timer and had to be released.
-        'preadvance', 'preadvance-stalled', 'preadvance-released',
     ];
 
     /** Session key holding the last auto advance, for retry de-duplication. */

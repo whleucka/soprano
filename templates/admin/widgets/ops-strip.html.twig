@@ -1,0 +1,32 @@
+{#
+  Everything the old dashboard spent eight cards saying, in one row. Each cell
+  links to the module that owns the detail, so nothing is lost — it just stops
+  competing with the analytics for the top of the page.
+#}
+{% macro cell_body(cell) %}
+  <i class="bi bi-{{ cell.icon }}"></i>
+  <span class="dash-ops-body">
+    <span class="dash-ops-value">{{ cell.value }}</span>
+    <span class="dash-ops-label">{{ cell.label }}</span>
+    {% if cell.note %}<span class="dash-ops-note">{{ cell.note }}</span>{% endif %}
+  </span>
+{% endmacro %}
+{% import _self as ops %}
+<div class="col-12" id="widget-{{ widget.id }}"
+  {% if widget.refresh_interval > 0 %}
+  hx-get="{{ uri('dashboard.widgets.render', {id: widget.id}) }}{% if widget.range %}?range={{ widget.range.key }}{% endif %}"
+  hx-trigger="every {{ widget.refresh_interval }}s"
+  hx-swap="outerHTML"
+  {% endif %}>
+  <div class="dash-ops">
+    {% for cell in data.cells %}
+      {% if cell.link %}
+        <a class="dash-ops-cell dash-ops-{{ cell.tone }}" href="{{ cell.link }}"
+          hx-boost="true" hx-target="#module" hx-select="#module"
+          hx-swap="outerHTML" hx-push-url="true">{{ ops.cell_body(cell) }}</a>
+      {% else %}
+        <div class="dash-ops-cell dash-ops-{{ cell.tone }}">{{ ops.cell_body(cell) }}</div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>

@@ -100,13 +100,39 @@ class WidgetRegistry
     }
 
     /**
+     * Get the widgets in one dashboard band, priority-sorted
+     */
+    public static function group(string $group): array
+    {
+        return array_filter(self::all(), fn(Widget $w) => $w->getGroup() === $group);
+    }
+
+    /**
+     * Render one band. Every widget in the band is handed the range, including
+     * the unranged ones — Widget::render() ignores it unless $ranged is set,
+     * so callers don't have to sort the two kinds apart.
+     */
+    public static function renderGroup(string $group, ?WidgetRange $range = null): string
+    {
+        return self::renderList(self::group($group), $range);
+    }
+
+    /**
      * Render all widgets
      */
-    public static function renderAll(): string
+    public static function renderAll(?WidgetRange $range = null): string
+    {
+        return self::renderList(self::all(), $range);
+    }
+
+    /**
+     * @param array<string, Widget> $widgets
+     */
+    private static function renderList(array $widgets, ?WidgetRange $range): string
     {
         $html = '';
-        foreach (self::all() as $widget) {
-            $html .= $widget->render();
+        foreach ($widgets as $widget) {
+            $html .= $widget->withRange($range)->render();
         }
         return $html;
     }

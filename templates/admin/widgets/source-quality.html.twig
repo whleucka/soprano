@@ -1,0 +1,45 @@
+{#
+  Completion rate per individual station, playlist and artist radio — the
+  scoreboard for everything Soprano generates. Sources with fewer than ten
+  finalised plays are filtered out in the service: a 0% rate off two plays is
+  noise and would sort straight to the bottom of a rate-ordered table.
+#}
+{% embed 'admin/widgets/card.html.twig' %}
+  {% block body_class %}p-0{% endblock %}
+  {% block body %}
+    {% import 'admin/widgets/_macros.html.twig' as ui %}
+    {% if data.sources is empty %}
+      <p class="dash-empty">Not enough plays in this window to rate a source</p>
+    {% else %}
+      <div class="dash-scroll">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th class="text-end">Plays</th>
+              <th class="text-end">Skips</th>
+              <th style="width: 30%;">Listened through</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for source in data.sources %}
+            <tr>
+              <td class="dash-truncate">
+                <i class="bi bi-{{ source.icon }} dash-row-icon"></i>{{ source.label }}
+              </td>
+              <td class="text-end">{{ source.plays|number_format }}</td>
+              <td class="text-end dash-dim">{{ source.skipped|number_format }}</td>
+              <td>
+                <div class="dash-meter-row">
+                  {{ ui.meter(source.completion, source.tone) }}
+                  <span class="dash-meter-value">{{ source.completion }}%</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  {% endblock %}
+{% endembed %}

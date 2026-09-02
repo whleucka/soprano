@@ -1,0 +1,31 @@
+{#
+  Range selector plus the three bands. Swapped whole when the range changes:
+  one request instead of a fan-out, and the active button state comes from the
+  server rather than being patched up in JS afterwards.
+#}
+<div id="dashboard-body">
+  <div class="dash-toolbar">
+    <div class="dash-range" role="group" aria-label="Time range">
+      {% for key, label in range_options %}
+      <a class="dash-range-btn{{ key == range.key ? ' active' : '' }}"
+        href="{{ dashboard_url }}?range={{ key }}"
+        hx-get="{{ uri('dashboard.body') }}?range={{ key }}"
+        hx-target="#dashboard-body"
+        hx-swap="outerHTML"
+        hx-push-url="{{ dashboard_url }}?range={{ key }}"
+        hx-indicator="#dashboard-body">{{ label }}</a>
+      {% endfor %}
+    </div>
+    <span class="dash-range-note">
+      {% if range.since %}since {{ range.since|date('D j M, H:i') }}{% else %}all recorded history{% endif %}
+    </span>
+  </div>
+
+  <div class="row g-3 dash-band">{{ bands.kpi|raw }}</div>
+
+  <h2 class="dash-band-title">Listening</h2>
+  <div class="row g-3 dash-band">{{ bands.listening|raw }}</div>
+
+  <h2 class="dash-band-title">Operations</h2>
+  <div class="row g-3 dash-band">{{ bands.ops|raw }}</div>
+</div>

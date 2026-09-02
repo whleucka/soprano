@@ -1,0 +1,40 @@
+{#
+  One template for top tracks, artists and albums — the three differ only in
+  cover shape and where the footer link goes, which is data, not markup.
+
+  The play count travels with a completion meter on purpose: a row at the top
+  of the list with a 30% completion rate isn't a favourite, it's something that
+  keeps getting dealt into mixes and skipped. The old widget showed the count
+  alone and read as an endorsement.
+#}
+{% embed 'admin/widgets/card.html.twig' %}
+  {% block body_class %}p-0{% endblock %}
+  {% block body %}
+    {% import 'admin/widgets/_macros.html.twig' as ui %}
+    {% if data.rows is empty %}
+      <p class="dash-empty">{{ data.empty }}</p>
+    {% else %}
+      <ol class="dash-board">
+        {% for row in data.rows %}
+        <li class="dash-board-row">
+          <span class="dash-board-rank">{{ loop.index }}</span>
+          <img class="dash-board-art{{ data.round ? ' rounded-circle' : '' }}"
+            src="{{ row.cover }}" alt="" loading="lazy" width="40" height="40">
+          <span class="dash-board-text">
+            <span class="dash-board-title">{{ row.title }}</span>
+            <span class="dash-board-sub">{{ row.subtitle }}</span>
+          </span>
+          <span class="dash-board-stats">
+            <span class="dash-board-plays">{{ row.plays|number_format }}</span>
+            {{ ui.meter(row.completion, row.tone) }}
+          </span>
+        </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  {% endblock %}
+  {% block footer %}
+    {% import 'admin/widgets/_macros.html.twig' as ui %}
+    {{ ui.module_link(data.link, data.link_label) }}
+  {% endblock %}
+{% endembed %}

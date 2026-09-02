@@ -1,0 +1,15 @@
+{#
+  A chart canvas and nothing else.
+
+  The spec goes out as a data attribute and admin.js builds the Chart from it,
+  so colours are resolved from CSS custom properties at render time. The old
+  dashboard-chart template shipped a full Chart.js options object per chart from
+  PHP with `rgba(0, 0, 0, 0.05)` grid lines baked in, which is why dark mode
+  could never be fixed in the stylesheet: the wrong colour was in the JSON.
+
+  Datasets name a semantic `role` (accent, info, success, warning, danger,
+  muted); the client turns that into the theme's actual colour.
+#}
+<div class="dash-chart" style="height: {{ height|default(280) }}px">
+  <canvas data-chart="{{ chart|json_encode|e('html_attr') }}"></canvas>
+</div>

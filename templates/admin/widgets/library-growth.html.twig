@@ -1,0 +1,14 @@
+{% embed 'admin/widgets/card.html.twig' %}
+  {% block actions %}
+    <span class="dash-chip">+{{ data.added|number_format }} added</span>
+  {% endblock %}
+  {% block body %}
+    {% include 'admin/widgets/_chart.html.twig' with {chart: data.chart, height: 240} only %}
+    <div class="dash-facts">
+      <span><strong>{{ data.totals.tracks|number_format }}</strong> tracks</span>
+      <span><strong>{{ data.totals.albums|number_format }}</strong> albums</span>
+      <span><strong>{{ data.totals.artists|number_format }}</strong> artists</span>
+      <span><strong>{{ data.totals.duration }}</strong> of audio</span>
+    </div>
+  {% endblock %}
+{% endembed %}
