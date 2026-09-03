@@ -56,17 +56,28 @@ extends it. Two things about it are easy to get wrong:
 `public/sw.js`:
 
 ```js
-const CACHE_VERSION = '2026-08-19';   // ~line 11
+const CACHE_VERSION = '2026-09-03a';   // ~line 11
 ```
 
 Its `STATIC_PATH` regex is `/^\/(css|js|fonts|icons|images|covers)\//`, so it
 caches **every** asset regardless of which one you changed. Bump it for any
-asset edit. Note the different date format here: `2026-09-03`, not `20260903`.
+asset edit. Note the different date format here: dashed `YYYY-MM-DD`, not the
+compact `?v=` one.
 
-This is the one that gets missed, because it is not under `templates/` and the
-symptom is delayed: `stale-while-revalidate` means a user keeps being served
-the old file even after the query string changed. A diff that updates the CSS
-and the `?v=` still looks correct in review and still ships nothing.
+What the bump buys you depends on the asset, because `NETWORK_FIRST`
+(`/^\/(css|js)\//`, ~line 15) splits the fetch handler in two:
+
+- css and js are **network-first** — fetched from the network on every request,
+  with the cache used only as an offline fallback. For these, freshness rests on
+  the `?v=` / `?d=` query string and the browser's own HTTP cache; the service
+  worker is not what serves someone a stale stylesheet, so do not start looking
+  there.
+- fonts, icons, images and covers are **stale-while-revalidate** — served from
+  cache first, so `CACHE_VERSION` is what makes a changed one appear.
+
+Bumping it also renames the cache, which is how `activate` evicts the previous
+generation. It is still the step that gets missed, because it is not under
+`templates/`.
 
 ## Where this runs
 
