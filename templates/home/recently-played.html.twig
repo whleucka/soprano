@@ -28,6 +28,7 @@
     {% block extra %}
       <span title="{{ track.title }}" class="title truncate fw-bold mt-1">{{ track.title }}</span>
       <span title="{{ track.artist }}" class="artist small truncate"><i class="bi bi-person pe-1"></i> {{ track.artist }}</span>
+      <span title="{{ track.album }}" class="album small truncate"><i class="bi bi-disc pe-1"></i> {{ track.album }}</span>
     {% endblock %}
     {% endembed %}
   {% endfor %}
