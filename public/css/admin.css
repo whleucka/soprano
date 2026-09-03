@@ -548,6 +548,17 @@ nav#nav-sidebar header h4 {
   max-width: 100%;
 }
 
+/* Capped scroll region.
+
+   300px on purpose: it is the height of the charts in this band, so a widget
+   whose row count is unbounded (sources, listeners) stops driving the height
+   of the row it shares with a chart. */
+#dashboard .dash-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
 /* Horizontal bar list */
 #dashboard .dash-bars {
   list-style: none;
@@ -601,13 +612,13 @@ nav#nav-sidebar header h4 {
   font-size: 0.72rem;
   color: var(--dash-muted);
 }
+/* Tables reach the card edge (`p-0` body) and own their gutter; a bar list sits
+   inside the body padding, so it needs its own gap to the scrollbar. */
+#dashboard .dash-scroll > .dash-bars {
+  padding-right: 0.4rem;
+}
 
 /* Tables */
-#dashboard .dash-scroll {
-  max-height: 300px;
-  overflow-y: auto;
-  overflow-x: auto;
-}
 #dashboard .dash-table {
   width: 100%;
   margin: 0;

@@ -2,29 +2,35 @@
   Ranked bars, not a pie. Playback is nearly always two dominant sources plus a
   long tail, and a pie chart of that is a wedge of slivers with an unreadable
   legend.
+
+  The list is scroll-capped: this card sits beside `Listening over time` in the
+  same row, the number of source families is unbounded, and over a multi-day
+  window the tail alone was making the whole row taller than the chart.
 #}
 {% embed 'admin/widgets/card.html.twig' %}
   {% block body %}
     {% if data.sources is empty %}
       <p class="dash-empty">Nothing played in this window</p>
     {% else %}
-      <ul class="dash-bars">
-        {% for source in data.sources %}
-        <li>
-          <div class="dash-bar-head">
-            <span class="dash-bar-label"><i class="bi bi-{{ source.icon }}"></i>{{ source.label }}</span>
-            <span class="dash-bar-value">{{ source.share }}%</span>
-          </div>
-          <span class="dash-bar-track">
-            <span class="dash-bar-fill" style="width: {{ source.share }}%"></span>
-          </span>
-          <div class="dash-bar-note">
-            {{ source.plays|number_format }} plays · {{ source.duration }}
-            {%- if source.completion is not null %} · {{ source.completion }}% listened{% endif %}
-          </div>
-        </li>
-        {% endfor %}
-      </ul>
+      <div class="dash-scroll">
+        <ul class="dash-bars">
+          {% for source in data.sources %}
+          <li>
+            <div class="dash-bar-head">
+              <span class="dash-bar-label"><i class="bi bi-{{ source.icon }}"></i>{{ source.label }}</span>
+              <span class="dash-bar-value">{{ source.share }}%</span>
+            </div>
+            <span class="dash-bar-track">
+              <span class="dash-bar-fill" style="width: {{ source.share }}%"></span>
+            </span>
+            <div class="dash-bar-note">
+              {{ source.plays|number_format }} plays · {{ source.duration }}
+              {%- if source.completion is not null %} · {{ source.completion }}% listened{% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
     {% endif %}
   {% endblock %}
 {% endembed %}
