@@ -1838,6 +1838,13 @@ a.wrapped-callout:focus {
 
 .settings-card .form-check-label { font-weight: 600; }
 
+/* Build line at the foot of the profile page. */
+.profile-version {
+  margin: 2.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
 .settings-card .form-select,
 .danger-card .form-control {
   max-width: 320px;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
+use App\Services\AppVersionService;
 use App\Services\Auth\AuthService;
 use App\Services\Auth\Client\RememberTokenService;
 use App\Services\Soprano\ProfileService;
@@ -20,6 +21,7 @@ class ProfileController extends Controller
         private AuthService $auth,
         private RememberTokenService $remember,
         private WrappedService $wrapped,
+        private AppVersionService $version,
     ) {}
 
     #[Get("/profile", "profile.index")]
@@ -33,6 +35,8 @@ class ProfileController extends Controller
             // 15), matching the home page — the page stays reachable directly.
             "wrapped_season" => $this->wrapped->isSeason(),
             "wrapped_year"   => $this->wrapped->seasonYear(),
+            // The deployed git tag, not APP_VERSION -- see AppVersionService.
+            "version"        => $this->version->version(),
         ]);
     }
 
