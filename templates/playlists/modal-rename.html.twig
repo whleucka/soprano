@@ -1,0 +1,18 @@
+{% if renamed|default(false) %}{% include 'playlists/name.html.twig' with { name: name, oob: true } %}{% endif %}
+<div id="modal-rename">
+<div class="modal-header">
+  <h5 class="modal-title"><i class="bi bi-pencil pe-1"></i> Rename playlist</h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+  <form hx-post="{{ uri('playlists.rename', [hash]) }}" hx-target="#modal .modal-content" hx-swap="innerHTML">
+    {{ csrf()|raw }}
+    <div class="input-group">
+      <input type="text" name="name" value="{{ name }}" class="form-control {% if validationErrors.name is defined %}is-invalid{% endif %}"
+             placeholder="Playlist name" maxlength="255" autocomplete="off" autofocus required />
+      <button type="submit" class="btn btn-primary" title="Save"><i class="bi bi-check-lg"></i></button>
+    </div>
+    {% include 'components/validation.html.twig' with { validate: 'name' } %}
+  </form>
+</div>
+</div>

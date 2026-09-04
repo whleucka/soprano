@@ -182,11 +182,51 @@ class PlaylistsService
 
     public function createPlaylist(string $name): Playlist|bool
     {
+        $name = $this->cleanName($name);
+        if ($name === '') {
+            return false;
+        }
+
         return Playlist::create([
             'hash'      => bin2hex(random_bytes(16)),
             'client_id' => client()->id,
             'name'      => $name,
         ]);
+    }
+
+    /**
+     * Rename one of the current client's playlists. Returns the stored name,
+     * or null when the hash isn't theirs or the name is blank once trimmed.
+     *
+     * The row's updated_at is ON UPDATE CURRENT_TIMESTAMP, so a rename also
+     * floats the playlist to the top of getPlaylists()' most-recently-touched
+     * ordering. That is the same thing adding a track does.
+     */
+    public function renamePlaylist(string $hash, string $name): ?string
+    {
+        $playlist = $this->getPlaylistByHash($hash);
+        $name     = $this->cleanName($name);
+        if (!$playlist || $name === '') {
+            return null;
+        }
+
+        $playlist->update(['name' => $name]);
+
+        return $name;
+    }
+
+    /**
+     * A playlist name is free text and stays that way — emoji included. The
+     * column is utf8mb4 VARCHAR(255) and every render site escapes, so the
+     * only thing worth doing here is dropping surrounding whitespace, which
+     * is invisible in the sidebar and makes two names look identical.
+     *
+     * trim() only strips ASCII bytes, none of which can appear inside a
+     * multi-byte UTF-8 sequence, so it cannot cut an emoji in half.
+     */
+    private function cleanName(string $name): string
+    {
+        return trim($name);
     }
 
     public function deletePlaylist(string $hash): void

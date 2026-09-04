@@ -38,6 +38,15 @@ document.addEventListener('queueReplaced', () => {
   if (typeof armQueueScroll === 'function') armQueueScroll();
 });
 
+// A rename succeeded. The form posts back into the modal so a rejected name can
+// come back with its error, which means the only signal that it went through is
+// this event — and the modal is still sitting open over the page it just
+// renamed. Bootstrap owns the backdrop, so the close has to go through it.
+document.addEventListener('playlistRenamed', () => {
+  const el = document.getElementById('modal');
+  if (el && window.bootstrap) bootstrap.Modal.getInstance(el)?.hide();
+});
+
 // The top bar re-renders on loadTop from static markup that can't know whether
 // the queue panel is currently open, so the button's pressed state would reset
 // out from under it. Resync after any swap that could have replaced it.
