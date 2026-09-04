@@ -91,8 +91,9 @@ class PlaylistsController extends Controller
         }
 
         return $this->render("playlists/actions.html.twig", [
-            "hash" => $playlist->hash,
-            "name" => $playlist->name,
+            "hash"         => $playlist->hash,
+            "name"         => $playlist->name,
+            "is_generated" => $playlist->slot !== null,
         ]);
     }
 
@@ -147,7 +148,7 @@ class PlaylistsController extends Controller
     #[Post("/playlists", "playlists.create")]
     public function create(): string
     {
-        $valid = $this->validate(["name" => ["required"]]);
+        $valid = $this->validate(["name" => ["required", "max_length:255"]]);
         $src   = request()->request->get("src");
         $ref   = request()->request->get("ref");
 
@@ -160,6 +161,64 @@ class PlaylistsController extends Controller
         }
 
         return $this->renderModal($src, $ref);
+    }
+
+    /**
+     * The rename form, pre-filled with the current name. Only a playlist the
+     * client made themselves can be renamed: the virtual "Liked" and "Random"
+     * have no row at all, and a generated mix's name belongs to the nightly
+     * job. Neither gets here — the actions bar hides the button for both and
+     * this guard falls through to a 404.
+     */
+    #[Get("/playlists/{hash}/rename", "playlists.rename-form")]
+    public function renameForm(string $hash): string
+    {
+        $playlist = $this->playlists->getUserPlaylistByHash($hash);
+        if (!$playlist) {
+            return $this->pageNotFound();
+        }
+
+        return $this->render("playlists/modal-rename.html.twig", [
+            "hash" => $playlist->hash,
+            "name" => $playlist->name,
+        ]);
+    }
+
+    #[Post("/playlists/{hash}/rename", "playlists.rename")]
+    public function rename(string $hash): string
+    {
+        $playlist = $this->playlists->getUserPlaylistByHash($hash);
+        if (!$playlist) {
+            return $this->pageNotFound();
+        }
+
+        $valid = $this->validate(["name" => ["required", "max_length:255"]]);
+        $name  = $valid ? $this->playlists->renamePlaylist($hash, $valid->name) : null;
+
+        if ($name === null) {
+            // Whitespace-only clears `required` but is not a name; the service
+            // rejects it, so say so rather than re-rendering a clean form.
+            if ($valid) {
+                $this->addValidationError("name", "Required field");
+            }
+
+            return $this->render("playlists/modal-rename.html.twig", [
+                "hash" => $playlist->hash,
+                "name" => (string) request()->request->get("name"),
+            ]);
+        }
+
+        // playlistRenamed closes the modal (app.js); the rest repaint the name
+        // in the sidebar, the index grid and the delete button's confirm text.
+        $this->hxTrigger("playlistRenamed, playlistActions, loadSidebar, loadPlaylists, loadTop");
+
+        return $this->render("playlists/modal-rename.html.twig", [
+            "hash"    => $playlist->hash,
+            "name"    => $name,
+            // Swaps the hero heading, which is rendered by the page around the
+            // modal and so is not otherwise this response's to update.
+            "renamed" => true,
+        ]);
     }
 
     #[Get("/playlists/{hash}/delete", "playlists.delete")]

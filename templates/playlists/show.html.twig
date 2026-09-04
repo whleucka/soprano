@@ -13,7 +13,7 @@
           <img class="cover me-3" src="{{ cover }}" />
         {% endif %}
         <div class="d-flex flex-column truncate">
-          <h1 title="{{ name }}" class="album truncate">{{ name }}</h1>
+          {% include 'playlists/name.html.twig' %}
           <h3 class="artist">{{ count }} track{% if count != 1 %}s{% endif %}</h3>
         </div>
       </div>

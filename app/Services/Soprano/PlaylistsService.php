@@ -180,13 +180,68 @@ class PlaylistsService
             ->first();
     }
 
+    /**
+     * The same row, but only when the client made it themselves. A generated
+     * mix (slot set) is the nightly job's: it picked the name to go with the
+     * slot's icon on the home rail and rewrites the tracks under it every
+     * night, so it is not the client's to edit. Null for a mix, exactly as for
+     * a hash that isn't theirs.
+     */
+    public function getUserPlaylistByHash(string $hash): ?Playlist
+    {
+        $playlist = $this->getPlaylistByHash($hash);
+
+        return $playlist?->slot === null ? $playlist : null;
+    }
+
     public function createPlaylist(string $name): Playlist|bool
     {
+        $name = $this->cleanName($name);
+        if ($name === '') {
+            return false;
+        }
+
         return Playlist::create([
             'hash'      => bin2hex(random_bytes(16)),
             'client_id' => client()->id,
             'name'      => $name,
         ]);
+    }
+
+    /**
+     * Rename one of the current client's own playlists. Returns the stored
+     * name, or null when the hash isn't theirs, is a generated mix, or the
+     * name is blank once trimmed.
+     *
+     * The row's updated_at is ON UPDATE CURRENT_TIMESTAMP, so a rename also
+     * floats the playlist to the top of getPlaylists()' most-recently-touched
+     * ordering. That is the same thing adding a track does.
+     */
+    public function renamePlaylist(string $hash, string $name): ?string
+    {
+        $playlist = $this->getUserPlaylistByHash($hash);
+        $name     = $this->cleanName($name);
+        if (!$playlist || $name === '') {
+            return null;
+        }
+
+        $playlist->update(['name' => $name]);
+
+        return $name;
+    }
+
+    /**
+     * A playlist name is free text and stays that way — emoji included. The
+     * column is utf8mb4 VARCHAR(255) and every render site escapes, so the
+     * only thing worth doing here is dropping surrounding whitespace, which
+     * is invisible in the sidebar and makes two names look identical.
+     *
+     * trim() only strips ASCII bytes, none of which can appear inside a
+     * multi-byte UTF-8 sequence, so it cannot cut an emoji in half.
+     */
+    private function cleanName(string $name): string
+    {
+        return trim($name);
     }
 
     public function deletePlaylist(string $hash): void

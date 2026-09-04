@@ -1,0 +1,3 @@
+{# The playlist hero heading. Rendered by show.html.twig, and re-rendered
+   out-of-band by the rename response, which has no other way to reach it. #}
+<h1 id="playlist-name" title="{{ name }}" class="album truncate"{% if oob|default(false) %} hx-swap-oob="true"{% endif %}>{{ name }}</h1>
