@@ -180,6 +180,20 @@ class PlaylistsService
             ->first();
     }
 
+    /**
+     * The same row, but only when the client made it themselves. A generated
+     * mix (slot set) is the nightly job's: it picked the name to go with the
+     * slot's icon on the home rail and rewrites the tracks under it every
+     * night, so it is not the client's to edit. Null for a mix, exactly as for
+     * a hash that isn't theirs.
+     */
+    public function getUserPlaylistByHash(string $hash): ?Playlist
+    {
+        $playlist = $this->getPlaylistByHash($hash);
+
+        return $playlist?->slot === null ? $playlist : null;
+    }
+
     public function createPlaylist(string $name): Playlist|bool
     {
         $name = $this->cleanName($name);
@@ -195,8 +209,9 @@ class PlaylistsService
     }
 
     /**
-     * Rename one of the current client's playlists. Returns the stored name,
-     * or null when the hash isn't theirs or the name is blank once trimmed.
+     * Rename one of the current client's own playlists. Returns the stored
+     * name, or null when the hash isn't theirs, is a generated mix, or the
+     * name is blank once trimmed.
      *
      * The row's updated_at is ON UPDATE CURRENT_TIMESTAMP, so a rename also
      * floats the playlist to the top of getPlaylists()' most-recently-touched
@@ -204,7 +219,7 @@ class PlaylistsService
      */
     public function renamePlaylist(string $hash, string $name): ?string
     {
-        $playlist = $this->getPlaylistByHash($hash);
+        $playlist = $this->getUserPlaylistByHash($hash);
         $name     = $this->cleanName($name);
         if (!$playlist || $name === '') {
             return null;

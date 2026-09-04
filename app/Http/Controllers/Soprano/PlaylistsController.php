@@ -91,8 +91,9 @@ class PlaylistsController extends Controller
         }
 
         return $this->render("playlists/actions.html.twig", [
-            "hash" => $playlist->hash,
-            "name" => $playlist->name,
+            "hash"         => $playlist->hash,
+            "name"         => $playlist->name,
+            "is_generated" => $playlist->slot !== null,
         ]);
     }
 
@@ -163,14 +164,16 @@ class PlaylistsController extends Controller
     }
 
     /**
-     * The rename form, pre-filled with the current name. Virtual playlists
-     * ("Liked", "Random") have no row to rename, so they never get here — the
-     * actions bar hides the button and this guard falls through to a 404.
+     * The rename form, pre-filled with the current name. Only a playlist the
+     * client made themselves can be renamed: the virtual "Liked" and "Random"
+     * have no row at all, and a generated mix's name belongs to the nightly
+     * job. Neither gets here — the actions bar hides the button for both and
+     * this guard falls through to a 404.
      */
     #[Get("/playlists/{hash}/rename", "playlists.rename-form")]
     public function renameForm(string $hash): string
     {
-        $playlist = $this->playlists->getPlaylistByHash($hash);
+        $playlist = $this->playlists->getUserPlaylistByHash($hash);
         if (!$playlist) {
             return $this->pageNotFound();
         }
@@ -184,7 +187,7 @@ class PlaylistsController extends Controller
     #[Post("/playlists/{hash}/rename", "playlists.rename")]
     public function rename(string $hash): string
     {
-        $playlist = $this->playlists->getPlaylistByHash($hash);
+        $playlist = $this->playlists->getUserPlaylistByHash($hash);
         if (!$playlist) {
             return $this->pageNotFound();
         }
