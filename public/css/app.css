@@ -1060,12 +1060,12 @@ input:-webkit-autofill:active {
    These rules sit after .album-cont so they win on equal specificity —
    tune radio width/cover here without disturbing albums. */
 .radio-cont {
-  width: 100px;
+  width: 120px;
   margin-right: 20px;
 }
 .radio-cont .cover {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
 }
 
 /** Radio */
