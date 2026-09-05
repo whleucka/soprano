@@ -221,9 +221,20 @@ class PlaylistsController extends Controller
         ]);
     }
 
+    /**
+     * Delete a playlist. Only one the client made themselves: the virtual
+     * "Liked" and "Random" have no row at all, and a generated mix belongs to
+     * the nightly job, which would rebuild the slot under a new hash on its
+     * next run. Neither gets here — the actions bar hides the button for both
+     * and this guard falls through to a 404.
+     */
     #[Get("/playlists/{hash}/delete", "playlists.delete")]
     public function delete(string $hash): void
     {
+        if (!$this->playlists->getUserPlaylistByHash($hash)) {
+            $this->pageNotFound();
+        }
+
         $this->playlists->deletePlaylist($hash);
         $this->hxTrigger("loadSidebar, loadPlaylists, loadTop");
         // HX-Location does a client-side htmx navigation (swap #view), unlike
