@@ -184,8 +184,8 @@ class PlaylistsService
      * The same row, but only when the client made it themselves. A generated
      * mix (slot set) is the nightly job's: it picked the name to go with the
      * slot's icon on the home rail and rewrites the tracks under it every
-     * night, so it is not the client's to edit. Null for a mix, exactly as for
-     * a hash that isn't theirs.
+     * night, so it is not the client's to rename or delete. Null for a mix,
+     * exactly as for a hash that isn't theirs.
      */
     public function getUserPlaylistByHash(string $hash): ?Playlist
     {
@@ -244,9 +244,16 @@ class PlaylistsService
         return trim($name);
     }
 
+    /**
+     * Delete one of the current client's own playlists. A generated mix is not
+     * theirs to delete: the nightly job would rebuild the slot on its next run
+     * anyway, so the row would come back with a new hash and every share link
+     * to it would be dead. No-op for a mix, exactly as for a hash that isn't
+     * theirs.
+     */
     public function deletePlaylist(string $hash): void
     {
-        $this->getPlaylistByHash($hash)?->delete();
+        $this->getUserPlaylistByHash($hash)?->delete();
     }
 
     /**
