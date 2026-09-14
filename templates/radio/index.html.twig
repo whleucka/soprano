@@ -4,13 +4,12 @@
 
 {% block view %}
 <section id="radio" class="h-100 d-flex flex-column">
-  <div class="hero d-flex align-items-center p-3">
-    <div class="d-flex align-items-center">
-      <div class="d-flex flex-column">
-        <h1 class="title"><i class="bi bi-broadcast pe-1"></i> Radio</h1>
-        <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-2">&nbsp;</div>
-      </div>
-    </div>
+  <div class="section-bar">
+    <span class="ico"><i class="bi bi-broadcast"></i></span>
+    <h1 class="name">Radio</h1>
+    <span class="leader" aria-hidden="true"></span>
+    {# Filled out-of-band by radio/stations.html.twig once the grid lands. #}
+    <span class="count" id="radio-count"></span>
   </div>
   <div class="stations scrollable p-3 card-grid"
        hx-get="{{ uri('radio.stations') }}"

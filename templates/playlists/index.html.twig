@@ -4,17 +4,17 @@
 
 {% block view %}
 <section id="playlists" class="h-100 d-flex flex-column">
-  <div class="hero d-flex flex-column justify-content-center p-3">
-    <div class="d-flex align-items-center">
-      <div class="d-flex flex-column">
-        <h1 class="title"><i class="bi bi-music-note-list pe-1"></i> Playlists</h1>
-      </div>
-    </div>
-    <div class="playlists-actions actions d-flex flex-nowrap align-items-center gap-2 mt-2">
+  <div class="section-bar">
+    <span class="ico"><i class="bi bi-music-note-list"></i></span>
+    <h1 class="name">Playlists</h1>
+    <span class="leader" aria-hidden="true"></span>
+    {# Filled out-of-band by playlists/load.html.twig once the grid lands. #}
+    <span class="count" id="playlists-count"></span>
+    <span class="controls">
       <button class="btn btn-sm btn-outline-light" title="New playlist" data-bs-toggle="modal" data-bs-target="#modal" hx-get="{{ uri('playlists.modal') }}" hx-target="#modal .modal-content" hx-swap="innerHTML" hx-select="#modal-picker">
         <i class="bi bi-plus"></i>
       </button>
-    </div>
+    </span>
   </div>
   <div class="scrollable p-3 card-grid" hx-get="{{ uri('playlists.load') }}" hx-trigger="load, loadPlaylists from:body"></div>
 </section>

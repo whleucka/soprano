@@ -724,11 +724,6 @@ input:-webkit-autofill:active {
     linear-gradient(180deg, var(--hero-color, rgba(100, 100, 100, 0.3)) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
-#home .hero     { --hero-color: rgba(60, 140, 22, 0.8); }
-#search .hero   { --hero-color: rgba(224, 66, 245, 0.8); }
-#music .hero    { --hero-color: rgba(23, 96, 255, 0.8); }
-#radio .hero    { --hero-color: rgba(255, 157, 0, 0.8); }
-#podcasts .hero { --hero-color: rgba(255, 0, 0, 0.75); }
 
 .hero .cover {
   width: 80px;
@@ -755,6 +750,121 @@ input:-webkit-autofill:active {
 .hero h5 {
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+
+/**
+* Section bar
+*/
+/* Radio, Search, Podcasts and Playlists are places, not things: no artwork, no
+   subject, nothing to fill a portrait frame. They get a one-row bar instead of
+   the entity hero above, which stays for album/artist/track/playlist pages.
+   Sizing rule for the row: everything is flex:none except .name (shrinks, then
+   ellipsises) and .leader (the only thing that grows). That is what makes the
+   row incapable of wrapping at any width — the requirement that killed every
+   earlier attempt at this. */
+.section-bar {
+  --hue: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 48px;
+  padding: 0 0.75rem;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  /* A short bloom of the section colour in the corner. The old hero spent the
+     same colour on a wash that faded to nothing over 120px of black, which is
+     why nobody could see the wayfinding it was supposed to provide. */
+  background: radial-gradient(120% 300% at 0% 0%,
+    color-mix(in srgb, var(--hue) 16%, transparent) 0%, transparent 62%);
+}
+
+#search .section-bar    { --hue: #e042f5; }
+#radio .section-bar     { --hue: #ff9d00; }
+#podcasts .section-bar  { --hue: #ff2d2d; }
+#playlists .section-bar { --hue: turquoise; }
+
+.section-bar .ico {
+  color: var(--hue);
+  display: flex;
+  align-items: center;
+  flex: none;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.section-bar .name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text);
+  margin: 0;
+  /* Shrinks before anything else does, and is the only thing that truncates. */
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dot leaders, borrowed from a printed tracklist. This is the flex spacer made
+   visible: it carries the section colour, it runs into the count, and being the
+   only element with flex-grow it swallows every spare pixel — on a wide monitor
+   it fills what used to be dead gap, at 320px it collapses to its 14px basis
+   and the name ellipsises instead of the row wrapping. */
+.section-bar .leader {
+  flex: 1 1 14px;
+  min-width: 14px;
+  height: 6px;
+  align-self: center;
+  color: var(--hue);
+  opacity: 0.6;
+  background-image: radial-gradient(circle, currentColor 1px, transparent 1.3px);
+  background-size: 7px 6px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 42%, transparent 96%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 42%, transparent 96%);
+}
+
+/* Optional by design: the radio and playlist grids load async, so the bar
+   renders before a count exists and the fragment fills it in out-of-band. An
+   empty count is a normal state, not a missing one — the leader just runs
+   straight into the controls. */
+.section-bar .count {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* Shrinks, and with a far higher shrink factor than .name so it gives way
+     first — the section's name matters more than its tally. Both truncate
+     rather than letting the row grow past the viewport. */
+  flex: 0 8 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.section-bar .count:empty {
+  display: none;
+}
+
+.section-bar .controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+}
+
+@media (min-width: 768px) {
+  .section-bar {
+    height: 60px;
+    padding: 0 1rem;
+  }
+  .section-bar .ico { font-size: 1.3rem; }
+  .section-bar .name { font-size: 1.5rem; }
+  .section-bar .count { font-size: 0.85rem; }
 }
 
 
@@ -785,6 +895,7 @@ input:-webkit-autofill:active {
    across every module, matching the podcasts/playlists look. Icon-only.
    The playlist queue's action row reuses the same look for consistency. */
 .hero .actions .btn,
+.section-bar .controls .btn,
 #playlist .actions .btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -793,6 +904,7 @@ input:-webkit-autofill:active {
   line-height: 1;
 }
 .hero .actions .btn:hover,
+.section-bar .controls .btn:hover,
 #playlist .actions .btn:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.15);
@@ -801,6 +913,7 @@ input:-webkit-autofill:active {
 /* The like button arrives via the shared like-btn component (plain `btn liked`,
    no `btn-sm`), so match it to its btn-sm siblings for a uniform actions row. */
 .hero .actions .btn.liked,
+.section-bar .controls .btn.liked,
 #playlist .actions .btn.liked {
   padding: 0.25rem 0.5rem;
   border-radius: var(--bs-border-radius-sm);
@@ -1081,6 +1194,61 @@ input:-webkit-autofill:active {
 }
 
 /** Podcasts */
+/* Podcasts is the only section whose header needs a control rather than a
+   button, which is what made it fight the old generic header: that header had a
+   slot for a title and a slot for icon buttons, and no slot for an input. Here
+   the field is just another child of the row.
+
+   On a phone there is no width for a name and a field at once, so the field
+   collapses to a pill and takes the row when focused. The input is its own
+   toggle — no state to track, no JS. It is a <label>, so a tap anywhere on the
+   pill lands on the input rather than on the icon addon beside it. */
+#podcasts .section-bar .podcast-search {
+  flex: none;
+  width: 210px;
+  margin: 0;
+  /* Bootstrap's .input-group is flex-wrap: wrap. Collapsed on a phone the addon
+     alone is wider than the pill, so the input wrapped onto a second line inside
+     a 48px row and pushed the whole bar out of shape. */
+  flex-wrap: nowrap;
+  transition: width var(--ease);
+}
+
+@media (max-width: 767.98px) {
+  /* Collapsed, the addon IS the control and the input shrinks to nothing. Sized
+     by content rather than a fixed pill width — a magic number here is what the
+     addon's own minimum width broke. */
+  #podcasts .section-bar .podcast-search {
+    width: auto;
+  }
+  #podcasts .section-bar .podcast-search .form-control {
+    width: 0;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-left: none;
+  }
+  /* Stay open while it holds a term: collapsing on blur would hide what was
+     just typed behind an icon. */
+  #podcasts .section-bar .podcast-search:focus-within,
+  #podcasts .section-bar .podcast-search:has(.form-control:not(:placeholder-shown)) {
+    flex: 1 1 auto;
+  }
+  #podcasts .section-bar .podcast-search:focus-within .form-control,
+  #podcasts .section-bar .podcast-search:has(.form-control:not(:placeholder-shown)) .form-control {
+    width: 1%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  /* Hand the row over rather than squeezing the field into what's left.
+     :has() is the only way to reach a previous sibling; where it's missing the
+     field still expands, it just shares the row with the name. */
+  #podcasts .section-bar:has(.podcast-search .form-control:focus) .name,
+  #podcasts .section-bar:has(.podcast-search .form-control:focus) .leader {
+    display: none;
+  }
+}
+
 #podcasts .podcast-search {
   max-width: 480px;
 }
@@ -1110,20 +1278,20 @@ input:-webkit-autofill:active {
 #podcasts .podcast-search:focus-within .input-group-text {
   background: rgba(255, 255, 255, 0.1);
 }
-#podcasts .podcast-actions .genre-select {
+#podcasts .genre-select {
   max-width: 220px;
   background-color: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
 }
-#podcasts .podcast-actions .genre-select:focus {
+#podcasts .genre-select:focus {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: none;
   outline: none;
   color: #fff;
 }
-#podcasts .podcast-actions .genre-select option {
+#podcasts .genre-select option {
   color: #000;
 }
 #podcasts .podcast-description {
@@ -1814,7 +1982,7 @@ a.wrapped-callout:focus {
 }
 
 /* ---- Profile page -------------------------------------------------------- */
-#profile .hero { --hero-color: rgba(122, 162, 247, 0.5); }
+#profile .section-bar { --hue: var(--tn-blue); }
 
 /* Player-settings + danger-zone panels reuse the wrapped surface look. */
 .settings-card,

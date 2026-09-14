@@ -8,7 +8,7 @@
      renders as a whole page, so the state is already here, and on a feed link
      the heading is the point of the page — fetching it flashes a bare hero
      first. The hx-get is only for the in-place refresh after a clear. #}
-  <div class="hero d-flex flex-column justify-content-center p-3" hx-get="{{ uri("search.hero") }}" hx-trigger="searchHero from:body">
+  <div class="section-bar" hx-get="{{ uri("search.hero") }}" hx-trigger="searchHero from:body">
     {% include 'search/hero.html.twig' %}
   </div>
   <div class="tracks scrollable" hx-get="{{ uri('search.results') }}" hx-trigger="load, searchResults from:body">

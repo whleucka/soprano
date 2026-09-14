@@ -4,26 +4,39 @@
 
 {% block view %}
 <section id="podcasts" class="h-100 d-flex flex-column">
-  <div class="hero d-flex flex-column justify-content-center p-3">
-    <h1 class="title"><i class="bi bi-mic pe-1"></i> Podcasts</h1>
-    <div class="input-group mt-2 podcast-search">
+  <div class="section-bar">
+    <span class="ico"><i class="bi bi-mic"></i></span>
+    <h1 class="name">Podcasts</h1>
+    <span class="leader" aria-hidden="true"></span>
+    {# A <label>, not a <div>: collapsed to a pill on mobile the icon addon is
+       most of the target, and a tap on it has to reach the input. #}
+    <label class="input-group podcast-search">
       <span class="input-group-text"><i class="bi bi-search"></i></span>
       <input type="search" name="q" class="form-control" placeholder="Search podcasts…" autocomplete="off"
+             aria-label="Search podcasts"
              hx-get="{{ uri('podcasts.search') }}"
              hx-trigger="keyup changed delay:500ms, search"
              hx-target="#podcast-results"
              hx-swap="innerHTML" />
-    </div>
-    <div class="podcast-actions actions d-flex flex-nowrap align-items-center gap-2 mt-2">
-      <button class="btn btn-sm btn-outline-light"
+    </label>
+    <span class="controls">
+      <button class="btn btn-sm btn-outline-light" title="Best podcasts"
               hx-get="{{ uri('podcasts.best') }}" hx-target="#podcast-results" hx-swap="innerHTML">
         <i class="bi bi-star-fill"></i>
       </button>
-      <button class="btn btn-sm btn-outline-light"
+      <button class="btn btn-sm btn-outline-light" title="Surprise me"
               hx-get="{{ uri('player.play-podcast-surprise') }}" hx-swap="none">
         <i class="bi bi-dice-6-fill"></i>
       </button>
-      <select class="form-select form-select-sm genre-select" name="genre"
+    </span>
+  </div>
+  <div class="scrollable p-3">
+    {# The genre picker filters the results, so it lives with them rather than
+       in the chrome — there is no room for a select in a 360px header row, and
+       a filter reads better next to what it filters anyway. Kept outside
+       #podcast-results, which every one of these requests replaces wholesale. #}
+    <div class="d-flex justify-content-end mb-2">
+      <select class="form-select form-select-sm genre-select" name="genre" aria-label="Browse podcasts by genre"
               hx-get="{{ uri('podcasts.best') }}" hx-target="#podcast-results" hx-swap="innerHTML" hx-trigger="change">
         <option value="">Browse by genre…</option>
         {% for g in genres %}
@@ -31,8 +44,7 @@
         {% endfor %}
       </select>
     </div>
-  </div>
-  <div class="scrollable p-3">
+
     <div id="podcast-results"></div>
 
     <div id="podcast-in-progress"

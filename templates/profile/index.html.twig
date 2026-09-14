@@ -4,12 +4,11 @@
 
 {% block view %}
 <section id="profile" class="h-100 d-flex flex-column">
-  <div class="hero d-flex flex-column p-3">
-    <h1><i class="bi bi-person-circle pe-1"></i> {{ client.username }}</h1>
-    <h5 class="stats">
-      Member since {{ client.created_at|date("F Y") }}
-      {% if stats.plays > 0 %}&middot; {{ stats.plays }} {{ stats.plays == 1 ? "play" : "plays" }}{% endif %}
-    </h5>
+  <div class="section-bar">
+    <span class="ico"><i class="bi bi-person-circle"></i></span>
+    <h1 class="name">{{ client.username }}</h1>
+    <span class="leader" aria-hidden="true"></span>
+    <span class="count">Member since {{ client.created_at|date("F Y") }}</span>
   </div>
 
   <div class="p-3 scrollable">

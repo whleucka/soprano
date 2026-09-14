@@ -1,3 +1,7 @@
+{# The section bar renders before the grid is fetched, so its count comes back
+   out-of-band with the cards. Creating or deleting a playlist fires
+   loadPlaylists, which re-renders this — so the count cannot drift. #}
+<span class="count" id="playlists-count" hx-swap-oob="true">{{ playlists|length }} playlist{{ playlists|length == 1 ? '' : 's' }}</span>
 {% if playlists %}
   {% for p in playlists %}
     <div class="d-flex flex-column album-cont" hx-boost="true" hx-target="#view" hx-select="#view" hx-swap="outerHTML" style="cursor: pointer;">

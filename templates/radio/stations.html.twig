@@ -1,3 +1,7 @@
+{# The section bar renders before the grid is fetched, so its count comes back
+   out-of-band with the rows. Anything that re-renders the grid re-renders this,
+   so it cannot drift. #}
+<span class="count" id="radio-count" hx-swap-oob="true">{{ stations|length }} station{{ stations|length == 1 ? '' : 's' }}</span>
 {% if stations %}
   {% for s in stations %}
     <div class="d-flex flex-column album-cont radio-cont">
