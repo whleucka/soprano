@@ -1,0 +1,30 @@
+{# Overflow menu for a .section-bar.
+
+   The bar caps how many pills fit before the row has to truncate something —
+   roughly five on a 360px phone, or three alongside a count. When a section
+   outgrows that, the last pill becomes this and everything secondary moves
+   inside it. Embed it as the final child of .controls and fill the items block:
+
+     {% embed 'components/bar-menu.html.twig' with { menu_id: 'search' } %}
+       {% block items %}
+         <li><a class="dropdown-item" style="cursor: pointer;"
+                hx-get="{{ uri('search.clear') }}" hx-swap="none">
+           <i class="bi bi-trash pe-1"></i> Clear search</a></li>
+       {% endblock %}
+     {% endembed %}
+
+   menu_id only has to be unique on the page — it keeps the button/menu aria
+   pairing intact if a bar ever renders twice.
+
+   The fixed positioning strategy is load-bearing, same as album-cont: #view and
+   its .content are both overflow-hidden, so an absolutely-positioned menu gets
+   clipped to the height of the bar it hangs off. #}
+<div class="dropdown">
+  <button class="btn btn-sm btn-outline-light bar-menu-btn" type="button" id="bar-menu-{{ menu_id }}"
+          title="More" aria-label="More options"
+          data-bs-toggle="dropdown" aria-expanded="false"
+          data-bs-config='{"popperConfig":{"strategy":"fixed"}}'><i class="bi bi-three-dots"></i></button>
+  <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="bar-menu-{{ menu_id }}">
+    {% block items %}{% endblock %}
+  </ul>
+</div>
