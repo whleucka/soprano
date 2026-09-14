@@ -38,6 +38,18 @@ document.addEventListener('queueReplaced', () => {
   if (typeof armQueueScroll === 'function') armQueueScroll();
 });
 
+// Back on a phone left the queue panel sitting over a view that had just
+// changed underneath it: on mobile the panel is full-width and #view is
+// d-none'd, so the only thing on screen was the one thing that didn't move.
+// Every forward navigation closes the panel from its own
+// hx-on::before-request; a popstate fires no request on those elements, so
+// nothing did. Bound on window rather than htmx's history events so it holds
+// whether or not the restore turns into a fetch. hidePlaylist() is a no-op
+// above 1200px, where the panel sits beside the view instead of over it.
+window.addEventListener('popstate', () => {
+  if (typeof hidePlaylist === 'function') hidePlaylist();
+});
+
 // A rename succeeded. The form posts back into the modal so a rejected name can
 // come back with its error, which means the only signal that it went through is
 // this event — and the modal is still sitting open over the page it just
