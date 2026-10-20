@@ -62,8 +62,38 @@ document.addEventListener('playlistRenamed', () => {
 // The top bar re-renders on loadTop from static markup that can't know whether
 // the queue panel is currently open, so the button's pressed state would reset
 // out from under it. Resync after any swap that could have replaced it.
+// The radio index's filter. Matches every word against a card's data-search
+// (name, city, province, country), then hides any country group left empty.
+// Accents are folded on both sides so "montreal" finds Montréal. The grid
+// re-renders on a like, so the filter is reapplied when it settles.
+const foldAccents = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function filterStations() {
+  const input = document.getElementById('radio-filter');
+  if (!input) return;
+  const words = foldAccents(input.value.toLowerCase()).split(/\s+/).filter(Boolean);
+  let shown = 0;
+  document.querySelectorAll('#radio .station-group').forEach((group) => {
+    let groupShown = 0;
+    group.querySelectorAll('.radio-cont').forEach((card) => {
+      const hay = foldAccents(card.dataset.search || '');
+      const match = words.every((w) => hay.includes(w));
+      card.classList.toggle('d-none', !match);
+      if (match) groupShown++;
+    });
+    group.classList.toggle('d-none', groupShown === 0);
+    const count = group.querySelector('.group-count');
+    if (count) count.textContent = groupShown;
+    shown += groupShown;
+  });
+  document.getElementById('radio-no-match')?.classList.toggle('d-none', shown > 0 || !words.length);
+}
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'radio-filter') filterStations();
+});
+
 document.addEventListener('htmx:afterSettle', () => {
   if (typeof syncPlaylistToggle === 'function') syncPlaylistToggle();
+  filterStations();
 });
 
 document.addEventListener('htmx:beforeRequest', () => {

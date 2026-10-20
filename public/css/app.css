@@ -1189,6 +1189,25 @@ input:-webkit-autofill:active {
   height: 120px;
 }
 
+/* Station logos (components/radio-card.html.twig) are letterboxed on white,
+   not cropped to fill like album art. Most are wordmarks drawn for a light
+   page: cropped, a 330x37 strip showed two letters of its middle, and the
+   black-on-transparent ones all but vanished into the dark card. */
+.radio-cont .cover.logo,
+.card-grid .radio-cont .cover.logo {
+  object-fit: contain;
+  background: #fff;
+  padding: 10%;
+}
+
+/* Radio index: one heading per country, each over its own grid. */
+.station-group h2 .group-count {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /** Radio */
 .radio-badge {
   color: #fff;
@@ -1202,16 +1221,16 @@ input:-webkit-autofill:active {
 }
 
 /** Podcasts */
-/* Podcasts is the only section whose header needs a control rather than a
-   button, which is what made it fight the old generic header: that header had a
-   slot for a title and a slot for icon buttons, and no slot for an input. Here
-   the field is just another child of the row.
+/* A search field in a section header (podcasts, radio). It is what made the
+   old generic header fight back: that header had a slot for a title and a slot
+   for icon buttons, and no slot for an input. Here the field is just another
+   child of the row.
 
    On a phone there is no width for a name and a field at once, so the field
    collapses to a pill and takes the row when focused. The input is its own
    toggle — no state to track, no JS. It is a <label>, so a tap anywhere on the
    pill lands on the input rather than on the icon addon beside it. */
-#podcasts .section-bar .podcast-search {
+.section-bar .bar-search {
   flex: none;
   width: 210px;
   margin: 0;
@@ -1226,10 +1245,10 @@ input:-webkit-autofill:active {
   /* Collapsed, the addon IS the control and the input shrinks to nothing. Sized
      by content rather than a fixed pill width — a magic number here is what the
      addon's own minimum width broke. */
-  #podcasts .section-bar .podcast-search {
+  .section-bar .bar-search {
     width: auto;
   }
-  #podcasts .section-bar .podcast-search .form-control {
+  .section-bar .bar-search .form-control {
     width: 0;
     min-width: 0;
     padding-left: 0;
@@ -1238,12 +1257,12 @@ input:-webkit-autofill:active {
   }
   /* Stay open while it holds a term: collapsing on blur would hide what was
      just typed behind an icon. */
-  #podcasts .section-bar .podcast-search:focus-within,
-  #podcasts .section-bar .podcast-search:has(.form-control:not(:placeholder-shown)) {
+  .section-bar .bar-search:focus-within,
+  .section-bar .bar-search:has(.form-control:not(:placeholder-shown)) {
     flex: 1 1 auto;
   }
-  #podcasts .section-bar .podcast-search:focus-within .form-control,
-  #podcasts .section-bar .podcast-search:has(.form-control:not(:placeholder-shown)) .form-control {
+  .section-bar .bar-search:focus-within .form-control,
+  .section-bar .bar-search:has(.form-control:not(:placeholder-shown)) .form-control {
     width: 1%;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
@@ -1251,39 +1270,39 @@ input:-webkit-autofill:active {
   /* Hand the row over rather than squeezing the field into what's left.
      :has() is the only way to reach a previous sibling; where it's missing the
      field still expands, it just shares the row with the name. */
-  #podcasts .section-bar:has(.podcast-search .form-control:focus) .name,
-  #podcasts .section-bar:has(.podcast-search .form-control:focus) .leader {
+  .section-bar:has(.bar-search .form-control:focus) .name,
+  .section-bar:has(.bar-search .form-control:focus) .leader {
     display: none;
   }
 }
 
-#podcasts .podcast-search {
+.section-bar .bar-search {
   max-width: 480px;
 }
-#podcasts .podcast-search .input-group-text {
+.section-bar .bar-search .input-group-text {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-right: none;
   color: #888;
 }
-#podcasts .podcast-search .form-control {
+.section-bar .bar-search .form-control {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: none;
   color: #fff;
 }
-#podcasts .podcast-search .form-control::placeholder {
+.section-bar .bar-search .form-control::placeholder {
   color: #777;
 }
 /* Drop Bootstrap's blue focus ring/border on the search field. */
-#podcasts .podcast-search .form-control:focus {
+.section-bar .bar-search .form-control:focus {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: none;
   outline: none;
   color: #fff;
 }
-#podcasts .podcast-search:focus-within .input-group-text {
+.section-bar .bar-search:focus-within .input-group-text {
   background: rgba(255, 255, 255, 0.1);
 }
 #podcasts .genre-select {
@@ -1625,6 +1644,21 @@ input:-webkit-autofill:active {
     width: 180px;
     height: 180px;
     aspect-ratio: auto;
+  }
+
+  /* The radio index is page after page of one card type, so its grid fills the
+     row instead of packing 180px cards and leaving a ragged gap on the right. */
+  .card-grid.station-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .card-grid.station-grid .radio-cont {
+    width: auto;
+  }
+  .card-grid.station-grid .radio-cont .cover {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 }
 
