@@ -1,11 +1,14 @@
 {# Station logos are wordmarks of every shape — 330x37 strips, 1500px squares,
    black-on-transparent — so they sit letterboxed on a white tile (.logo) rather
-   than cropped to fill like album art. A missing or dead logo falls back to the
+   than cropped to fill like album art. A logo that turns out to be square
+   already is its own artwork, so it drops .logo on load and fills the tile like
+   a cover; the frame only shrank it. A missing or dead logo falls back to the
    default art, which is full-bleed and keeps the plain .cover treatment. #}
 <div class="d-flex flex-column album-cont radio-cont"
      data-search="{{ (s.name ~ ' ' ~ s.location ~ ' ' ~ s.country)|lower }}">
   <div class="cover-wrap position-relative">
     <img title="{{ s.name }}" alt="{{ s.name }}" class="cover{{ s.has_cover ? ' logo' }}" src="{{ s.cover }}" loading="lazy"
+         onload="if (Math.abs(this.naturalWidth / this.naturalHeight - 1) < 0.1) this.classList.remove('logo')"
          onerror="this.onerror=null;this.classList.remove('logo');this.src='/images/no-album-art.png'"
          hx-get="{{ uri('player.play-radio', [s.hash]) }}" hx-swap="none" style="cursor: pointer;" />
     <div class="card-actions d-flex align-items-center">
