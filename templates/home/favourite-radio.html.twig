@@ -1,22 +1,6 @@
 {% if stations %}
   {% for s in stations %}
-    <div class="d-flex flex-column album-cont radio-cont">
-      <div class="cover-wrap position-relative">
-        <img title="{{ s.name }}" class="cover" src="{{ s.cover }}" loading="lazy"
-             hx-get="{{ uri('player.play-radio', [s.hash]) }}" hx-swap="none" style="cursor: pointer;" />
-        <div class="card-actions d-flex align-items-center">
-          <span class="like-overlay"
-                hx-get="{{ uri('radio.like', [s.hash]) }}"
-                hx-trigger="like-{{ s.hash }} from:body">
-            {% include 'components/like-btn.html.twig' with { liked: s.liked, like_uri: uri('radio.like-toggle', [s.hash]) } %}
-          </span>
-        </div>
-      </div>
-      <span title="{{ s.name }}" class="title truncate fw-bold mt-1">{{ s.name }}</span>
-      {% if s.location %}
-        <span title="{{ s.location }}" class="artist small truncate"><i class="bi bi-geo-alt pe-1"></i> {{ s.location }}</span>
-      {% endif %}
-    </div>
+    {% include 'components/radio-card.html.twig' %}
   {% endfor %}
 {% else %}
   <p class="lead"><i class="bi bi-info pe-1 text-warning"></i> No favourite radio stations yet</p>

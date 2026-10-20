@@ -8,10 +8,17 @@
     <span class="ico"><i class="bi bi-broadcast"></i></span>
     <h1 class="name">Radio</h1>
     <span class="leader" aria-hidden="true"></span>
+    {# Filters the cards already on the page (see filterStations in app.js) —
+       every station is loaded up front, so there is nothing to ask the server. #}
+    <label class="input-group bar-search">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input type="search" id="radio-filter" class="form-control" placeholder="Filter stations…" autocomplete="off"
+             aria-label="Filter stations by name, city or country" />
+    </label>
     {# Filled out-of-band by radio/stations.html.twig once the grid lands. #}
     <span class="count" id="radio-count"></span>
   </div>
-  <div class="stations scrollable p-3 card-grid"
+  <div class="stations scrollable p-3"
        hx-get="{{ uri('radio.stations') }}"
        hx-trigger="load, radioStations from:body"></div>
 </section>

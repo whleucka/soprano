@@ -28,11 +28,39 @@ class RadioService
                     rs.src AS src,
                     IFNULL((SELECT 1 FROM radio_station_likes WHERE client_id=? AND radio_station_id=rs.id), 0) AS liked
              FROM radio_stations rs
-             ORDER BY rs.country, rs.province, rs.city, rs.name",
+             ORDER BY rs.country IS NULL, rs.country, rs.province, rs.city, rs.name",
             [client()->id],
         );
 
         return array_map(fn($row) => $this->mapStationRow($row), $rows);
+    }
+
+    /**
+     * Stations for the radio index, one group per country in getStations()
+     * order, with the client's liked stations in a group of their own up front.
+     * A liked station also stays under its country, so the country groups read
+     * the same whether or not you've liked anything.
+     *
+     * @param array<int, array<string, mixed>> $stations
+     * @return array<int, array{name: string, liked: bool, stations: array<int, array<string, mixed>>}>
+     */
+    public function groupStations(array $stations): array
+    {
+        $groups = [];
+        $liked = array_values(array_filter($stations, fn($s) => $s['liked']));
+        if ($liked) {
+            $groups[] = ['name' => 'Liked', 'liked' => true, 'stations' => $liked];
+        }
+
+        $byCountry = [];
+        foreach ($stations as $s) {
+            $byCountry[$s['country'] ?: 'Elsewhere'][] = $s;
+        }
+        foreach ($byCountry as $country => $rows) {
+            $groups[] = ['name' => (string) $country, 'liked' => false, 'stations' => $rows];
+        }
+
+        return $groups;
     }
 
     /**
@@ -94,6 +122,8 @@ class RadioService
 
     /**
      * Normalise a raw station row for the views: location string + boolean like.
+     * `has_cover` is false when the cover is the default art, which the cards
+     * show full-bleed rather than letterboxed like a station logo.
      */
     private function mapStationRow(array $row): array
     {
@@ -103,6 +133,7 @@ class RadioService
             'hash'     => $row['hash'],
             'name'     => $row['name'],
             'cover'    => $row['cover'] ?: '/images/no-album-art.png',
+            'has_cover' => (bool) $row['cover'],
             'country'  => $row['country'],
             'province' => $row['province'],
             'city'     => $row['city'],

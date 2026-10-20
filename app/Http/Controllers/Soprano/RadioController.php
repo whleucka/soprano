@@ -23,8 +23,11 @@ class RadioController extends Controller
     #[Get("/radio/stations", "radio.stations")]
     public function stations(): string
     {
+        $stations = $this->radio->getStations();
+
         return $this->render("radio/stations.html.twig", [
-            "stations" => $this->radio->getStations(),
+            "groups" => $this->radio->groupStations($stations),
+            "total"  => count($stations),
         ]);
     }
 
