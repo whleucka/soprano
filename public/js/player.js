@@ -1,7 +1,7 @@
 var progressBar = document.querySelector("#playback .progress .progress-bar");
 var progressContainer = document.querySelector('.progress');
 var radioBadge = document.querySelector('.radio-badge');
-var audio = document.getElementById("audio");
+var audio = adoptPreloadedNext(document.getElementById("audio"));
 var playBtn = document.getElementById("play");
 var isRadio = audio && audio.dataset.type === 'radio';
 
@@ -17,6 +17,12 @@ var CROSSFADE_MIN_TRACK = 2 * CROSSFADE_SEC;
 // enough of its tail to advance the ordinary way instead.
 var CROSSFADE_STALL_MS = 3000;
 var crossfadeEnabled = !!(audio && audio.dataset.crossfade === '1');
+// How far before a track's end we start buffering the next one (see
+// preloadNext). The handoff used to start the incoming track's load inside the
+// crossfade window itself: on a phone with ~700ms round trips that load could
+// outlast the 6s overlap, the outgoing track ran out, and Android froze the now
+// silent, screen-off page until someone unlocked it. Well clear of that.
+var PRELOAD_NEXT_SEC = 45;
 // How many linear segments approximate each half of the equal-power fade curve
 // (see scheduleEqualPowerRamp). 24 over a multi-second overlap is well past the
 // point where the stepping is audible.
@@ -226,6 +232,72 @@ function setupReplayGain() {
   } catch (e) {
     console.warn('[player] WebAudio gain unavailable', e);
   }
+}
+
+// --- Next-track preload ---------------------------------------------------
+// Near the end of a track, buffer the next one in a detached <audio> held on
+// window.__preload. When the swap brings in that same URL, the freshly
+// rendered element is swapped for the buffered one, so the handoff no longer
+// waits on a cold load: next-track and /player still have to land, but the
+// audio is already there when they do.
+//
+// data-next-src is the server's guess at the next auto-advance. The queue can
+// change before then — a mismatch just means the preload is thrown away and
+// the new track loads the ordinary way.
+function maybePreloadNext() {
+  if (!audio || audio.dataset.type) return;   // music tracks only
+  const next = audio.dataset.nextSrc;
+  if (!next) return;
+  const d = audio.duration;
+  if (!isFinite(d) || d - audio.currentTime > PRELOAD_NEXT_SEC) return;
+
+  const url = new URL(next, location.href).href;
+  if (url === audio.src) return;              // repeat-one: already loaded
+  if (window.__preload && window.__preload.src === url) return; // in flight
+
+  discardPreload();
+  const el = new Audio();
+  el.preload = 'auto';
+  el.src = url;                               // starts the load
+  window.__preload = el;
+}
+
+function discardPreload() {
+  const el = window.__preload;
+  window.__preload = null;
+  if (!el) return;
+  // Detached, so nothing else will ever stop it fetching.
+  el.removeAttribute('src');
+  try { el.load(); } catch (_) { /* ignore */ }
+}
+
+// Runs first thing on every player swap, before anything binds to `audio`.
+// Returns the element the rest of this script should use: the buffered one if
+// it holds the track that just swapped in, otherwise the fresh element as-is.
+function adoptPreloadedNext(fresh) {
+  const pre = window.__preload;
+  if (!pre || !fresh) return fresh;
+  if (fresh.dataset.type || pre.src !== fresh.src) {
+    discardPreload();
+    return fresh;
+  }
+  window.__preload = null;
+
+  // Take on the rendered element's identity (id, data-hash, data-gain,
+  // data-next, data-next-src, ...). Not src: re-setting it, even to the same
+  // value, restarts the load and throws the buffer away.
+  for (const attr of Array.from(fresh.attributes)) {
+    if (attr.name !== 'src') pre.setAttribute(attr.name, attr.value);
+  }
+  fresh.replaceWith(pre);
+  // The rendered element started its own load the moment it was inserted.
+  fresh.removeAttribute('src');
+  try { fresh.load(); } catch (_) { /* ignore */ }
+
+  // How much of the track was ready by the handoff — rs4 means it can start
+  // the moment play() is called, which is the whole point.
+  if (window.__plog) window.__plog('preload-adopted', 'rs' + pre.readyState, pre);
+  return pre;
 }
 
 // --- Crossfade -------------------------------------------------------------
@@ -946,7 +1018,10 @@ if (!window.__podcastReportHooked) {
   // The crossfade handoff rides on timeupdate (fires ~4×/s during playback and,
   // unlike requestAnimationFrame, keeps firing in a backgrounded tab) so the
   // fade starts on time even when the tab isn't focused.
-  audio.ontimeupdate = maybeStartCrossfade;
+  audio.ontimeupdate = function () {
+    maybePreloadNext();
+    maybeStartCrossfade();
+  };
 
   audio.onplaying = function () {
     resumeAudioCtx();

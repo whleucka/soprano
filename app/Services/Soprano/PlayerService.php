@@ -28,6 +28,9 @@ class PlayerService
             // into (auto-advance only) — read by player.js as data attributes.
             'crossfade'   => $state['crossfade']   ?? false,
             'has_next'    => $state['has_next']    ?? false,
+            // Stream URL of the track the next auto-advance lands on, for
+            // player.js to preload ahead of the handoff. Null when there is none.
+            'next_src'    => $state['next_src']    ?? null,
         ];
     }
 }

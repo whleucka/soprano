@@ -27,6 +27,7 @@ class PlayerController extends Controller
         'devicechange', 'ctxstate',
         // Reported by our own code rather than the browser.
         'stall-detected', 'crossfade-stalled', 'autoplay-blocked',
+        'preload-adopted',
         // Queue-advance recovery: a next-track request that had to be re-sent,
         // a finished track found still sitting there when the tab came back,
         // and a track that swapped in but never started.
@@ -368,6 +369,7 @@ class PlayerController extends Controller
             $this->hxTrigger("playlistQueue, playlistActions");
         }
         $this->music->trackPlay($track->id, $source);
+        $next = $this->playlist->peekNextAuto();
         $this->player->setPlayer([
             'hash'      => $track->hash,
             'album_hash'  => $album?->hash  ?? '#',
@@ -392,7 +394,14 @@ class PlayerController extends Controller
             // Crossfade: the client's toggle, gated on there being a next track
             // to fade into (so the final track ends cleanly with no crossfade).
             'crossfade' => (bool) client()->crossfade,
-            'has_next'    => $this->playlist->hasNextAuto(),
+            'has_next'    => $next !== false,
+            // Where the next auto-advance will stream from, so player.js can
+            // buffer it before the handoff instead of during it (see
+            // preloadNext). A guess: the queue can change before then, and
+            // the client only uses the preload if the swap brings in this URL.
+            'next_src'    => $next !== false && !empty($next['hash'])
+                ? uri("player.stream", $next['hash'])
+                : null,
         ]);
         $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks, searchResults");
     }

@@ -401,10 +401,22 @@ class PlaylistService
 
     /**
      * Whether a natural end-of-track advance would land on another track —
-     * i.e. the crossfade should arm. Read-only mirror of the auto/forward
-     * branch of changePlaylistTrack(): it never moves the queue index.
+     * i.e. the crossfade should arm.
      */
     public function hasNextAuto(): bool
+    {
+        return $this->peekNextAuto() !== false;
+    }
+
+    /**
+     * The track a natural end-of-track advance would land on, or false at the
+     * end of the queue. Read-only mirror of the auto/forward branch of
+     * changePlaylistTrack(): it never moves the queue index. The player
+     * preloads this track's audio ahead of the handoff, so it must agree with
+     * changePlaylistTrack() — a wrong guess only costs the preload, but a
+     * systematically wrong one brings back the dead air it exists to prevent.
+     */
+    public function peekNextAuto(): array|false
     {
         $playlist = state()->playlist;
         $tracks = $playlist["tracks"] ?? [];
@@ -415,10 +427,10 @@ class PlaylistService
         if ($count === 0) return false;
 
         // repeat-one replays the same track — a valid crossfade target.
-        if ($repeat === "one") return isset($tracks[$index]);
+        if ($repeat === "one") return $tracks[$index] ?? false;
 
         // A lone track only "advances" when repeat-all is on.
-        if ($count < 2) return $repeat === "all" && isset($tracks[$index]);
+        if ($count < 2) return $repeat === "all" ? ($tracks[$index] ?? false) : false;
 
         if (!empty($playlist["shuffle"])) {
             $order = $this->shuffleOrder($playlist);
@@ -426,12 +438,12 @@ class PlaylistService
             if ($pos === false) $pos = 0;
             $new_pos = $pos + 1;
             if ($repeat !== "all" && $new_pos >= $count) return false;
-            return isset($tracks[$order[($new_pos + $count) % $count]]);
+            return $tracks[$order[($new_pos + $count) % $count]] ?? false;
         }
 
         $new_index = $index + 1;
         if ($repeat !== "all" && $new_index >= $count) return false;
-        return isset($tracks[($new_index + $count) % $count]);
+        return $tracks[($new_index + $count) % $count] ?? false;
     }
 
     /**

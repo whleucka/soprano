@@ -593,4 +593,37 @@ class PlaylistServiceTest extends TestCase
         // The walk re-deals anchored on what is now playing.
         $this->assertSame($state["index"], $order[0]);
     }
+
+    /**
+     * The player preloads whatever peekNextAuto() names ahead of the handoff,
+     * so it has to agree with the advance that actually happens — in every
+     * shuffle/repeat combination, all the way to the end of the queue.
+     */
+    public function testPeekNextAutoMatchesTheAutoAdvance(): void
+    {
+        foreach ([false, true] as $shuffle) {
+            foreach (["off", "all", "one"] as $repeat) {
+                $this->setUp();
+                $this->playlist->setPlaylist($this->tracks(5), 1);
+                state()->playlist = ["shuffle" => $shuffle, "repeat" => $repeat];
+
+                // Bounded: repeat all/one never reach a false.
+                for ($i = 0; $i < 12; $i++) {
+                    $peek = $this->playlist->peekNextAuto();
+                    $index = $this->playlist->getPlaylist()["index"];
+                    $this->assertSame($index, $this->playlist->getPlaylist()["index"], "peek moved the index");
+
+                    $next = $this->playlist->changePlaylistTrack(true, auto: true);
+                    $this->assertSame($next, $peek, "shuffle=" . (int) $shuffle . " repeat=$repeat step $i");
+                    if ($next === false) break;
+                }
+            }
+        }
+    }
+
+    public function testPeekNextAutoOnEmptyQueueIsFalse(): void
+    {
+        $this->assertFalse($this->playlist->peekNextAuto());
+        $this->assertFalse($this->playlist->hasNextAuto());
+    }
 }
