@@ -1007,6 +1007,15 @@ if (!window.__podcastReportHooked) {
     });
   }
 
+  // An element adopted from the next-track preload (adoptPreloadedNext) loaded
+  // its metadata while detached, before the handler above existed, so
+  // loadedmetadata will not fire again for it. Without this the lock screen and
+  // car display keep showing the previous track. Autoplay is handled below.
+  if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+    setupMediaSession();
+    updatePositionState();
+  }
+
   audio.onpause = function () {
     if (audio.dataset.type === 'podcast') window.__podcastReport(false);
     if (radioBadge) radioBadge.classList.remove("active");
