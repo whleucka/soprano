@@ -1112,5 +1112,55 @@ if (!window.__podcastReportHooked) {
     }, 6000);
   }
 
+  // Network stall recovery. On a weak cellular link (a car, changing towers)
+  // the stream request can die without erroring: the element sits at
+  // readyState 0 with networkState LOADING, fires 'stalled', and waits on that
+  // dead connection indefinitely. 10:32:21 a track swapped in and made no sound
+  // until the page was reloaded 30s later; the server had answered in a second.
+  // A fresh request on a new connection is what the reload was doing, so do it
+  // here: if playback wanted to run but hasn't moved for STALL_RETRY_MS,
+  // load() again, picking up where it was via the same data-resume seek
+  // onloadedmetadata does for podcasts.
+  //
+  // load() fires a 'pause' with no ui stamp — the 'load-retry' line logged
+  // just before it is what explains it.
+  if (!isRadio && !audio.dataset.type) {
+    const STALL_RETRY_MS  = 8000;
+    const STALL_MAX_TRIES = 3;    // per stall; a 'playing' resets it
+    let stallTries = 0;
+    let stallTimer = null;
+    let stallPos   = 0;
+
+    const armStallRetry = function () {
+      if (stallTimer || audio.paused) return;
+      stallPos = audio.currentTime;
+      stallTimer = setTimeout(retryStalledLoad, STALL_RETRY_MS);
+    };
+
+    const retryStalledLoad = function () {
+      stallTimer = null;
+      if (document.getElementById('audio') !== audio) return; // swapped out
+      if (audio.paused || audio.error || window.__crossfade) return;
+      // Moved on its own, or has data to play: not stuck.
+      if (audio.readyState >= 3 || audio.currentTime !== stallPos) return;
+      if (stallTries >= STALL_MAX_TRIES) return;
+      stallTries++;
+      if (window.__plog) window.__plog('load-retry', 'try' + stallTries + ' rs' + audio.readyState, audio);
+      // currentTime is 0 again after a retry that never got metadata; keep the
+      // position the first one saved.
+      if (audio.currentTime > 0) audio.dataset.resume = Math.round(audio.currentTime * 1000);
+      audio.load();
+      audio.play().catch(function () {});
+      armStallRetry();
+    };
+
+    audio.addEventListener('waiting', armStallRetry);
+    audio.addEventListener('stalled', armStallRetry);
+    audio.addEventListener('playing', function () {
+      if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
+      stallTries = 0;
+    });
+  }
+
   requestAnimationFrame(updateProgress);
 })();

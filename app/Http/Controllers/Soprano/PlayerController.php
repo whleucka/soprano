@@ -32,6 +32,8 @@ class PlayerController extends Controller
         // a finished track found still sitting there when the tab came back,
         // and a track that swapped in but never started.
         'advance-retry', 'advance-recovered', 'start-stalled',
+        // A stalled stream request re-issued by player.js.
+        'load-retry',
     ];
 
     /** Session key holding the last auto advance, for retry de-duplication. */
