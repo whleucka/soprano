@@ -62,7 +62,7 @@ class SearchController extends Controller
         $this->hxTrigger("loadTop, searchResults, searchHero");
 
         return $this->render("search/index.html.twig", [
-            "search" => $this->search->getSearch(),
+            "search" => $this->search->getSearchState(),
         ]);
     }
 
@@ -124,6 +124,8 @@ class SearchController extends Controller
     #[Get("/search/results", "search.results")]
     public function results()
     {
+        // The only search view that renders hearts, so the only one that
+        // pays for re-reading liked state.
         return $this->render("search/results.html.twig", [
             "search" => $this->search->getSearch(),
             "player" => $this->player->getPlayer()
@@ -140,7 +142,7 @@ class SearchController extends Controller
     public function hero(): string
     {
         return $this->render("search/hero.html.twig", [
-            "search" => $this->search->getSearch(),
+            "search" => $this->search->getSearchState(),
         ]);
     }
 
@@ -148,7 +150,7 @@ class SearchController extends Controller
     public function top(): string
     {
         return $this->render("search/top.html.twig", [
-            "search" => $this->search->getSearch(),
+            "search" => $this->search->getSearchState(),
             "client" => client(),
         ]);
     }

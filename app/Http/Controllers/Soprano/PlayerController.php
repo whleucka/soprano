@@ -177,7 +177,7 @@ class PlayerController extends Controller
     #[Get("/player/play/search", "player.play-search")]
     public function playSearch()
     {
-        $search = $this->search->getSearch();
+        $search = $this->search->getSearchState();
         if (!empty($search['tracks'])) {
             $this->playlist->setPlaylist($search['tracks'], source: "search");
             $this->queueReplaced();

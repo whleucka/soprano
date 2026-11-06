@@ -54,9 +54,21 @@ class SearchService
      */
     public function getSearch(): array
     {
-        $search = state()->search ?? [];
+        $search = $this->getSearchState();
         $search['tracks'] = $this->music->refreshLikedState($search['tracks'] ?? []);
 
         return $search;
+    }
+
+    /**
+     * The search as stored, liked flags and all, without re-reading them.
+     * For callers that only want the term, the context, a count or the
+     * hashes. refreshLikedState() is an IN() over up to 2,500 hashes, and one
+     * /search load used to run it four times (page, top bar, hero, results)
+     * for the one fragment that shows hearts.
+     */
+    public function getSearchState(): array
+    {
+        return state()->search ?? [];
     }
 }

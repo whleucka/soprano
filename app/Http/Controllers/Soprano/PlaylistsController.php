@@ -314,7 +314,7 @@ class PlaylistsController extends Controller
                 ? array_column($this->music->albumTracks((int) $album->id), "hash")
                 : [],
             "artist" => $ref ? array_column($this->music->artistTracks($ref), "hash") : [],
-            "search" => array_column($this->search->getSearch()["tracks"] ?? [], "hash"),
+            "search" => array_column($this->search->getSearchState()["tracks"] ?? [], "hash"),
             // "track" and any single-hash fallback
             default  => $ref ? [$ref] : [],
         };
