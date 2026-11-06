@@ -306,7 +306,9 @@ class PlayerController extends Controller
         ]);
         // Clearing the playlist makes the rendered queue stale — refresh it so
         // clicking a leftover row doesn't hit the now-empty playlist (no-op).
-        $this->hxTrigger("loadPlayer, nowPlaying, playlistQueue, playlistActions");
+        // podcastProgress: touchProgress() just put this episode in Continue
+        // Listening, which no longer refreshes on loadPlayer.
+        $this->hxTrigger("loadPlayer, nowPlaying, playlistQueue, playlistActions, podcastProgress");
     }
 
     #[Get("/player/play/podcast-surprise", "player.play-podcast-surprise")]
@@ -332,7 +334,7 @@ class PlayerController extends Controller
         ]);
         // Clearing the playlist makes the rendered queue stale — refresh it so
         // clicking a leftover row doesn't hit the now-empty playlist (no-op).
-        $this->hxTrigger("loadPlayer, nowPlaying, playlistQueue, playlistActions");
+        $this->hxTrigger("loadPlayer, nowPlaying, playlistQueue, playlistActions, podcastProgress");
     }
 
     #[Get("/player/play/{hash}", "player.play")]
@@ -405,7 +407,12 @@ class PlayerController extends Controller
                 ? uri("player.stream", $next['hash'])
                 : null,
         ]);
-        $this->hxTrigger("loadPlayer, recentlyPlayed, topPlayed, topPlayedMonth, rediscover, topTracks, searchResults");
+        // Only the views a single play actually changes. Top Played, Top This
+        // Month and Rediscover used to be in this list too, which put eight
+        // or nine requests behind every track change on Home — enough to show
+        // up as php-fpm "pool seems busy" bursts in prod. One play barely
+        // moves those rankings, and the rails already poll every few minutes.
+        $this->hxTrigger("loadPlayer, recentlyPlayed, topTracks, searchResults");
     }
 
     #[Get("/player/podcast-progress", "player.podcast-progress")]
