@@ -29,17 +29,20 @@ class TrackController extends Controller
         $artist = $track->trackArtist();
         $album = $track->album();
 
+        // Any of the three rows can be missing (a half-synced or pruned
+        // track), and the page used to fatal on the first one that was. Same
+        // fallbacks as the player bar: '#' means "no link" to the template.
         return $this->render("tracks/index.html.twig", [
             "hash" => $track->hash,
-            "album_hash" => $album->hash,
-            "artist_hash" => $artist->hash,
-            "cover" => $album->cover ?? '/images/no-album-art.png',
-            "title" => $meta->title,
-            "artist" => $artist->name,
-            "album" => $album->title,
-            "lyrics" => $meta->lyrics,
-            "synced_lyrics" => $meta->synced_lyrics,
-            "dominant"    => $this->coverArt->hexToRgb($album->dominant_color),
+            "album_hash" => $album?->hash ?? '#',
+            "artist_hash" => $artist?->hash ?? '#',
+            "cover" => $album?->cover ?? '/images/no-album-art.png',
+            "title" => $meta?->title ?? 'N/A',
+            "artist" => $artist?->name ?? 'N/A',
+            "album" => $album?->title ?? 'N/A',
+            "lyrics" => $meta?->lyrics,
+            "synced_lyrics" => $meta?->synced_lyrics,
+            "dominant"    => $this->coverArt->hexToRgb($album?->dominant_color),
         ]);
     }
 

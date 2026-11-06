@@ -38,4 +38,29 @@ class SearchServiceTest extends TestCase
         $this->assertSame([], state()->search['tracks']);
         $this->assertSame('Top Played', state()->search['context']['label']);
     }
+
+    /** The cheap path must not touch the database at all. */
+    public function testGetSearchStateDoesNotRefreshLikes(): void
+    {
+        $music = $this->createMock(MusicService::class);
+        $music->expects($this->never())->method('refreshLikedState');
+        $search = new SearchService($music);
+
+        state()->search = ['term' => 'x', 'tracks' => [['hash' => 'a', 'liked' => 1]], 'context' => null];
+
+        $this->assertSame([['hash' => 'a', 'liked' => 1]], $search->getSearchState()['tracks']);
+    }
+
+    /** The results pane still gets current hearts. */
+    public function testGetSearchRefreshesLikes(): void
+    {
+        $music = $this->createMock(MusicService::class);
+        $music->expects($this->once())->method('refreshLikedState')
+            ->willReturn([['hash' => 'a', 'liked' => 0]]);
+        $search = new SearchService($music);
+
+        state()->search = ['term' => 'x', 'tracks' => [['hash' => 'a', 'liked' => 1]], 'context' => null];
+
+        $this->assertSame(0, $search->getSearch()['tracks'][0]['liked']);
+    }
 }
