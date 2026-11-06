@@ -16,9 +16,13 @@
       </a>
     {% endif %}
 
-    {# Header lives inside the fragment so the section vanishes until the
+    {# Every poll on this page is gated on the tab being visible: a phone
+       left playing on Home kept refreshing a dozen rails nobody could see.
+       A hidden tab skips the tick and picks up on the next one.
+
+       Header lives inside the fragment so the section vanishes until the
        feature backfill has analyzed part of the library. #}
-    <div id="stations" class="mb-4" hx-get="{{ uri("home.stations") }}" hx-trigger="load, every 10m"></div>
+    <div id="stations" class="mb-4" hx-get="{{ uri("home.stations") }}" hx-trigger="load, every 10m [document.visibilityState === 'visible']"></div>
 
     <div class="d-inline-flex align-items-center gap-2">
       <h2 class="mb-0"><i class="bi bi-clock text-secondary pe-1"></i> Recently Played</h2>
@@ -26,7 +30,7 @@
           <a hx-boost="true" href="{{ uri('search.feed', ['recently-played']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
-    <div id="recently-played" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-played") }}" hx-trigger="every 2m, load, recentlyPlayed from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+    <div id="recently-played" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-played") }}" hx-trigger="every 2m [document.visibilityState === 'visible'], load, recentlyPlayed from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-heart-fill text-danger pe-1"></i> Recently Liked</h2>
@@ -34,7 +38,7 @@
           <a hx-boost="true" href="{{ uri('search.feed', ['recently-liked']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
-    <div id="recently-liked" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-liked") }}" hx-trigger="every 2m, load, recentlyLiked from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+    <div id="recently-liked" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-liked") }}" hx-trigger="every 2m [document.visibilityState === 'visible'], load, recentlyLiked from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     {# Header lives inside the fragment so the rail vanishes until there's
        listening history to seed artist radios from. #}
@@ -51,7 +55,7 @@
           <a hx-boost="true" href="{{ uri('search.feed', ['top-played']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
-    <div id="top-played" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.top-played") }}" hx-trigger="every 2m, load, topPlayed from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+    <div id="top-played" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.top-played") }}" hx-trigger="every 2m [document.visibilityState === 'visible'], load, topPlayed from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-graph-up-arrow text-success pe-1"></i> Top This Month</h2>
@@ -59,7 +63,7 @@
           <a hx-boost="true" href="{{ uri('search.feed', ['top-played-month']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
-    <div id="top-played-month" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.top-played-month") }}" hx-trigger="every 2m, load, topPlayedMonth from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+    <div id="top-played-month" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.top-played-month") }}" hx-trigger="every 2m [document.visibilityState === 'visible'], load, topPlayedMonth from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-plus-lg pe-1"></i> Recently Added</h2>
@@ -67,7 +71,7 @@
           <a hx-boost="true" href="{{ uri('search.feed', ['recently-added']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
-    <div id="recently-added" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-added") }}" hx-trigger="every 5m, load, recentlyAdded from:body, trackLike from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+    <div id="recently-added" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.recently-added") }}" hx-trigger="every 5m [document.visibilityState === 'visible'], load, recentlyAdded from:body, trackLike from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-gem text-info pe-1"></i> Rediscover</h2>
@@ -75,7 +79,7 @@
           <a hx-boost="true" href="{{ uri('search.feed', ['rediscover']) }}" hx-target="#view" hx-select="#view" hx-swap="outerHTML" class="text-reset small text-decoration-none">More</a>
       </span>
     </div>
-    <div id="rediscover" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.rediscover") }}" hx-trigger="every 5m, load, rediscover from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
+    <div id="rediscover" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.rediscover") }}" hx-trigger="every 5m [document.visibilityState === 'visible'], load, rediscover from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-mic-fill text-info pe-1"></i> My Podcasts</h2>
@@ -86,8 +90,10 @@
     <div id="my-podcasts" class="d-flex justify-content-start py-2 scrollable" hx-get="{{ uri("home.my-podcasts") }}" hx-trigger="load, podcastLikes from:body">{% include 'components/skeleton-rail.html.twig' %}</div>
 
     {# Header lives inside the fragment so the section vanishes when empty;
-       loadPlayer refreshes it when a new episode starts playing. #}
-    <div id="continue-listening" hx-get="{{ uri("home.continue-listening") }}" hx-trigger="every 2m, load, loadPlayer from:body, podcastProgress from:body"></div>
+       the podcast play routes fire podcastProgress when an episode starts.
+       Not loadPlayer: that fires on every track change, and a music track
+       never changes this section. #}
+    <div id="continue-listening" hx-get="{{ uri("home.continue-listening") }}" hx-trigger="every 2m [document.visibilityState === 'visible'], load, podcastProgress from:body"></div>
 
     <div class="d-inline-flex align-items-center gap-2 mt-5">
       <h2 class="mb-0"><i class="bi bi-broadcast text-danger pe-1"></i> Favourite Radio</h2>

@@ -27,8 +27,12 @@ class SearchService
      */
     public function setSearchResults(array $tracks, ?array $context = null): void
     {
+        // 'term' must be cleared explicitly: state writes merge over the
+        // previous value, so leaving it out kept the last typed search in
+        // the box (and in "No results found for '…'") on every feed page.
         state()->search = [
             'tracks' => $tracks,
+            'term' => '',
             'context' => $context,
         ];
     }
