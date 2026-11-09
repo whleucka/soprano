@@ -31,7 +31,7 @@ class SignInController extends AuthController
         if ($valid) {
             $success = $this->service->signIn($valid->username, $valid->password);
             if ($success) {
-                $path = config("security.client_authenticated_route");
+                $path = $this->intendedPath();
                 return redirect($path)->withFlash("success", "Welcome back, " . client()->username . ".");
             } else {
                 Flash::add("warning", "Invalid username and/or password");

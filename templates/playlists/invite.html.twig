@@ -1,0 +1,28 @@
+{% extends "layout/app.html.twig" %}
+
+{% block title %}Soprano - Playlist invite {% endblock %}
+
+{% block view %}
+<section id="playlist-invite" class="h-100 d-flex flex-column align-items-center justify-content-center p-3 text-center">
+  {% if valid %}
+    <i class="bi bi-people display-4 mb-3"></i>
+    <h1 class="h3 mb-1 text-break">{{ name }}</h1>
+    <p class="text-muted mb-4">{{ owner }} invited you to collaborate · {{ count }} track{% if count != 1 %}s{% endif %}</p>
+    <p class="small text-muted mb-4">Joining adds it to your playlists. You'll both be able to add and remove tracks.</p>
+    <div class="d-flex gap-2">
+      {# A plain POST, not boosted: the redirect after it should be a full
+         page load so the sidebar picks up the new playlist. #}
+      <form method="POST" action="{{ uri('playlists.invite-accept', [token]) }}" hx-boost="false">
+        {{ csrf()|raw }}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg pe-1"></i> Join playlist</button>
+      </form>
+      <a class="btn btn-outline-light" href="{{ uri('playlists.index') }}">Not now</a>
+    </div>
+  {% else %}
+    <i class="bi bi-link-45deg display-4 mb-3 text-warning"></i>
+    <h1 class="h4 mb-2">This invite link doesn't work</h1>
+    <p class="text-muted mb-4">The owner may have turned it off or made a new one. Ask them for a fresh link.</p>
+    <a class="btn btn-outline-light" href="{{ uri('playlists.index') }}">Your playlists</a>
+  {% endif %}
+</section>
+{% endblock %}

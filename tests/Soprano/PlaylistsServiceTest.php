@@ -93,6 +93,128 @@ class PlaylistsServiceTest extends TestCase
 
         $this->assertSame($row, (new StubPlaylistsService($row))->getUserPlaylistByHash("abc123"));
     }
+
+    // ─── Collaboration ───────────────────────────────────────────
+
+    public function testTheOwnerOwnsTheirPlaylist(): void
+    {
+        $row = new FakePlaylist();
+
+        $this->assertTrue((new StubPlaylistsService($row))->isOwner($row));
+    }
+
+    public function testACollaboratorDoesNotOwnThePlaylist(): void
+    {
+        $row = new FakePlaylist();
+
+        $this->assertFalse((new StubPlaylistsService($row, clientId: 2))->isOwner($row));
+    }
+
+    public function testAJoinedPlaylistIsNotTheCollaboratorsUserPlaylist(): void
+    {
+        // The lookup hands the row over (they're a member), but renaming,
+        // deleting and managing members still belong to the owner.
+        $row = new FakePlaylist();
+
+        $this->assertNull((new StubPlaylistsService($row, clientId: 2))->getUserPlaylistByHash("abc123"));
+    }
+
+    public function testACollaboratorCannotDeleteThePlaylist(): void
+    {
+        $row = new FakePlaylist();
+
+        (new StubPlaylistsService($row, clientId: 2))->deletePlaylist("abc123");
+
+        $this->assertFalse($row->deleted);
+    }
+
+    public function testACollaboratorCannotRenameThePlaylist(): void
+    {
+        $row = new FakePlaylist();
+
+        $this->assertNull((new StubPlaylistsService($row, clientId: 2))->renamePlaylist("abc123", "Mine now"));
+    }
+
+    public function testACollaboratorCannotMakeAnInviteLink(): void
+    {
+        // Returns before minting a token or touching the database.
+        $row = new FakePlaylist();
+
+        $this->assertNull((new StubPlaylistsService($row, clientId: 2))->createInvite("abc123"));
+    }
+
+    public function testAGeneratedMixCannotGetAnInviteLink(): void
+    {
+        $row       = new FakePlaylist();
+        $row->slot = "heavy-rotation";
+
+        $this->assertNull((new StubPlaylistsService($row))->createInvite("abc123"));
+    }
+
+    public function testATokenIsThirtyTwoHexCharacters(): void
+    {
+        $this->assertTrue(PlaylistsService::isTokenShaped(bin2hex(random_bytes(16))));
+    }
+
+    /** @return array<string, array{string}> */
+    public static function badTokens(): array
+    {
+        return [
+            'empty'      => [''],
+            'too short'  => ['abc123'],
+            'too long'   => [str_repeat('a', 33)],
+            'not hex'    => [str_repeat('g', 32)],
+            'sql-ish'    => ["' OR 1=1 -- " . str_repeat('a', 20)],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('badTokens')]
+    public function testAnythingElseIsNotAToken(string $token): void
+    {
+        $this->assertFalse(PlaylistsService::isTokenShaped($token));
+    }
+
+    public function testAJoinedPlaylistRowIsSharedAndNamesItsOwner(): void
+    {
+        $row = $this->map(['is_owner' => 0, 'owner' => 'kara', 'has_members' => 1]);
+
+        $this->assertTrue($row['shared']);
+        $this->assertSame('kara', $row['owner']);
+    }
+
+    public function testAnOwnPlaylistWithMembersIsSharedButNamesNoOwner(): void
+    {
+        $row = $this->map(['is_owner' => 1, 'owner' => 'william', 'has_members' => 1]);
+
+        $this->assertTrue($row['shared']);
+        $this->assertNull($row['owner']);
+    }
+
+    public function testAnOwnPlaylistWithoutMembersIsNotShared(): void
+    {
+        $row = $this->map(['is_owner' => 1, 'owner' => 'william', 'has_members' => 0]);
+
+        $this->assertFalse($row['shared']);
+        $this->assertNull($row['owner']);
+    }
+
+    public function testAVirtualPlaylistRowIsNotShared(): void
+    {
+        // Liked and Random carry none of the ownership columns.
+        $row = $this->map([]);
+
+        $this->assertFalse($row['shared']);
+        $this->assertNull($row['owner']);
+    }
+
+    private function map(array $extra): array
+    {
+        $method = new ReflectionMethod(PlaylistsService::class, 'mapPlaylistRow');
+
+        return $method->invoke(new PlaylistsService(), [
+            'hash' => 'abc123', 'name' => 'Road Trip', 'track_count' => 3, ...$extra,
+        ]);
+    }
 }
 
 // ─── Fixtures ────────────────────────────────────────────────
@@ -107,6 +229,13 @@ class FakePlaylist extends Playlist
 {
     public bool $deleted = false;
 
+    /** Owned by client 1, the stub's default current client. */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->client_id = 1;
+    }
+
     public function delete(): bool
     {
         $this->deleted = true;
@@ -115,13 +244,22 @@ class FakePlaylist extends Playlist
     }
 }
 
-/** PlaylistsService with its one db()-backed lookup answering with a fixed row. */
+/**
+ * PlaylistsService with its one db()-backed lookup answering with a fixed row,
+ * as seen by a fixed client: 1 owns the fake row, anyone else is there as a
+ * collaborator (the lookup only answers for owners and members).
+ */
 class StubPlaylistsService extends PlaylistsService
 {
-    public function __construct(private ?Playlist $row) {}
+    public function __construct(private ?Playlist $row, private int $clientId = 1) {}
 
     public function getPlaylistByHash(string $hash): ?Playlist
     {
         return $this->row;
+    }
+
+    protected function clientId(): int
+    {
+        return $this->clientId;
     }
 }

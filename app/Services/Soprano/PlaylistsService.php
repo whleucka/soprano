@@ -6,7 +6,10 @@ use App\Models\Playlist;
 
 /**
  * Persistent, per-client playlists (distinct from PlaylistService, which is the
- * ephemeral now-playing queue). Reads use db() for the list/aggregate queries
+ * ephemeral now-playing queue). A playlist has one owner (playlists.client_id)
+ * and may have collaborators (playlist_members) who joined through the owner's
+ * invite link. Owner and collaborators alike can open, play and edit the
+ * tracks; only the owner can rename, delete, or manage the invite and members. Reads use db() for the list/aggregate queries
  * since the ORM has no JOIN; writes go through the models or raw INSERT IGNORE.
  *
  * Membership operates on a *selection* — a set of track hashes resolved by the
@@ -28,7 +31,16 @@ class PlaylistsService
     public const RANDOM_SIZE = 2500;
 
     /**
-     * Current client's user-created playlists, most-recently-touched first,
+     * "The current client may open this playlist": they own it or joined it.
+     * Expects the playlists table aliased as `p` and two bindings, both the
+     * client id.
+     */
+    private const ACCESS_SQL =
+        "(p.client_id = ? OR p.id IN (SELECT playlist_id FROM playlist_members WHERE client_id = ?))";
+
+    /**
+     * Current client's user-created playlists, plus the ones they joined as a
+     * collaborator, most-recently-touched first,
      * each with a track_count and a cover (the album art of the first track
      * added, or the default placeholder when empty). Led by the two virtual
      * playlists, which carry an icon instead of cover art. Drives the sidebar
@@ -39,9 +51,13 @@ class PlaylistsService
      */
     public function getPlaylists(): array
     {
+        $clientId = $this->clientId();
         $rows = db()->fetchAll(
             "SELECT p.hash AS hash,
                     p.name AS name,
+                    p.client_id = ? AS is_owner,
+                    c.username AS owner,
+                    EXISTS (SELECT 1 FROM playlist_members m WHERE m.playlist_id = p.id) AS has_members,
                     (SELECT COUNT(*) FROM playlist_tracks pt WHERE pt.playlist_id = p.id) AS track_count,
                     (SELECT al.cover
                        FROM playlist_tracks pt
@@ -51,9 +67,10 @@ class PlaylistsService
                        ORDER BY pt.id ASC
                        LIMIT 1) AS cover
              FROM playlists p
-             WHERE p.client_id = ? AND p.slot IS NULL
+             JOIN clients c ON c.id = p.client_id
+             WHERE p.slot IS NULL AND " . self::ACCESS_SQL . "
              ORDER BY p.updated_at DESC, p.id DESC",
-            [client()->id],
+            [$clientId, $clientId, $clientId],
         );
 
         return [
@@ -158,14 +175,22 @@ class PlaylistsService
     }
 
     /**
-     * @return array{hash: string, name: string, slot: ?string, track_count: int, cover: string, icon: ?string}
+     * `shared` is true for a playlist with more than one person on it, from
+     * either side. `owner` is the owner's username, but only when that is
+     * someone else, so a view can say whose playlist the client joined.
+     *
+     * @return array{hash: string, name: string, slot: ?string, shared: bool, owner: ?string, track_count: int, cover: string, icon: ?string}
      */
     private function mapPlaylistRow(array $row): array
     {
+        $isOwner = (bool) ($row['is_owner'] ?? true);
+
         return [
             'hash'        => $row['hash'],
             'name'        => $row['name'],
             'slot'        => $row['slot'] ?? null,
+            'shared'      => !$isOwner || (bool) ($row['has_members'] ?? false),
+            'owner'       => $isOwner ? null : ($row['owner'] ?? null),
             'track_count' => (int) $row['track_count'],
             // An icon replaces the cover art entirely (virtual playlists).
             'icon'        => $row['icon'] ?? null,
@@ -173,10 +198,21 @@ class PlaylistsService
         ];
     }
 
+    /**
+     * A playlist the current client can open: their own, or one they joined
+     * as a collaborator. This is the gate for viewing, playing and editing
+     * tracks. Null for a hash that is neither.
+     */
     public function getPlaylistByHash(string $hash): ?Playlist
     {
+        $clientId = $this->clientId();
+
         return Playlist::where('hash', $hash)
-            ->andWhere('client_id', client()->id)
+            // ACCESS_SQL without the alias; the model's query has none.
+            ->whereRaw(
+                "playlists.client_id = ? OR playlists.id IN (SELECT playlist_id FROM playlist_members WHERE client_id = ?)",
+                [$clientId, $clientId],
+            )
             ->first();
     }
 
@@ -184,14 +220,193 @@ class PlaylistsService
      * The same row, but only when the client made it themselves. A generated
      * mix (slot set) is the nightly job's: it picked the name to go with the
      * slot's icon on the home rail and rewrites the tracks under it every
-     * night, so it is not the client's to rename or delete. Null for a mix,
-     * exactly as for a hash that isn't theirs.
+     * night, so it is not the client's to rename or delete. A playlist the
+     * client only joined isn't theirs either: renaming, deleting and managing
+     * who is in stay with the owner. Null for both, exactly as for a hash
+     * that isn't theirs.
      */
     public function getUserPlaylistByHash(string $hash): ?Playlist
     {
         $playlist = $this->getPlaylistByHash($hash);
 
-        return $playlist?->slot === null ? $playlist : null;
+        return $playlist && $playlist->slot === null && $this->isOwner($playlist)
+            ? $playlist
+            : null;
+    }
+
+    public function isOwner(Playlist $playlist): bool
+    {
+        return (int) $playlist->client_id === $this->clientId();
+    }
+
+    /** True when the playlist has at least one collaborator. */
+    public function hasMembers(Playlist $playlist): bool
+    {
+        return (bool) db()->fetch(
+            "SELECT 1 FROM playlist_members WHERE playlist_id = ? LIMIT 1",
+            [$playlist->id],
+        );
+    }
+
+    /** The current client's id. A seam for the tests, which have no session. */
+    protected function clientId(): int
+    {
+        return (int) client()->id;
+    }
+
+    // ─── Collaboration ───────────────────────────────────────────
+
+    /**
+     * Mint a fresh invite link for one of the client's own playlists and
+     * return its token. Any previous link stops working; collaborators who
+     * already joined are unaffected. Null when the playlist isn't theirs or
+     * is a generated mix, which can't be shared.
+     *
+     * Written with a bare UPDATE rather than the model so updated_at keeps
+     * its value: managing the invite shouldn't float the playlist to the top
+     * of everyone's list the way editing it does.
+     */
+    public function createInvite(string $hash): ?string
+    {
+        $playlist = $this->getUserPlaylistByHash($hash);
+        if (!$playlist) {
+            return null;
+        }
+
+        $token = bin2hex(random_bytes(16));
+        db()->execute(
+            "UPDATE playlists SET invite_token = ?, updated_at = updated_at WHERE id = ?",
+            [$token, $playlist->id],
+        );
+
+        return $token;
+    }
+
+    /** Turn the invite link off. Existing collaborators stay. */
+    public function disableInvite(string $hash): void
+    {
+        $playlist = $this->getUserPlaylistByHash($hash);
+        if (!$playlist) {
+            return;
+        }
+
+        db()->execute(
+            "UPDATE playlists SET invite_token = NULL, updated_at = updated_at WHERE id = ?",
+            [$playlist->id],
+        );
+    }
+
+    /**
+     * The playlist a live invite token opens. Not limited to the current
+     * client, since the point is to reach someone else's playlist. Anything
+     * that isn't the shape of a token is turned away before it reaches the
+     * database.
+     */
+    public function findByInviteToken(string $token): ?Playlist
+    {
+        if (!self::isTokenShaped($token)) {
+            return null;
+        }
+
+        return Playlist::where('invite_token', $token)
+            ->whereNull('slot')
+            ->first();
+    }
+
+    public static function isTokenShaped(string $token): bool
+    {
+        return strlen($token) === 32 && ctype_xdigit($token);
+    }
+
+    /**
+     * Join a playlist as a collaborator. The owner never gets a member row,
+     * and joining twice is a no-op thanks to unique(playlist_id, client_id).
+     */
+    public function join(Playlist $playlist): void
+    {
+        if ($this->isOwner($playlist)) {
+            return;
+        }
+
+        db()->execute(
+            "INSERT IGNORE INTO playlist_members (playlist_id, client_id) VALUES (?, ?)",
+            [$playlist->id, $this->clientId()],
+        );
+    }
+
+    /** True when the current client is a collaborator (not the owner). */
+    public function isMember(Playlist $playlist): bool
+    {
+        return (bool) db()->fetch(
+            "SELECT 1 FROM playlist_members WHERE playlist_id = ? AND client_id = ?",
+            [$playlist->id, $this->clientId()],
+        );
+    }
+
+    /** Leave a playlist the client joined. The owner can't leave their own. */
+    public function leave(string $hash): void
+    {
+        $playlist = $this->getPlaylistByHash($hash);
+        if (!$playlist || $this->isOwner($playlist)) {
+            return;
+        }
+
+        db()->execute(
+            "DELETE FROM playlist_members WHERE playlist_id = ? AND client_id = ?",
+            [$playlist->id, $this->clientId()],
+        );
+    }
+
+    /**
+     * The collaborators on one of the client's own playlists, in join order.
+     * Addressed by client uuid, never the integer id.
+     *
+     * @return array<int, array{uuid: string, username: string}>
+     */
+    public function members(Playlist $playlist): array
+    {
+        return db()->fetchAll(
+            "SELECT c.uuid AS uuid, c.username AS username
+             FROM playlist_members m
+             JOIN clients c ON c.id = m.client_id
+             WHERE m.playlist_id = ?
+             ORDER BY m.id ASC",
+            [$playlist->id],
+        );
+    }
+
+    /** The owner removes a collaborator. */
+    public function removeMember(string $hash, string $clientUuid): void
+    {
+        $playlist = $this->getUserPlaylistByHash($hash);
+        if (!$playlist) {
+            return;
+        }
+
+        db()->execute(
+            "DELETE m FROM playlist_members m
+             JOIN clients c ON c.id = m.client_id
+             WHERE m.playlist_id = ? AND c.uuid = ?",
+            [$playlist->id, $clientUuid],
+        );
+    }
+
+    public function trackCount(Playlist $playlist): int
+    {
+        $row = db()->fetch(
+            "SELECT COUNT(*) AS c FROM playlist_tracks WHERE playlist_id = ?",
+            [$playlist->id],
+        );
+
+        return (int) ($row['c'] ?? 0);
+    }
+
+    /** The owner's username, for "shared by …" on a joined playlist. */
+    public function ownerName(Playlist $playlist): ?string
+    {
+        $row = db()->fetch("SELECT username FROM clients WHERE id = ?", [$playlist->client_id]);
+
+        return $row['username'] ?? null;
     }
 
     public function createPlaylist(string $name): Playlist|bool
@@ -203,7 +418,7 @@ class PlaylistsService
 
         return Playlist::create([
             'hash'      => bin2hex(random_bytes(16)),
-            'client_id' => client()->id,
+            'client_id' => $this->clientId(),
             'name'      => $name,
         ]);
     }
@@ -308,7 +523,8 @@ class PlaylistsService
     }
 
     /**
-     * Every playlist for the current client, each with a `contains` flag that is
+     * Every playlist the current client can add to (their own and the ones
+     * they joined), each with a `contains` flag that is
      * true only when the playlist already holds the *entire* selection. Drives
      * the modal's add/added indicator. With an empty selection, `contains` is
      * false for all (used by the sidebar "New playlist" entry).
@@ -321,10 +537,14 @@ class PlaylistsService
 
         // Generated mixes are excluded — the nightly job wipes their contents,
         // so hand-adding tracks to them would be a trap.
+        $clientId = $this->clientId();
         if (empty($ids)) {
             $rows = db()->fetchAll(
-                "SELECT hash, name FROM playlists WHERE client_id = ? AND slot IS NULL ORDER BY name ASC",
-                [client()->id],
+                "SELECT p.hash AS hash, p.name AS name
+                 FROM playlists p
+                 WHERE p.slot IS NULL AND " . self::ACCESS_SQL . "
+                 ORDER BY p.name ASC",
+                [$clientId, $clientId],
             );
             return array_map(fn($r) => [
                 'hash' => $r['hash'], 'name' => $r['name'], 'contains' => false,
@@ -340,10 +560,10 @@ class PlaylistsService
              FROM playlists p
              LEFT JOIN playlist_tracks pt
                ON pt.playlist_id = p.id AND pt.track_id IN ($ph)
-             WHERE p.client_id = ? AND p.slot IS NULL
+             WHERE p.slot IS NULL AND " . self::ACCESS_SQL . "
              GROUP BY p.id
              ORDER BY p.name ASC",
-            [...$ids, client()->id],
+            [...$ids, $clientId, $clientId],
         );
 
         return array_map(fn($r) => [

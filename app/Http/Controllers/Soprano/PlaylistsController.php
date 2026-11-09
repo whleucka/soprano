@@ -68,6 +68,8 @@ class PlaylistsController extends Controller
         return $this->render("playlists/show.html.twig", [
             "hash"     => $playlist->hash,
             "name"     => $playlist->name,
+            // Whose it is, on a playlist the client joined rather than made.
+            "owner"    => $this->playlists->isOwner($playlist) ? null : $this->playlists->ownerName($playlist),
             "count"    => count($tracks),
             "cover"    => $first['cover'] ?? '/images/no-album-art.png',
             "dominant" => $this->coverArt->hexToRgb($first['dominant_color'] ?? null),
@@ -94,6 +96,7 @@ class PlaylistsController extends Controller
             "hash"         => $playlist->hash,
             "name"         => $playlist->name,
             "is_generated" => $playlist->slot !== null,
+            "is_owner"     => $this->playlists->isOwner($playlist),
         ]);
     }
 
@@ -245,6 +248,99 @@ class PlaylistsController extends Controller
             "select" => "#view",
             "swap"   => "outerHTML",
         ]));
+    }
+
+    /**
+     * The collaborators modal: the invite link and who has joined. Owner
+     * only, and only on a playlist they made (a generated mix can't be
+     * shared); everyone else falls through to a 404.
+     */
+    #[Get("/playlists/{hash}/collaborators", "playlists.collaborators")]
+    public function collaborators(string $hash): string
+    {
+        $playlist = $this->playlists->getUserPlaylistByHash($hash);
+        if (!$playlist) {
+            return $this->pageNotFound();
+        }
+
+        return $this->renderCollaborators($hash);
+    }
+
+    /** Mint a new invite link. Any older link stops working. */
+    #[Post("/playlists/{hash}/invite", "playlists.invite-create")]
+    public function inviteCreate(string $hash): string
+    {
+        if (!$this->playlists->createInvite($hash)) {
+            return $this->pageNotFound();
+        }
+
+        return $this->renderCollaborators($hash);
+    }
+
+    /** Turn the invite link off. People who already joined stay. */
+    #[Post("/playlists/{hash}/invite/disable", "playlists.invite-disable")]
+    public function inviteDisable(string $hash): string
+    {
+        if (!$this->playlists->getUserPlaylistByHash($hash)) {
+            return $this->pageNotFound();
+        }
+
+        $this->playlists->disableInvite($hash);
+
+        return $this->renderCollaborators($hash);
+    }
+
+    #[Post("/playlists/{hash}/members/{uuid}/remove", "playlists.member-remove")]
+    public function memberRemove(string $hash, string $uuid): string
+    {
+        if (!$this->playlists->getUserPlaylistByHash($hash)) {
+            return $this->pageNotFound();
+        }
+
+        $this->playlists->removeMember($hash, $uuid);
+        $this->hxTrigger("loadSidebar, loadPlaylists");
+
+        return $this->renderCollaborators($hash);
+    }
+
+    /**
+     * A collaborator leaves a playlist they joined. Takes them back to the
+     * playlists index, as deleting does, because the page they were on is no
+     * longer theirs to see. The owner can't leave their own playlist; they
+     * delete it instead.
+     */
+    #[Post("/playlists/{hash}/leave", "playlists.leave")]
+    public function leave(string $hash): void
+    {
+        $playlist = $this->playlists->getPlaylistByHash($hash);
+        if (!$playlist || $this->playlists->isOwner($playlist)) {
+            $this->pageNotFound();
+        }
+
+        $this->playlists->leave($hash);
+        $this->hxTrigger("loadSidebar, loadPlaylists, loadTop");
+        $this->setHeader("HX-Location", json_encode([
+            "path"   => uri("playlists.index"),
+            "target" => "#view",
+            "select" => "#view",
+            "swap"   => "outerHTML",
+        ]));
+    }
+
+    private function renderCollaborators(string $hash): string
+    {
+        // Re-read: an invite change just rewrote the row.
+        $playlist = $this->playlists->getUserPlaylistByHash($hash);
+        $token    = $playlist->invite_token;
+
+        return $this->render("playlists/modal-collaborators.html.twig", [
+            "hash"    => $playlist->hash,
+            "name"    => $playlist->name,
+            "invite"  => $token
+                ? request()->getScheme() . "://" . request()->getHost() . uri("playlists.invite", $token)
+                : null,
+            "members" => $this->playlists->members($playlist),
+        ]);
     }
 
     /** The virtual "Liked" playlist is track_likes wearing a playlist's clothes. */

@@ -12,6 +12,8 @@ use Echo\Framework\Session\Flash;
 
 class ClientAuth implements MiddlewareInterface
 {
+    public const INTENDED = "client_intended";
+
     public function handle(RequestInterface $request, Closure $next): ResponseInterface
     {
         $route = $request->getAttribute("route");
@@ -31,6 +33,14 @@ class ClientAuth implements MiddlewareInterface
         if ($client) {
             $request->setAttribute('client', $client);
             return $next($request);
+        }
+
+        // Remember where a full-page visit was headed, so signing in lands
+        // there instead of on the home page. This is what lets a playlist
+        // invite link survive a trip through the sign-in form. Path only:
+        // see AuthController::intendedPath() for the other half.
+        if ($request->getMethod() === "GET" && !$request->isHTMX()) {
+            session()->set(self::INTENDED, $request->getUri());
         }
 
         Flash::add("warning", "Please sign in to continue.");

@@ -35,7 +35,7 @@ class RegisterController extends AuthController
         if ($valid) {
             $success = $this->service->register($valid->username, $valid->password);
             if ($success) {
-                $path = config("security.client_authenticated_route");
+                $path = $this->intendedPath();
                 return redirect($path)->withFlash("success", "Welcome, " . client()->username . "!");
             } else {
                 Flash::add("warning", "Failed to register new account");
