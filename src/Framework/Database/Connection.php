@@ -64,6 +64,7 @@ final class Connection implements ConnectionInterface
           $this->driver->getPassword(),
           $this->driver->getOptions()
         );
+        $this->syncTimeZone();
       } catch (PDOException $e) {
         error_log("Please refer to setup guide: https://github.com/whleucka/echo");
 
@@ -83,6 +84,51 @@ final class Connection implements ConnectionInterface
         }
       }
     }
+  }
+
+  /**
+   * Make the session's clock agree with PHP's.
+   *
+   * PHP and the database swap wall-clock strings constantly: NOW() and
+   * CURRENT_TIMESTAMP come back for PHP to diff against its own time(), and
+   * PHP-built cutoffs ('- 1 WEEK') go into WHERE clauses. That only works
+   * while both sides map the zone to the same UTC offset. Each side resolves
+   * a named zone with its own tz database, and the database container's
+   * copy can lag. When Alberta moved to permanent UTC-6 in November 2026,
+   * PHP's bundled tzdb had the change but the MariaDB image's tzdata didn't,
+   * and every "played 1 minute ago" read as an hour.
+   *
+   * So the session gets PHP's current numeric offset instead of a zone
+   * name, and PHP's tzdb is the only one that matters. It's set on every
+   * connect, not once: the link is persistent, and a fresh offset per
+   * request also carries it across a DST change.
+   *
+   * The zone is read from config rather than date('P'): the HTTP kernel,
+   * and with it this connection, is resolved before Application calls
+   * date_default_timezone_set(), so PHP's default is still UTC here.
+   */
+  private function syncTimeZone(): void
+  {
+    if ($this->link->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
+      return;
+    }
+
+    $this->link->exec("SET time_zone = " . $this->link->quote(self::utcOffset(config('app.timezone'))));
+  }
+
+  /**
+   * "+HH:MM" for the zone right now, per PHP's tz database. An empty or
+   * unknown zone falls back to PHP's default.
+   */
+  public static function utcOffset(?string $zone, string $at = 'now'): string
+  {
+    try {
+      $tz = new \DateTimeZone($zone ?: date_default_timezone_get());
+    } catch (\Exception) {
+      $tz = new \DateTimeZone(date_default_timezone_get());
+    }
+
+    return (new \DateTimeImmutable($at, $tz))->format('P');
   }
 
   public function execute(string $sql, array $params = []): mixed
