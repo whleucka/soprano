@@ -1,0 +1,54 @@
+{# The owner's collaborators modal. Every action posts back here and the
+   response replaces the modal content. #}
+<div id="modal-collaborators">
+<div class="modal-header">
+  <h5 class="modal-title truncate"><i class="bi bi-people pe-1"></i> Collaborators</h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+  <p class="text-muted small mb-2">Anyone you send the link to can join &quot;{{ name }}&quot; and add or remove tracks. Only you can rename it, delete it or change who's in.</p>
+
+  {% if invite %}
+    <div class="input-group mb-2">
+      <input type="text" class="form-control" value="{{ invite }}" aria-label="Invite link" readonly onfocus="this.select()" />
+      <button type="button" class="btn btn-primary" title="Copy link"
+              data-url="{{ invite }}"
+              onclick="_copyClipboard(this.dataset.url).then(() => { this.querySelector('i').className = 'bi bi-check2'; })"><i class="bi bi-clipboard"></i></button>
+    </div>
+    <div class="d-flex gap-2 mb-3">
+      <form hx-post="{{ uri('playlists.invite-create', [hash]) }}" hx-target="#modal .modal-content" hx-swap="innerHTML"
+            hx-confirm="Make a new link? The current one will stop working.">
+        {{ csrf()|raw }}
+        <button type="submit" class="btn btn-sm btn-outline-light"><i class="bi bi-arrow-repeat pe-1"></i> New link</button>
+      </form>
+      <form hx-post="{{ uri('playlists.invite-disable', [hash]) }}" hx-target="#modal .modal-content" hx-swap="innerHTML">
+        {{ csrf()|raw }}
+        <button type="submit" class="btn btn-sm btn-outline-light"><i class="bi bi-link-45deg pe-1"></i> Turn off link</button>
+      </form>
+    </div>
+  {% else %}
+    <form class="mb-3" hx-post="{{ uri('playlists.invite-create', [hash]) }}" hx-target="#modal .modal-content" hx-swap="innerHTML">
+      {{ csrf()|raw }}
+      <button type="submit" class="btn btn-primary"><i class="bi bi-link-45deg pe-1"></i> Create invite link</button>
+    </form>
+  {% endif %}
+
+  <h6 class="mb-2">Members</h6>
+  {% if members %}
+    <ul class="list-group">
+      {% for m in members %}
+        <li class="list-group-item d-flex align-items-center justify-content-between">
+          <span class="truncate"><i class="bi bi-person pe-1"></i> {{ m.username }}</span>
+          <form hx-post="{{ uri('playlists.member-remove', [hash, m.uuid]) }}" hx-target="#modal .modal-content" hx-swap="innerHTML"
+                hx-confirm="Remove {{ m.username }} from this playlist?">
+            {{ csrf()|raw }}
+            <button type="submit" class="btn btn-sm btn-outline-light" title="Remove {{ m.username }}"><i class="bi bi-x-lg"></i></button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted small mb-0">Nobody has joined yet.</p>
+  {% endif %}
+</div>
+</div>

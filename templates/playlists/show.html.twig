@@ -14,7 +14,7 @@
         {% endif %}
         <div class="d-flex flex-column truncate">
           {% include 'playlists/name.html.twig' %}
-          <h3 class="artist">{{ count }} track{% if count != 1 %}s{% endif %}</h3>
+          <h3 class="artist">{{ count }} track{% if count != 1 %}s{% endif %}{% if owner|default(null) %} · <i class="bi bi-people"></i> {{ owner }}'s playlist{% endif %}</h3>
         </div>
       </div>
       <div class="actions d-flex flex-nowrap align-items-center gap-2 mt-3" hx-get="{{ uri("playlists.actions", [hash]) }}" hx-trigger="load, playlistActions from:body"></div>
