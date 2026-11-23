@@ -9,7 +9,7 @@ use Echo\Framework\Routing\Route\Get;
 
 /**
  * "Year in Review" listening stats. /wrapped picks the season's year
- * (December → this year, otherwise last year); /wrapped/{year} shows any
+ * (January → last year, otherwise this year); /wrapped/{year} shows any
  * year directly — the page is reachable year-round, only the home banner
  * is seasonal.
  */
