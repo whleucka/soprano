@@ -10,9 +10,46 @@ namespace App\Services\Soprano;
  */
 class WrappedService
 {
+    public function __construct(private MusicService $music) {}
+
     private const MONTHS = [
         1 => 'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+
+    /** How many top tracks "Play your top tracks" queues up. */
+    public const MIX_SIZE = 50;
+
+    /**
+     * Listening "personality" by time of day. Hours are local wall-clock
+     * hours (0–23); night wraps past midnight. Every hour belongs to exactly
+     * one part — WrappedServiceTest holds that invariant.
+     */
+    public const DAYPARTS = [
+        'morning' => [
+            'label' => 'Early Bird',
+            'icon'  => 'bi-sunrise',
+            'blurb' => 'Mornings are when you press play',
+            'hours' => [5, 6, 7, 8, 9, 10],
+        ],
+        'afternoon' => [
+            'label' => 'Daytime Listener',
+            'icon'  => 'bi-sun',
+            'blurb' => 'Your music keeps the workday moving',
+            'hours' => [11, 12, 13, 14, 15, 16],
+        ],
+        'evening' => [
+            'label' => 'Evening Unwinder',
+            'icon'  => 'bi-sunset',
+            'blurb' => 'You save the good stuff for after hours',
+            'hours' => [17, 18, 19, 20, 21],
+        ],
+        'night' => [
+            'label' => 'Night Owl',
+            'icon'  => 'bi-moon-stars',
+            'blurb' => 'The best listening happens after dark',
+            'hours' => [22, 23, 0, 1, 2, 3, 4],
+        ],
     ];
 
     /**
@@ -45,16 +82,24 @@ class WrappedService
      */
     public function review(int $year): array
     {
-        $from = sprintf('%d-01-01 00:00:00', $year);
-        $to   = sprintf('%d-01-01 00:00:00', $year + 1);
+        [$from, $to] = self::bounds($year);
 
+        // Play history only goes back so far (tracking began mid-2026). When
+        // it starts inside this year, say so, and start the month chart there
+        // instead of leading with a row of empty bars that read as "you
+        // didn't listen in spring".
+        $since   = $this->trackedSince($year);
         $byMonth = $this->playsByMonth($from, $to);
-        $byHour  = $this->playsByHour($from, $to);
+        if ($since !== null) {
+            $byMonth = array_slice($byMonth, $since['month'] - 1);
+        }
+        $byHour = $this->playsByHour($from, $to);
 
         return [
             'year'         => $year,
+            'since'        => $since,
             'totals'       => $this->totals($from, $to),
-            'top_tracks'   => $this->topTracks($from, $to),
+            'top_tracks'   => $this->topTracks($year, 10),
             'top_artists'  => $this->topArtists($from, $to),
             'top_albums'   => $this->topAlbums($from, $to),
             'top_genres'   => $this->topGenres($from, $to),
@@ -64,7 +109,186 @@ class WrappedService
             'by_hour_max'  => max(1, ...$byHour),
             'peak_day'     => $this->peakDay($from, $to),
             'obsession'    => $this->obsession($from, $to),
+            'streak'       => self::longestStreak($this->listeningDays($from, $to)),
+            'daypart'      => self::daypart($byHour),
+            'liked'        => $this->likedCount($from, $to),
         ];
+    }
+
+    /**
+     * The year's most-played tracks as full queue rows (MusicService's
+     * shared row shape, `plays` included), most played first. Feeds both the
+     * Top Tracks list and the "play your top tracks" queue.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function topTracks(int $year, int $limit = self::MIX_SIZE): array
+    {
+        [$from, $to] = self::bounds($year);
+
+        $rows = db()->fetchAll(
+            "SELECT " . MusicService::TRACK_COLUMNS . ", " . MusicService::LIKED_COLUMN . ",
+                    COUNT(*) AS plays
+             FROM track_plays tp
+             JOIN tracks t ON t.id = tp.track_id " . MusicService::TRACK_JOINS . "
+             WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED . "
+             GROUP BY t.id
+             ORDER BY plays DESC, MAX(tp.id) DESC
+             LIMIT ?",
+            [client()->id, client()->id, $from, $to, $limit],
+        );
+
+        return $this->music->mapTrackRows($rows);
+    }
+
+    /**
+     * Longest run of consecutive calendar days with at least one play.
+     * Null below two days — a one-day "streak" isn't worth a callout.
+     *
+     * @param list<string> $days Y-m-d strings, any order, duplicates allowed
+     * @return array{days:int,from:string,to:string}|null
+     */
+    public static function longestStreak(array $days): ?array
+    {
+        $days = array_values(array_unique($days));
+        sort($days);
+
+        $best = null;
+        $runStart = $prev = null;
+        $run = 0;
+        foreach ($days as $d) {
+            $day = new \DateTimeImmutable($d);
+            if ($prev !== null && $prev->modify('+1 day')->format('Y-m-d') === $day->format('Y-m-d')) {
+                $run++;
+            } else {
+                $runStart = $day;
+                $run = 1;
+            }
+            // >= keeps the most recent of equally long streaks.
+            if ($best === null || $run >= $best['days']) {
+                $best = ['days' => $run, 'start' => $runStart, 'end' => $day];
+            }
+            $prev = $day;
+        }
+
+        if ($best === null || $best['days'] < 2) {
+            return null;
+        }
+
+        return [
+            'days' => $best['days'],
+            'from' => $best['start']->format('M j'),
+            'to'   => $best['end']->format('M j'),
+        ];
+    }
+
+    /**
+     * Which part of the day dominates the listening clock, with its share of
+     * plays and the single busiest hour. Null with no plays.
+     *
+     * @param array<int,int> $byHour plays keyed by hour 0–23
+     * @return array{key:string,label:string,icon:string,blurb:string,share:int,peak_hour:string}|null
+     */
+    public static function daypart(array $byHour): ?array
+    {
+        $total = array_sum($byHour);
+        if ($total <= 0) {
+            return null;
+        }
+
+        $bestKey = null;
+        $bestPlays = -1;
+        foreach (self::DAYPARTS as $key => $part) {
+            $plays = 0;
+            foreach ($part['hours'] as $h) {
+                $plays += $byHour[$h] ?? 0;
+            }
+            if ($plays > $bestPlays) {
+                $bestKey = $key;
+                $bestPlays = $plays;
+            }
+        }
+
+        $peak = (int) array_search(max($byHour), $byHour, true);
+        $part = self::DAYPARTS[$bestKey];
+
+        return [
+            'key'       => $bestKey,
+            'label'     => $part['label'],
+            'icon'      => $part['icon'],
+            'blurb'     => $part['blurb'],
+            'share'     => (int) round($bestPlays / $total * 100),
+            'peak_hour' => self::hourLabel($peak),
+        ];
+    }
+
+    /** 0 → "12 am", 13 → "1 pm". */
+    public static function hourLabel(int $hour): string
+    {
+        $h = $hour % 12 === 0 ? 12 : $hour % 12;
+        return $h . ($hour < 12 ? ' am' : ' pm');
+    }
+
+    /** @return array{0:string,1:string} half-open [from, to) for a calendar year */
+    private static function bounds(int $year): array
+    {
+        return [
+            sprintf('%d-01-01 00:00:00', $year),
+            sprintf('%d-01-01 00:00:00', $year + 1),
+        ];
+    }
+
+    /**
+     * When this client's play history begins, if that's inside $year.
+     * Null when the history predates the year (a full year of data) or
+     * there is none.
+     *
+     * @return array{date:string,month:int}|null
+     */
+    private function trackedSince(int $year): ?array
+    {
+        $first = db()->fetch(
+            "SELECT MIN(created_at) AS first FROM track_plays WHERE client_id = ?",
+            [client()->id],
+        )['first'] ?? null;
+
+        if (!$first) {
+            return null;
+        }
+
+        $first = new \DateTimeImmutable((string) $first);
+        if ((int) $first->format('Y') !== $year) {
+            return null;
+        }
+
+        return ['date' => $first->format('F j'), 'month' => (int) $first->format('n')];
+    }
+
+    /** @return list<string> distinct Y-m-d days with a counted play */
+    private function listeningDays(string $from, string $to): array
+    {
+        $rows = db()->fetchAll(
+            "SELECT DISTINCT DATE(tp.created_at) AS d
+             FROM track_plays tp
+             WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
+               AND " . MusicService::NOT_SKIPPED,
+            [client()->id, $from, $to],
+        );
+
+        return array_map(fn($r) => (string) $r['d'], $rows);
+    }
+
+    /** Tracks hearted during the window that are still liked now. */
+    private function likedCount(string $from, string $to): int
+    {
+        $row = db()->fetch(
+            "SELECT COUNT(*) AS n FROM track_likes
+             WHERE client_id = ? AND created_at >= ? AND created_at < ?",
+            [client()->id, $from, $to],
+        );
+
+        return (int) ($row['n'] ?? 0);
     }
 
     /**
@@ -104,29 +328,6 @@ class WrappedService
         ];
     }
 
-    private function topTracks(string $from, string $to, int $limit = 10): array
-    {
-        return db()->fetchAll(
-            "SELECT t.hash AS hash,
-                    tm.title AS title,
-                    ar.name AS artist,
-                    ar.hash AS artist_hash,
-                    al.cover AS cover,
-                    COUNT(*) AS plays
-             FROM track_plays tp
-             JOIN tracks t ON t.id = tp.track_id
-             JOIN albums al ON al.id = t.album_id
-             JOIN artists ar ON ar.id = t.track_artist_id
-             LEFT JOIN track_meta tm ON tm.track_id = t.id
-             WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
-               AND " . MusicService::NOT_SKIPPED . "
-             GROUP BY t.id
-             ORDER BY plays DESC, MAX(tp.id) DESC
-             LIMIT ?",
-            [client()->id, $from, $to, $limit],
-        );
-    }
-
     private function topArtists(string $from, string $to, int $limit = 5): array
     {
         return db()->fetchAll(
@@ -140,7 +341,7 @@ class WrappedService
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
                AND " . MusicService::NOT_SKIPPED . "
              GROUP BY ar.id
-             ORDER BY plays DESC
+             ORDER BY plays DESC, MAX(tp.id) DESC
              LIMIT ?",
             [client()->id, $from, $to, $limit],
         );
@@ -161,7 +362,7 @@ class WrappedService
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
                AND " . MusicService::NOT_SKIPPED . "
              GROUP BY al.id
-             ORDER BY plays DESC
+             ORDER BY plays DESC, MAX(tp.id) DESC
              LIMIT ?",
             [client()->id, $from, $to, $limit],
         );
@@ -179,7 +380,7 @@ class WrappedService
                AND " . MusicService::NOT_SKIPPED . "
                AND al.genre <> '' AND al.genre <> 'Unknown'
              GROUP BY al.genre
-             ORDER BY plays DESC
+             ORDER BY plays DESC, MAX(tp.id) DESC
              LIMIT ?",
             [client()->id, $from, $to, $limit],
         );
@@ -246,7 +447,7 @@ class WrappedService
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
                AND " . MusicService::NOT_SKIPPED . "
              GROUP BY d
-             ORDER BY plays DESC
+             ORDER BY plays DESC, MAX(tp.id) DESC
              LIMIT 1",
             [client()->id, $from, $to],
         );
@@ -280,7 +481,7 @@ class WrappedService
              WHERE tp.client_id = ? AND tp.created_at >= ? AND tp.created_at < ?
                AND " . MusicService::NOT_SKIPPED . "
              GROUP BY ar.id, m
-             ORDER BY plays DESC
+             ORDER BY plays DESC, MAX(tp.id) DESC
              LIMIT 1",
             [client()->id, $from, $to],
         );

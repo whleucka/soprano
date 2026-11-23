@@ -519,6 +519,7 @@ class PlaybackAnalyticsService
             'playlist' => 'Playlist',
             'podcast' => 'Podcast',
             'radio' => 'Radio',
+            'wrapped' => 'Wrapped',
             'unknown' => 'Unattributed',
             default => ucfirst(str_replace('-', ' ', $family)),
         };
@@ -574,6 +575,7 @@ class PlaybackAnalyticsService
             'playlist' => 'music-note-list',
             'podcast' => 'mic',
             'radio' => 'radio',
+            'wrapped' => 'stars',
             default => 'question-circle',
         };
     }

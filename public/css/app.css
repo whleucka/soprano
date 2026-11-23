@@ -1733,6 +1733,73 @@ input:-webkit-autofill:active {
 /** Wrapped (year in review) */
 #wrapped .hero { --hero-color: rgba(187, 154, 247, 0.5); }
 
+/* Two soft colour pools behind the generic hero wash, so the year-in-review
+   header feels like an occasion rather than another entity page. */
+#wrapped .wrapped-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+#wrapped .wrapped-hero::before {
+  content: "";
+  position: absolute;
+  inset: -40% -10% auto auto;
+  width: 70%;
+  aspect-ratio: 1;
+  z-index: -1;
+  background:
+    radial-gradient(closest-side, rgba(122, 162, 247, 0.35), transparent 70%),
+    radial-gradient(closest-side at 30% 70%, rgba(125, 207, 255, 0.22), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.wrapped-kicker {
+  font-size: 0.72rem !important;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tn-cyan) !important;
+}
+
+#wrapped .wrapped-since {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+#wrapped .hero .actions .btn.wrapped-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.9rem 0.4rem 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--tn-grad);
+  color: #1a1b26;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: transform var(--ease), filter var(--ease);
+}
+#wrapped .hero .actions .btn.wrapped-play .bi { font-size: 1.25rem; }
+#wrapped .hero .actions .btn.wrapped-play:hover,
+#wrapped .hero .actions .btn.wrapped-play:focus-visible {
+  color: #1a1b26;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Staggered entrance for the headline cards. Pure CSS so it replays on every
+   htmx swap; --i is the card's position, set inline. */
+@keyframes wrapped-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.wrapped-reveal {
+  animation: wrapped-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
 #wrapped .hero .wrapped-title {
   font-family: var(--font-display);
   font-size: clamp(2.4rem, 6vw, 4rem);
@@ -1846,7 +1913,9 @@ input:-webkit-autofill:active {
   text-decoration: none;
 }
 
-.wrapped-callout .bi { font-size: 1.4rem; color: var(--tn-cyan); }
+.wrapped-callout .bi { font-size: 1.4rem; flex: none; }
+/* Profile's callouts carry no accent class and stay cyan; wrapped's pick their own. */
+.wrapped-callout .bi:not([class*="tn-icon-"]) { color: var(--tn-cyan); }
 .wrapped-callout b { color: var(--text); }
 
 a.wrapped-callout:hover,
@@ -1854,6 +1923,60 @@ a.wrapped-callout:focus {
   background: var(--surface-hover);
   color: var(--text);
 }
+
+/* Song of the year — tinted with the album's dominant colour (--tint). */
+.wrapped-spotlight {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--tint) 35%, transparent);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(100deg, color-mix(in srgb, var(--tint) 38%, transparent) 0%, transparent 75%),
+    var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--ease), border-color var(--ease);
+}
+.wrapped-spotlight:hover,
+.wrapped-spotlight:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--tint) 70%, transparent);
+}
+.wrapped-spotlight img {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--tint) 45%, transparent);
+}
+.wrapped-spotlight-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.wrapped-spotlight-artist { color: var(--text-soft); }
+.wrapped-spotlight-plays {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.wrapped-spotlight-play {
+  margin-left: auto;
+  flex: none;
+  font-size: 2.2rem;
+  color: var(--text);
+  opacity: 0.85;
+  transition: opacity var(--ease), transform var(--ease);
+}
+.wrapped-spotlight:hover .wrapped-spotlight-play,
+.wrapped-spotlight:focus-visible .wrapped-spotlight-play { opacity: 1; transform: scale(1.06); }
 
 /* Ranked lists (artists + tracks) */
 .wrapped-rank {
@@ -1897,6 +2020,18 @@ a.wrapped-callout:focus {
   object-fit: cover;
 }
 
+/* #1 artist: gradient ring + accented rank */
+.wrapped-artist.is-top img {
+  padding: 3px;
+  background: var(--tn-grad);
+}
+.wrapped-artist.is-top .wrapped-rank {
+  background: var(--tn-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .wrapped-artist-name {
   font-weight: 700;
   max-width: 100%;
@@ -1918,12 +2053,46 @@ a.wrapped-callout:focus {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
   padding: 0.4rem 0.6rem;
+  border: 0;
   border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  text-align: left;
   cursor: pointer;
 }
 
-.wrapped-track:hover { background: var(--surface-hover); }
+.wrapped-track:hover,
+.wrapped-track:focus-visible { background: var(--surface-hover); }
+
+.wrapped-track .artist { color: var(--text-muted); }
+
+/* Relative play-count meter between title and count. */
+.wrapped-track-meter {
+  flex: none;
+  width: 72px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.wrapped-track-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--tn-grad);
+}
+
+/* Shared keyboard focus for everything clickable on the page. */
+.wrapped-spotlight:focus-visible,
+.wrapped-track:focus-visible,
+.wrapped-callout:focus-visible,
+.wrapped-artist:focus-visible,
+.wrapped-album:focus-visible {
+  outline: 2px solid var(--tn-blue);
+  outline-offset: 2px;
+}
 
 .wrapped-track img {
   width: 42px;
@@ -2015,12 +2184,41 @@ a.wrapped-callout:focus {
 
 .wrapped-bar-fill {
   width: 100%;
-  /* --h is the bar's 0–100 value set inline; the label row (1.1rem) is
-     reserved so a 100% bar never overflows the fixed chart height. */
-  height: calc((100% - 1.1rem) * var(--h, 0) / 100);
+  /* --h is the bar's 0–100 value set inline. The label row below and the
+     peak bar's count above (1rem each, plus slack) are reserved so a 100%
+     bar never overflows the fixed chart height. */
+  height: calc((100% - 2.2rem) * var(--h, 0) / 100);
   min-height: 2px;
   border-radius: 3px 3px 0 0;
   background: var(--tn-grad-2);
+  opacity: 0.55;
+  transform-origin: bottom;
+  animation: wrapped-grow 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 25ms);
+  transition: opacity var(--ease);
+}
+
+@keyframes wrapped-grow {
+  from { transform: scaleY(0); }
+  to   { transform: none; }
+}
+
+.wrapped-bar:hover .wrapped-bar-fill { opacity: 0.85; }
+
+/* The busiest month / hour gets full colour and its count on top. */
+.wrapped-bar.is-peak .wrapped-bar-fill {
+  opacity: 1;
+  background: var(--tn-grad);
+  box-shadow: 0 0 14px rgba(187, 154, 247, 0.35);
+}
+.wrapped-bar.is-peak .wrapped-bar-label { color: var(--text); font-weight: 700; }
+
+.wrapped-bar-value {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--tn-purple);
+  line-height: 1rem;
+  white-space: nowrap;
 }
 
 /* ---- Profile page -------------------------------------------------------- */
@@ -2076,6 +2274,21 @@ a.wrapped-callout:focus {
   color: var(--text-muted);
   height: 1rem;
   line-height: 1rem;
+  white-space: nowrap;
+}
+
+.wrapped-footnote {
+  max-width: 560px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapped-reveal,
+  .wrapped-bar-fill { animation: none; }
+  .wrapped-spotlight,
+  .wrapped-spotlight-play,
+  #wrapped .hero .actions .btn.wrapped-play { transition: none; transform: none; }
 }
 
 /* Mobile: lock grids to clean columns so tiles/art don't get too wide or
@@ -2083,6 +2296,11 @@ a.wrapped-callout:focus {
 @media (max-width: 575.98px) {
   .wrapped-tiles { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
   .wrapped-tile { padding: 0.75rem; }
+  /* Odd tile out (the hearted count) spans the row instead of dangling. */
+  .wrapped-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .wrapped-spotlight { gap: 0.8rem; padding: 0.8rem; }
+  .wrapped-spotlight img { width: 72px; height: 72px; }
+  .wrapped-track-meter { display: none; }
   .wrapped-callouts { grid-template-columns: 1fr; }
   .wrapped-artists,
   .wrapped-albums { grid-template-columns: repeat(2, 1fr); }

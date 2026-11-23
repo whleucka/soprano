@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Soprano;
 
-use App\Services\Soprano\{MixService, MusicService, PlaylistService, PlaylistsService, PlayerService, PodcastService, RadioService, ReplayGainService, SearchService, StationService, TranscodeService};
+use App\Services\Soprano\{MixService, MusicService, PlaylistService, PlaylistsService, PlayerService, PodcastService, RadioService, ReplayGainService, SearchService, StationService, TranscodeService, WrappedService};
 use Echo\Framework\Http\Controller;
 use Echo\Framework\Routing\Group;
 use Echo\Framework\Routing\Route\Get;
@@ -58,6 +58,7 @@ class PlayerController extends Controller
         private StationService $stations,
         private ReplayGainService $replaygain,
         private MixService $mix,
+        private WrappedService $wrapped,
     ) {}
 
     #[Get("/player", "player.index")]
@@ -234,6 +235,19 @@ class PlayerController extends Controller
         $this->playlist->setPlaylist($tracks, $index, source: $source);
         $this->queueReplaced();
         return $this->play($tracks[$index]['hash']);
+    }
+
+    /** Queue the year's most-played tracks, most played first. */
+    #[Get("/player/play/wrapped/{year}", "player.play-wrapped")]
+    public function playWrapped(int $year)
+    {
+        $tracks = $this->wrapped->topTracks($year);
+        if (empty($tracks)) {
+            return;
+        }
+        $this->playlist->setPlaylist($tracks, source: "wrapped:$year");
+        $this->queueReplaced();
+        return $this->play($tracks[0]['hash']);
     }
 
     #[Get("/player/play/album/{hash}", "player.play-album")]
