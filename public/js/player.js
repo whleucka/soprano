@@ -281,6 +281,20 @@ function adoptPreloadedNext(fresh) {
     discardPreload();
     return fresh;
   }
+  // A preload whose fetch failed is dead: it holds an error and no data, and
+  // play() on it just rejects. Its 'error' event fired before any handler here
+  // was bound, and the stall retry and advance watchdog both stand down on an
+  // errored or never-started element, so adopting it left the track sitting
+  // silent until someone pressed play (preload-adopted rs0 ec4). The fresh
+  // element has already started its own load, so keep that one instead.
+  if (pre.error || pre.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+    // pre has no data-hash yet (that is copied over below), so name the track.
+    if (window.__plog) {
+      window.__plog('preload-dropped', (fresh.dataset.hash || '') + ' rs' + pre.readyState, pre);
+    }
+    discardPreload();
+    return fresh;
+  }
   window.__preload = null;
 
   // Take on the rendered element's identity (id, data-hash, data-gain,
